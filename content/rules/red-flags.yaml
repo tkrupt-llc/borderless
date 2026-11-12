@@ -1,0 +1,163 @@
+# Red-flag rules. Owned by the psychiatrist; every change bumps the version.
+# Any rule here takes over the session: the AI is never called again for it.
+# Designed to over-detect: 100% red-flag recall on the vignettes is a hard gate.
+#
+# Source: tech spec "Requirement 3" (triggers, ASQ -> C-SSRS, clocks).
+# DRAFT, needs psychiatrist sign-off:
+#   - RF-CSSRS-HIGH and RF-CSSRS-PAST-BEHAVIOUR (which C-SSRS answers count as imminent)
+#   - the tier of each RF-RED-* rule (the spec names the six topics, not their tiers)
+#
+# Facts: item.<INSTRUMENT>.<n> = answer value; answer.<INSTRUMENT>.<n> = answered "yes" / above zero.
+
+ruleset: red_flags
+version: "0.4"
+owner: psychiatrist
+
+rules:
+  # --- Direct suicide questions -------------------------------------------
+  - id: RF-PHQ9-ITEM9
+    description: PHQ-9 item 9 (thoughts of being better off dead or of self-harm) above zero
+    when: { fact: item.PHQ9.9, op: ">", value: 0 }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: run_instrument
+        instrument: ASQ
+      - action: create_task
+        tier: urgent
+
+  - id: RF-QC-SUICIDE-YES
+    description: 'Answered "yes" to the quick-check direct suicide question'
+    when: { fact: answer.QC_SUICIDE.1, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: run_instrument
+        instrument: ASQ
+      - action: create_task
+        tier: urgent
+
+  # --- ASQ and C-SSRS ------------------------------------------------------
+  - id: RF-ASQ-POSITIVE
+    description: Positive ASQ screen (any "yes" to items 1-4) raises the clock to 15 minutes and runs the C-SSRS screener
+    when:
+      any:
+        - { fact: answer.ASQ.1, op: "==", value: true }
+        - { fact: answer.ASQ.2, op: "==", value: true }
+        - { fact: answer.ASQ.3, op: "==", value: true }
+        - { fact: answer.ASQ.4, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: run_instrument
+        instrument: CSSRS_SCREENER
+      - action: create_task
+        tier: imminent
+
+  - id: RF-ASQ-ACUTE
+    description: '"Yes" to the ASQ acuity question (thoughts of killing yourself right now)'
+    when: { fact: answer.ASQ.5, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: imminent
+
+  - id: RF-CSSRS-HIGH
+    description: 'DRAFT: "yes" to C-SSRS screener item 4 (intent), 5 (plan) or 7 (behaviour in the past 3 months)'
+    when:
+      any:
+        - { fact: answer.CSSRS_SCREENER.4, op: "==", value: true }
+        - { fact: answer.CSSRS_SCREENER.5, op: "==", value: true }
+        - { fact: answer.CSSRS_SCREENER.7, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: imminent
+
+  - id: RF-CSSRS-PAST-BEHAVIOUR
+    description: 'DRAFT: "yes" to C-SSRS screener item 6 (ever done or prepared anything to end their life)'
+    when: { fact: answer.CSSRS_SCREENER.6, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: urgent
+
+  # --- The psychiatrist's red-flag questions (tiers are DRAFT) -------------
+  - id: RF-RED-SELF-HARM
+    description: Recent self-harm
+    when: { fact: answer.RED_FLAG.1, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: urgent
+
+  - id: RF-RED-PSYCHOSIS
+    description: Possible psychotic symptoms
+    when: { fact: answer.RED_FLAG.2, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: urgent
+
+  - id: RF-RED-MANIA
+    description: Possible mania
+    when: { fact: answer.RED_FLAG.3, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: urgent
+
+  - id: RF-RED-UNSAFE
+    description: Worried they cannot keep themselves safe
+    when: { fact: answer.RED_FLAG.4, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: imminent
+
+  - id: RF-RED-HARM-OTHERS
+    description: Thoughts of harming someone else
+    when: { fact: answer.RED_FLAG.5, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: imminent
+
+  - id: RF-RED-CHILD-RISK
+    description: Worried a child in their care may not be safe
+    when: { fact: answer.RED_FLAG.6, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: urgent
+
+  # --- Chat: the direct check question (lib/chat/safety-check.ts) ---------
+  - id: RF-SAFETY-CHECK
+    description: 'DRAFT: answered "yes", "not sure" or anything but a clear "no" to the direct check question after a risk phrase'
+    when: { fact: flag.safety_check_positive, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: run_instrument
+        instrument: ASQ
+      - action: create_task
+        tier: urgent
+
+  # --- Always-visible button -----------------------------------------------
+  - id: RF-HELP-NOW
+    description: The person pressed "I need help now"
+    when: { fact: flag.help_now, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: urgent

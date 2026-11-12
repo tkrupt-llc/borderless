@@ -1,0 +1,91 @@
+{
+  "instrument": "GAD2",
+  "version": "1.0",
+  "wordingStatus": "published_pending_approval",
+  "source": "GAD-2 (first two GAD-7 items), standard published English wording. Awaiting psychiatrist approval.",
+  "arabicEnabled": false,
+  "stem": {
+    "en": "Over the last 2 weeks, how often have you been bothered by the following problems?",
+    "ar": ""
+  },
+  "items": [
+    {
+      "id": "GAD2-1",
+      "instrument": "GAD2",
+      "number": 1,
+      "text": {
+        "en": "Feeling nervous, anxious or on edge",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "GAD2-2",
+      "instrument": "GAD2",
+      "number": 2,
+      "text": {
+        "en": "Not being able to stop or control worrying",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    }
+  ]
+}

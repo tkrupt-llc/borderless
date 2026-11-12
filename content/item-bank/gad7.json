@@ -1,0 +1,286 @@
+{
+  "instrument": "GAD7",
+  "version": "1.0",
+  "wordingStatus": "published_pending_approval",
+  "source": "GAD-7, standard published English wording (Spitzer, Kroenke, Williams & Löwe). Awaiting psychiatrist approval.",
+  "arabicEnabled": false,
+  "stem": {
+    "en": "Over the last 2 weeks, how often have you been bothered by the following problems?",
+    "ar": ""
+  },
+  "items": [
+    {
+      "id": "GAD7-1",
+      "instrument": "GAD7",
+      "number": 1,
+      "text": {
+        "en": "Feeling nervous, anxious or on edge",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "GAD7-2",
+      "instrument": "GAD7",
+      "number": 2,
+      "text": {
+        "en": "Not being able to stop or control worrying",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "GAD7-3",
+      "instrument": "GAD7",
+      "number": 3,
+      "text": {
+        "en": "Worrying too much about different things",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "GAD7-4",
+      "instrument": "GAD7",
+      "number": 4,
+      "text": {
+        "en": "Trouble relaxing",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "GAD7-5",
+      "instrument": "GAD7",
+      "number": 5,
+      "text": {
+        "en": "Being so restless that it is hard to sit still",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "GAD7-6",
+      "instrument": "GAD7",
+      "number": 6,
+      "text": {
+        "en": "Becoming easily annoyed or irritable",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "GAD7-7",
+      "instrument": "GAD7",
+      "number": 7,
+      "text": {
+        "en": "Feeling afraid as if something awful might happen",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    }
+  ]
+}

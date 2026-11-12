@@ -1,0 +1,188 @@
+{
+  "instrument": "CSSRS_SCREENER",
+  "version": "1.0",
+  "wordingStatus": "published_pending_approval",
+  "source": "C-SSRS Screen Version (Columbia Lighthouse Project), standard English wording. Items 1-5: past month. Items 3-5 are asked only if item 2 is yes. Item 6 is lifetime; item 7 is its published follow-up (past 3 months), asked only if item 6 is yes. Awaiting psychiatrist approval; confirm licence terms.",
+  "arabicEnabled": false,
+  "stem": {
+    "en": "In the past month:",
+    "ar": ""
+  },
+  "items": [
+    {
+      "id": "CSSRS_SCREENER-1",
+      "instrument": "CSSRS_SCREENER",
+      "number": 1,
+      "text": {
+        "en": "Have you wished you were dead or wished you could go to sleep and not wake up?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "CSSRS_SCREENER-2",
+      "instrument": "CSSRS_SCREENER",
+      "number": 2,
+      "text": {
+        "en": "Have you actually had any thoughts of killing yourself?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "CSSRS_SCREENER-3",
+      "instrument": "CSSRS_SCREENER",
+      "number": 3,
+      "text": {
+        "en": "Have you been thinking about how you might do this?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "CSSRS_SCREENER-4",
+      "instrument": "CSSRS_SCREENER",
+      "number": 4,
+      "text": {
+        "en": "Have you had these thoughts and had some intention of acting on them?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "CSSRS_SCREENER-5",
+      "instrument": "CSSRS_SCREENER",
+      "number": 5,
+      "text": {
+        "en": "Have you started to work out or worked out the details of how to kill yourself, and do you intend to carry out this plan?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "CSSRS_SCREENER-6",
+      "instrument": "CSSRS_SCREENER",
+      "number": 6,
+      "text": {
+        "en": "Have you ever done anything, started to do anything, or prepared to do anything to end your life?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "CSSRS_SCREENER-7",
+      "instrument": "CSSRS_SCREENER",
+      "number": 7,
+      "text": {
+        "en": "Was this within the past 3 months?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    }
+  ]
+}

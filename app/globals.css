@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from the handoff DESIGN.md (warm cream + olive).
+ * Red (`danger`) is ONLY for emergency call buttons and imminent clinician alerts.
+ * `clay` is decorative (logo dot, tiny dots): never text.
+ * `sage` takes dark text only (white on sage fails contrast).
+ * Dark mode is a P2 item, so only the light theme is defined.
+ */
+:root {
+  --bg: #f7f4ee;
+  --surface: #ffffff;
+  --primary: #556b2f; /* white on it about 6:1 */
+  --primary-dark: #3f5222; /* links, labels on sage, big numbers */
+  --sage: #dce3cc;
+  --sage-deep: #c8d3b0; /* icon blob on a sage card */
+  --sage-soft: #e9edde;
+  --sage-mist: #eef0e4;
+  --ink: #1f2a1c;
+  --text-2: #36412f;
+  --text-on-sage: #2c3825;
+  --muted: #4e5a48;
+  --line: #c9cfba;
+  --line-warm: #dad6cc;
+  --track: #e2e2d8;
+  --step-idle: #9aa38c;
+  --clay: #b5835a;
+  --danger: #a3302a;
+  --on-dark: #f2f4ec; /* text on primary / ink */
+  --on-dark-2: #d9decf;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-sage: var(--sage);
+  --color-sage-deep: var(--sage-deep);
+  --color-sage-soft: var(--sage-soft);
+  --color-sage-mist: var(--sage-mist);
+  --color-ink: var(--ink);
+  --color-text-2: var(--text-2);
+  --color-text-on-sage: var(--text-on-sage);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-warm: var(--line-warm);
+  --color-track: var(--track);
+  --color-step-idle: var(--step-idle);
+  --color-clay: var(--clay);
+  --color-danger: var(--danger);
+  --color-on-dark: var(--on-dark);
+  --color-on-dark-2: var(--on-dark-2);
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+
+  /* rem-based so text scales with the browser's text-size setting (200% zoom). */
+  --text-small: 0.875rem; /* 14px, captions only */
+  --text-caption: 0.9375rem; /* 15px */
+  --text-body: 1.0625rem; /* 17px, minimum for questions and answers */
+  --text-lead: 1.1875rem; /* 19px */
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+
+/* In the base layer so utility classes (e.g. text-white on a button link) win. */
+@layer base {
+  a {
+    color: var(--primary-dark);
+  }
+  a:hover {
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--primary-dark);
+    outline-offset: 2px;
+  }
+}
+
+/* Paced-breathing circle on the breathing card. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.6);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+/* Honour "reduce motion". */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

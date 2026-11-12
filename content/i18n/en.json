@@ -1,0 +1,40 @@
+{
+  "app": {
+    "name": "Borderless",
+    "discreetTitle": "Wellbeing check"
+  },
+  "start": {
+    "helpNow": "I need help now",
+    "quickCheck": "Quick check (2 minutes)",
+    "fullAssessment": "Full assessment (6–10 minutes)",
+    "notATherapist": "Not a therapist, a way to one."
+  },
+  "check": {
+    "leadIn": "We ask everyone this question.",
+    "leadInStatus": "DRAFT: the psychiatrist supplies the approved lead-in wording.",
+    "leadInItems": ["QC_SUICIDE-1", "PHQ9-9"]
+  },
+  "trust": {
+    "reviewedBy": "Questions and safety rules reviewed by [Psychiatrist name], Consultant Psychiatrist",
+    "partner": "Care provided by [Licensed partner facility]",
+    "dataPromiseTitle": "Our promise about your data",
+    "readDataPromise": "Read our data promise",
+    "aiNotice": "The full check-in starts with an AI assistant. It is not a therapist and never diagnoses you. A clinician reads everything.",
+    "dataPromise": [
+      "No name or account is needed to start.",
+      "Only your care team sees your answers. Never your employer.",
+      "You choose what is shared, and can change your mind.",
+      "You can delete your data at any time.",
+      "This prototype uses made-up data only."
+    ]
+  },
+  "footer": {
+    "talkToPerson": "Talk to a person",
+    "helpNow": "I need help now"
+  },
+  "emergency": {
+    "outsideUae": "Outside the UAE? Find a helpline in your country",
+    "outsideUaeUrl": "https://findahelpline.com",
+    "card": "If you are in danger now, call 998 (ambulance) or 999 (police). For 24/7 support, call 800-SAKINA (800 725462). Stay with someone you trust."
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "instrument": "ASQ",
+  "version": "1.0",
+  "wordingStatus": "published_pending_approval",
+  "source": "ASQ Suicide Risk Screening Toolkit (NIMH), standard English wording. Items 1-4 are the screen; item 5 is the acuity question, asked only if any of items 1-4 is yes. Awaiting psychiatrist approval.",
+  "arabicEnabled": false,
+  "items": [
+    {
+      "id": "ASQ-1",
+      "instrument": "ASQ",
+      "number": 1,
+      "text": {
+        "en": "In the past few weeks, have you wished you were dead?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "ASQ-2",
+      "instrument": "ASQ",
+      "number": 2,
+      "text": {
+        "en": "In the past few weeks, have you felt that you or your family would be better off if you were dead?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "ASQ-3",
+      "instrument": "ASQ",
+      "number": 3,
+      "text": {
+        "en": "In the past week, have you been having thoughts about killing yourself?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "ASQ-4",
+      "instrument": "ASQ",
+      "number": 4,
+      "text": {
+        "en": "Have you ever tried to kill yourself?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "ASQ-5",
+      "instrument": "ASQ",
+      "number": 5,
+      "text": {
+        "en": "Are you having thoughts of killing yourself right now?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    }
+  ]
+}

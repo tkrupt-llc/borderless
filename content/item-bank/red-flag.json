@@ -1,0 +1,159 @@
+{
+  "instrument": "RED_FLAG",
+  "version": "1.0",
+  "wordingStatus": "draft",
+  "source": "DRAFT wording for the psychiatrist's six red-flag topics: recent self-harm, psychotic symptoms, mania, unable to stay safe, harm to others, risk to a child. The psychiatrist supplies the final wording.",
+  "arabicEnabled": false,
+  "items": [
+    {
+      "id": "RED_FLAG-1",
+      "instrument": "RED_FLAG",
+      "number": 1,
+      "text": {
+        "en": "In the past month, have you hurt yourself on purpose?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "RED_FLAG-2",
+      "instrument": "RED_FLAG",
+      "number": 2,
+      "text": {
+        "en": "Have you been hearing or seeing things other people cannot, or felt that people are watching you or trying to harm you?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "RED_FLAG-3",
+      "instrument": "RED_FLAG",
+      "number": 3,
+      "text": {
+        "en": "Have you had days when you felt unusually high or full of energy and needed much less sleep than usual?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "RED_FLAG-4",
+      "instrument": "RED_FLAG",
+      "number": 4,
+      "text": {
+        "en": "Are you worried that you might not be able to keep yourself safe?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "RED_FLAG-5",
+      "instrument": "RED_FLAG",
+      "number": 5,
+      "text": {
+        "en": "Have you had thoughts of harming someone else?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "RED_FLAG-6",
+      "instrument": "RED_FLAG",
+      "number": 6,
+      "text": {
+        "en": "Is there a child in your care who you are worried may not be safe?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    }
+  ]
+}

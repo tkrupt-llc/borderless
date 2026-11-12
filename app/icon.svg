@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <!-- Favicon from the borderless logo: open ring (primary) with the clay dot, on a cream tile so it shows on dark tab bars too. -->
+  <rect width="40" height="40" rx="9" fill="#F7F4EE"/>
+  <path d="M30.5 11.2 A13 13 0 1 0 30.5 28.8" fill="none" stroke="#556B2F" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="26" cy="20" r="3.6" fill="#B5835A"/>
+</svg>

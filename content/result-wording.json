@@ -1,0 +1,49 @@
+{
+  "status": "draft",
+  "source": "Approved decision #10 (result wording for patients) is pending: DRAFT plain-words bands. Never a diagnosis label: say 'mood' and 'worry', never 'depression' or 'anxiety disorder'. The 'What this does not mean' lines are from the tech spec.",
+  "instruments": {
+    "PHQ2": {
+      "label": "Mood",
+      "maxScore": 6,
+      "bands": {
+        "negative": "Low mood or losing interest in things hasn't bothered you often in the last 2 weeks.",
+        "positive": "Low mood or losing interest in things has bothered you often in the last 2 weeks."
+      }
+    },
+    "GAD2": {
+      "label": "Worry",
+      "maxScore": 6,
+      "bands": {
+        "negative": "Feeling nervous or not being able to stop worrying hasn't bothered you often in the last 2 weeks.",
+        "positive": "Feeling nervous or not being able to stop worrying has bothered you often in the last 2 weeks."
+      }
+    },
+    "PHQ9": {
+      "label": "Mood",
+      "maxScore": 27,
+      "bands": {
+        "minimal": "Your answers show few signs of low mood.",
+        "mild": "Your answers show some signs of low mood.",
+        "moderate": "Your answers show a moderate level of low mood.",
+        "moderately_severe": "Your answers show a high level of low mood.",
+        "severe": "Your answers show a very high level of low mood."
+      }
+    },
+    "GAD7": {
+      "label": "Worry",
+      "maxScore": 21,
+      "bands": {
+        "minimal": "Your answers show few signs of worry or nervousness.",
+        "mild": "Your answers show some signs of worry or nervousness.",
+        "moderate": "Your answers show a moderate level of worry or nervousness.",
+        "severe": "Your answers show a high level of worry or nervousness."
+      }
+    }
+  },
+  "doesNotMean": [
+    "This is not a diagnosis.",
+    "Answers can be affected by sleep, illness or a hard week.",
+    "A low score does not mean help is unavailable to you."
+  ],
+  "fullCheckInOffer": "A fuller check-in gives your clinician a clearer picture. It takes about 10 minutes."
+}

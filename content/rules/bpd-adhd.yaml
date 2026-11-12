@@ -1,0 +1,53 @@
+# Extra safeguards when BPD or ADHD history is known. Owned by the psychiatrist.
+# Source: tech spec "Higher-risk groups: BPD and ADHD".
+#   - Applies ONLY if the person reported the history or a clinician added it
+#     (facts history.bpd / history.adhd). The AI never infers a diagnosis.
+#   - A known history never lowers the tier: these rules can only add tasks,
+#     and the highest tier always wins (lib/rules/tiers.ts).
+#   - Any increase from the person's usual pattern goes to the urgent tier.
+#   - Patient-facing text never shows a diagnosis label.
+# DRAFT, needs psychiatrist sign-off: which extra answers count as "an increase"
+# (here: question 1, different from usual, and question 2, self-harm or urges this week).
+
+ruleset: bpd_adhd
+version: "0.1"
+owner: psychiatrist
+
+rules:
+  - id: BA-ASK-EXTRA
+    description: Known BPD or ADHD history, so ask the four extra questions
+    when:
+      any:
+        - { fact: history.bpd, op: "==", value: true }
+        - { fact: history.adhd, op: "==", value: true }
+    then:
+      - action: run_instrument
+        instrument: BPD_ADHD_EXTRA
+
+  - id: BA-CHANGE-FROM-USUAL
+    description: Known history and feeling different from usual (acute-on-chronic) goes to urgent
+    when:
+      all:
+        - any:
+            - { fact: history.bpd, op: "==", value: true }
+            - { fact: history.adhd, op: "==", value: true }
+        - { fact: answer.BPD_ADHD_EXTRA.1, op: "==", value: true }
+    then:
+      - action: propose_urgent
+      - action: create_task
+        tier: urgent
+
+  - id: BA-SELF-HARM-URGES
+    description: Known history and self-harm or strong urges in the last week
+    when:
+      all:
+        - any:
+            - { fact: history.bpd, op: "==", value: true }
+            - { fact: history.adhd, op: "==", value: true }
+        - { fact: answer.BPD_ADHD_EXTRA.2, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: propose_urgent
+      - action: create_task
+        tier: urgent

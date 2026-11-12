@@ -1,0 +1,12 @@
+{
+  "wordingStatus": "draft",
+  "source": "Titles and durations from the UI mockup. Card text comes from the psychiatrist's wording doc.",
+  "cards": [
+    { "id": "breathing", "title": "Paced breathing", "duration": "2 min" },
+    { "id": "grounding", "title": "5-4-3-2-1 grounding", "shortTitle": "5-4-3-2-1", "duration": "3 min" },
+    { "id": "stop", "title": "STOP", "duration": "1 min" },
+    { "id": "tip", "title": "TIP", "duration": "5 min" },
+    { "id": "urge-surfing", "title": "Urge surfing", "duration": "5 min" },
+    { "id": "reach-out", "title": "Reach out", "duration": "Message someone" }
+  ]
+}

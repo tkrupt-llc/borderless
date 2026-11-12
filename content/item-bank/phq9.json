@@ -1,0 +1,404 @@
+{
+  "instrument": "PHQ9",
+  "version": "1.0",
+  "wordingStatus": "published_pending_approval",
+  "source": "PHQ-9, standard published English wording (Kroenke, Spitzer & Williams). Item 10 (difficulty) is part of the published form but is not scored. Awaiting psychiatrist approval.",
+  "arabicEnabled": false,
+  "stem": {
+    "en": "Over the last 2 weeks, how often have you been bothered by any of the following problems?",
+    "ar": ""
+  },
+  "items": [
+    {
+      "id": "PHQ9-1",
+      "instrument": "PHQ9",
+      "number": 1,
+      "text": {
+        "en": "Little interest or pleasure in doing things",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "PHQ9-2",
+      "instrument": "PHQ9",
+      "number": 2,
+      "text": {
+        "en": "Feeling down, depressed, or hopeless",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "PHQ9-3",
+      "instrument": "PHQ9",
+      "number": 3,
+      "text": {
+        "en": "Trouble falling or staying asleep, or sleeping too much",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "PHQ9-4",
+      "instrument": "PHQ9",
+      "number": 4,
+      "text": {
+        "en": "Feeling tired or having little energy",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "PHQ9-5",
+      "instrument": "PHQ9",
+      "number": 5,
+      "text": {
+        "en": "Poor appetite or overeating",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "PHQ9-6",
+      "instrument": "PHQ9",
+      "number": 6,
+      "text": {
+        "en": "Feeling bad about yourself — or that you are a failure or have let yourself or your family down",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "PHQ9-7",
+      "instrument": "PHQ9",
+      "number": 7,
+      "text": {
+        "en": "Trouble concentrating on things, such as reading the newspaper or watching television",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "PHQ9-8",
+      "instrument": "PHQ9",
+      "number": 8,
+      "text": {
+        "en": "Moving or speaking so slowly that other people could have noticed? Or the opposite — being so fidgety or restless that you have been moving around a lot more than usual",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "PHQ9-9",
+      "instrument": "PHQ9",
+      "number": 9,
+      "text": {
+        "en": "Thoughts that you would be better off dead or of hurting yourself in some way",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Several days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "More than half the days",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Nearly every day",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "PHQ9-10",
+      "instrument": "PHQ9",
+      "number": 10,
+      "scored": false,
+      "text": {
+        "en": "If you checked off any problems, how difficult have these problems made it for you to do your work, take care of things at home, or get along with other people?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 0,
+          "label": {
+            "en": "Not difficult at all",
+            "ar": ""
+          }
+        },
+        {
+          "value": 1,
+          "label": {
+            "en": "Somewhat difficult",
+            "ar": ""
+          }
+        },
+        {
+          "value": 2,
+          "label": {
+            "en": "Very difficult",
+            "ar": ""
+          }
+        },
+        {
+          "value": 3,
+          "label": {
+            "en": "Extremely difficult",
+            "ar": ""
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "instrument": "BPD_ADHD_EXTRA",
+  "version": "1.0",
+  "wordingStatus": "draft",
+  "source": "DRAFT wording of the four extra questions from the tech spec, asked only when BPD or ADHD history is self-reported or added by a clinician. Never shown with a diagnosis label. The psychiatrist supplies the final wording.",
+  "arabicEnabled": false,
+  "items": [
+    {
+      "id": "BPD_ADHD_EXTRA-1",
+      "instrument": "BPD_ADHD_EXTRA",
+      "number": 1,
+      "text": {
+        "en": "Is how you feel now different from how you usually feel?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "BPD_ADHD_EXTRA-2",
+      "instrument": "BPD_ADHD_EXTRA",
+      "number": 2,
+      "text": {
+        "en": "In the last week, have you hurt yourself or had strong urges to?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "BPD_ADHD_EXTRA-3",
+      "instrument": "BPD_ADHD_EXTRA",
+      "number": 3,
+      "text": {
+        "en": "Recently, have you done things on impulse that worried you, or used alcohol or drugs?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "BPD_ADHD_EXTRA-4",
+      "instrument": "BPD_ADHD_EXTRA",
+      "number": 4,
+      "text": {
+        "en": "Recently, have you had a loss, a conflict, or a change in a relationship?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    }
+  ]
+}

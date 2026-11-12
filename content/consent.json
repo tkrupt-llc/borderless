@@ -1,0 +1,28 @@
+{
+  "version": "consent-v0.3-draft",
+  "status": "draft",
+  "source": "Purposes from the tech spec (granular consent). Research ('ask only what is needed, and say why'): only clinician review is asked before the questions; the rest is asked on the result page, when it matters. GP sharing removed for the prototype (no GP connection); the database still accepts it if it returns. One-line explanations are DRAFT; the psychiatrist and the licensed provider approve the final text.",
+  "purposes": [
+    {
+      "id": "clinician_review",
+      "askOn": "start",
+      "title": "A clinician reviews my check-in",
+      "explanation": "A licensed clinician reads your answers and chooses your next step. Without this, you still see your own results.",
+      "default": false
+    },
+    {
+      "id": "follow_up",
+      "askOn": "result",
+      "title": "Check in again in about 4 weeks",
+      "explanation": "A short check-in later, so you and your clinician can see how things change. You can stop at any time.",
+      "default": false
+    },
+    {
+      "id": "service_improvement",
+      "askOn": "result",
+      "title": "Help improve the service",
+      "explanation": "Your answers, with nothing that identifies you, help us check the service works fairly for everyone.",
+      "default": false
+    }
+  ]
+}

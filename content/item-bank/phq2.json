@@ -1,0 +1,37 @@
+{
+  "instrument": "PHQ2",
+  "version": "1.0",
+  "wordingStatus": "published_pending_approval",
+  "source": "PHQ-2, standard published English wording (Kroenke, Spitzer & Williams). Awaiting psychiatrist approval.",
+  "arabicEnabled": false,
+  "stem": {
+    "en": "Over the last 2 weeks, how often have you been bothered by any of the following problems?",
+    "ar": ""
+  },
+  "items": [
+    {
+      "id": "PHQ2-1",
+      "instrument": "PHQ2",
+      "number": 1,
+      "text": { "en": "Little interest or pleasure in doing things", "ar": "" },
+      "options": [
+        { "value": 0, "label": { "en": "Not at all", "ar": "" } },
+        { "value": 1, "label": { "en": "Several days", "ar": "" } },
+        { "value": 2, "label": { "en": "More than half the days", "ar": "" } },
+        { "value": 3, "label": { "en": "Nearly every day", "ar": "" } }
+      ]
+    },
+    {
+      "id": "PHQ2-2",
+      "instrument": "PHQ2",
+      "number": 2,
+      "text": { "en": "Feeling down, depressed, or hopeless", "ar": "" },
+      "options": [
+        { "value": 0, "label": { "en": "Not at all", "ar": "" } },
+        { "value": 1, "label": { "en": "Several days", "ar": "" } },
+        { "value": 2, "label": { "en": "More than half the days", "ar": "" } },
+        { "value": 3, "label": { "en": "Nearly every day", "ar": "" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "instrument": "QC_SUICIDE",
+  "version": "1.0",
+  "wordingStatus": "draft",
+  "source": "DRAFT wording based on the ASQ direct question. Not approved: the psychiatrist supplies the final wording and lead-in.",
+  "arabicEnabled": false,
+  "items": [
+    {
+      "id": "QC_SUICIDE-1",
+      "instrument": "QC_SUICIDE",
+      "number": 1,
+      "text": {
+        "en": "In the past few weeks, have you had thoughts about killing yourself?",
+        "ar": ""
+      },
+      "options": [
+        {
+          "value": 1,
+          "label": {
+            "en": "Yes",
+            "ar": ""
+          }
+        },
+        {
+          "value": 0,
+          "label": {
+            "en": "No",
+            "ar": ""
+          }
+        }
+      ]
+    }
+  ]
+}
