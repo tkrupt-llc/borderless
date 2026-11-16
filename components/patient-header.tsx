@@ -26,8 +26,21 @@ export function PatientHeader({ backHref }: { backHref?: string }) {
         <BackButton fallback={backHref ?? "/"} className={backClass}>
           <Arrow />
         </BackButton>
-        <Link href="/" aria-label="borderless home page" className="no-underline">
-          <Logo />
+        {/* A visible Home button: the logo alone did not read as a link. */}
+        <Link href="/" aria-label="Home" className={backClass}>
+          <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+            <path
+              d="M3.5 10.5L11 4l7.5 6.5M5.5 9v8.5h4v-5h3v5h4V9"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Link>
+        <Link href="/" aria-label="borderless home page" className="ms-1 no-underline">
+          <Logo compact />
         </Link>
       </div>
       <QuickExit />

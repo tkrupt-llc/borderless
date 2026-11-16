@@ -1,6 +1,7 @@
 // Placeholder mark from DESIGN.md: open ring in primary with a clay dot, then the word.
 // Replace with the final logo files when available.
-export function Logo({ size = "sm" }: { size?: "sm" | "lg" }) {
+/** compact: on narrow phones only the ring shows, so the header buttons fit. */
+export function Logo({ size = "sm", compact = false }: { size?: "sm" | "lg"; compact?: boolean }) {
   const lg = size === "lg";
   return (
     <span className={`flex items-center ${lg ? "gap-2.5" : "gap-2"}`}>
@@ -15,7 +16,7 @@ export function Logo({ size = "sm" }: { size?: "sm" | "lg" }) {
         <circle cx="27" cy="20" r="3.6" fill="var(--clay)" />
       </svg>
       <span
-        className={`font-semibold tracking-[-0.01em] text-primary ${lg ? "text-[1.625rem]" : "text-[1.1875rem]"}`}
+        className={`font-semibold tracking-[-0.01em] text-primary ${lg ? "text-[1.625rem]" : "text-[1.1875rem]"} ${compact ? "max-[399px]:hidden" : ""}`}
       >
         borderless
       </span>
