@@ -12,8 +12,9 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-caption f
 export function StartReview({ sessionId }: { sessionId: string }) {
   const router = useRouter();
   useEffect(() => {
+    // Reload only when a summary draft was just created (otherwise the page is already current).
     startReview(sessionId)
-      .then(() => router.refresh())
+      .then((r) => r.created && router.refresh())
       .catch(() => {});
   }, [sessionId, router]);
   return null;

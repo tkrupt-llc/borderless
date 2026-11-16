@@ -96,18 +96,22 @@ export async function decide(input: unknown): Promise<Result> {
 }
 
 /** Opening a case starts the review timer and stores the draft summary once. */
-export async function startReview(sessionId: string): Promise<void> {
+export async function startReview(sessionId: string): Promise<{ created: boolean }> {
   const staff = await requireStaff();
   const id = uuid.parse(sessionId);
+  // Log the visit and check for a summary at the same time; build the draft only when there is none yet.
+  const [existing] = await Promise.all([
+    db().from("summaries").select("session_id").eq("session_id", id).limit(1),
+    audit(staff, "case_viewed", "session", id, id),
+  ]);
+  if (!canWrite(staff) || (existing.data?.length ?? 0) > 0) return { created: false };
   const data = await loadCase(id);
-  if (!data) return;
-  if (!data.summary && canWrite(staff)) {
-    must(
-      await db().from("summaries").insert({ session_id: id, draft: { lines: data.draftLines }, review_started_at: new Date().toISOString() }),
-      "summary",
-    );
-  }
-  await audit(staff, "case_viewed", "session", id, id);
+  if (!data || data.summary) return { created: false };
+  must(
+    await db().from("summaries").insert({ session_id: id, draft: { lines: data.draftLines }, review_started_at: new Date().toISOString() }),
+    "summary",
+  );
+  return { created: true };
 }
 
 export async function saveSummary(sessionId: string, text: string): Promise<Result> {

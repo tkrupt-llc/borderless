@@ -68,16 +68,16 @@ export async function loadCase(sessionId: string) {
   const one = async <T>(table: string, cols: string, order = "created_at") =>
     rows<T>(await db().from(table).select(cols).eq("session_id", sessionId).order(order, { ascending: true }), table);
 
-  const sessionRows = rows<{
-    id: string; path: string; created_at: string; taken_over: boolean; discreet_mode: boolean;
-    contact_phone: string | null; preferred_language: string | null; preferred_clinician_gender: string | null;
-    callback_time: string | null; history_bpd: boolean; history_adhd: boolean; history_source: string | null;
-  }>(await db().from("sessions").select("*").eq("id", sessionId), "session");
-  const session = sessionRows[0];
-  if (!session) return null;
-
-  const [consents, scores, answers, redFlags, messages, fields, proposals, tasks, receipt, contacts, summaryRows] =
+  // One parallel batch: every query for the case goes out at once.
+  const [sessionRows, consents, scores, answers, redFlags, messages, fields, proposals, tasks, receipt, contacts, summaryRows, activityRows] =
     await Promise.all([
+      db().from("sessions").select("*").eq("id", sessionId).then((r) =>
+        rows<{
+          id: string; path: string; created_at: string; taken_over: boolean; discreet_mode: boolean;
+          contact_phone: string | null; preferred_language: string | null; preferred_clinician_gender: string | null;
+          callback_time: string | null; history_bpd: boolean; history_adhd: boolean; history_source: string | null;
+        }>(r, "session"),
+      ),
       one<{ purpose: string; granted: boolean }>("consent_records", "purpose, granted, created_at"),
       one<{ instrument: string; total: number; band: string }>("scores", "instrument, total, band, created_at"),
       one<{ item_id: string; value: number }>("item_responses", "item_id, value, created_at"),
@@ -85,30 +85,28 @@ export async function loadCase(sessionId: string) {
         "red_flag_events", "rule_id, tier, trigger, created_at, message_id"),
       one<{ id: string; role: string; text: string }>("messages", "id, role, text, created_at"),
       one<{ field: string; value: string; source_message_id: string }>("extracted_fields", "field, value, source_message_id, created_at"),
-      one<{ id: string; step: number | null; urgent: boolean; rule_ids: string[]; reasons: string[]; created_at: string }>(
-        "triage_proposals", "id, step, urgent, rule_ids, reasons, created_at"),
+      // Decisions come embedded in their proposal, so no second trip is needed.
+      one<{
+        id: string; step: number | null; urgent: boolean; rule_ids: string[]; reasons: string[]; created_at: string;
+        clinician_decisions: { action: string; new_step: number | null; reason: string | null; created_at: string }[];
+      }>("triage_proposals", "id, step, urgent, rule_ids, reasons, created_at, clinician_decisions(action, new_step, reason, created_at)"),
       one<{ id: string; type: string; priority: string; due_at: string; acknowledged_at: string | null; escalated_at: string | null; closed_at: string | null }>(
         "tasks", "id, type, priority, due_at, acknowledged_at, escalated_at, closed_at, created_at"),
       one<{ status: string; reason: string | null; created_at: string }>("receipt_events", "status, reason, created_at"),
       one<{ outcome: string; note: string | null; created_at: string }>("contact_attempts", "outcome, note, created_at"),
       one<{ draft: { lines: SummaryLine[] }; edited: { text: string } | null; review_started_at: string | null; signed_at: string | null }>(
         "summaries", "draft, edited, review_started_at, signed_at", "updated_at"),
+      // The audit trail for this case, newest first (research: keep the audit trail visible).
+      db().from("audit_events").select("actor, action, created_at").eq("session_id", sessionId).order("created_at", { ascending: false }).limit(40)
+        .then((r) => rows<{ actor: string; action: string; created_at: string }>(r, "activity")),
     ]);
+  const session = sessionRows[0];
+  if (!session) return null;
 
   // The proposal the clinician decides on: an urgent one wins, else the latest.
   const proposal = proposals.find((p) => p.urgent) ?? proposals.at(-1) ?? null;
-  const decisions = proposal
-    ? rows<{ action: string; new_step: number | null; reason: string | null; created_at: string }>(
-        await db().from("clinician_decisions").select("action, new_step, reason, created_at").eq("proposal_id", proposal.id).order("created_at"),
-        "decisions",
-      )
-    : [];
-
-  // The audit trail for this case, newest first (research: keep the audit trail visible).
-  const activity = rows<{ actor: string; action: string; created_at: string }>(
-    await db().from("audit_events").select("actor, action, created_at").eq("session_id", sessionId).order("created_at", { ascending: false }).limit(40),
-    "activity",
-  );
+  const decisions = [...(proposal?.clinician_decisions ?? [])].sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const activity = activityRows;
 
   const messageText = new Map(messages.map((m) => [m.id, m.text]));
   const latestConsent = Object.fromEntries(consents.map((c) => [c.purpose, c.granted]));

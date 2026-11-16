@@ -32,10 +32,13 @@ export async function getStaff(): Promise<Staff | null> {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return null;
   // Staff pages are always rendered per request (the auth client reads the clock).
   await connection();
-  const { data } = await (await staffAuthClient()).auth.getUser();
-  const role = data.user?.app_metadata?.role;
-  if (!data.user || typeof role !== "string" || !ROLES.includes(role)) return null;
-  return { id: data.user.id, email: data.user.email ?? "", role: role as StaffRole };
+  // getClaims checks the token's signature locally (no trip to the auth server
+  // when the project signs tokens with asymmetric keys; otherwise it asks the server).
+  const { data } = await (await staffAuthClient()).auth.getClaims();
+  const claims = data?.claims;
+  const role = claims?.app_metadata?.role;
+  if (!claims?.sub || typeof role !== "string" || !ROLES.includes(role)) return null;
+  return { id: claims.sub, email: typeof claims.email === "string" ? claims.email : "", role: role as StaffRole };
 }
 
 export async function requireStaff(): Promise<Staff> {
