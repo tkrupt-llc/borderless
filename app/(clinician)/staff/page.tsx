@@ -86,9 +86,9 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
         {stats.map((s) => (
-          <div key={s.label} className="flex flex-col-reverse rounded-lg border border-line-warm bg-surface px-4 py-3">
+          <div key={s.label} className="flex flex-col-reverse rounded-lg border border-line-warm bg-surface px-4 py-2.5">
             <dt className="text-[0.8125rem] text-muted">{s.label}</dt>
-            <dd className={`text-[1.75rem] leading-tight font-semibold tabular-nums ${s.alert && s.value > 0 ? "text-danger" : ""}`}>
+            <dd className={`text-[1.375rem] leading-tight font-semibold tabular-nums ${s.alert && s.value > 0 ? "text-danger" : ""}`}>
               {s.value}
             </dd>
           </div>
@@ -135,7 +135,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                   <thead className="bg-sage-mist text-[0.75rem] tracking-wide text-muted">
                     <tr>
                       {["Case", "Tier", "Reason", "Next action", "Received", "Clock", "Status", ""].map((h) => (
-                        <th key={h} scope="col" className="px-4 py-2.5 font-semibold">
+                        <th key={h} scope="col" className="px-4 py-2 font-semibold">
                           {h || <span className="sr-only">Actions</span>}
                         </th>
                       ))}
@@ -146,39 +146,39 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                       const overdue = t.dueAt < now;
                       const edge = t.priority === "imminent" || overdue ? "border-s-danger" : t.priority === "urgent" ? "border-s-[#d9a441]" : "border-s-transparent";
                       return (
-                        <tr key={t.id} className={`border-t border-line-warm ${!t.acknowledgedAt ? "bg-surface" : "bg-bg/60"}`}>
-                          <td className={`border-s-4 px-4 py-3 ${edge}`}>
+                        <tr key={t.id} className={`border-t border-line-warm hover:bg-sage-mist ${!t.acknowledgedAt ? "bg-surface" : "bg-bg/60"}`}>
+                          <td className={`border-s-4 px-4 py-2.5 ${edge}`}>
                             <Link href={`/staff/case/${t.sessionId}`} className="font-semibold whitespace-nowrap text-ink tabular-nums">
                               {caseRef(t.sessionId)}
                             </Link>
                             <span className="block text-[0.75rem] whitespace-nowrap text-muted">{t.path === "contact" ? "No check-in" : `${t.path[0].toUpperCase()}${t.path.slice(1)} check`}</span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2.5">
                             <PriorityBadge priority={t.priority} />
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2.5">
                             <span className="font-medium text-ink">{TASK_LABELS[t.type] ?? t.type}</span>
-                            {t.ruleId && <span className="block text-[0.75rem] text-muted">{t.ruleId}</span>}
+                            {t.ruleId && <span className="block text-[0.75rem] whitespace-nowrap text-muted">{t.ruleId}</span>}
                           </td>
-                          <td className="px-4 py-3 text-text-2">{nextAction(t)}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-text-2">{received.format(new Date(t.createdAt))}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className="px-4 py-2.5 text-text-2">{nextAction(t)}</td>
+                          <td className="px-4 py-2.5 whitespace-nowrap text-text-2">{received.format(new Date(t.createdAt))}</td>
+                          <td className="px-4 py-2.5 whitespace-nowrap">
                             <Countdown dueAt={t.dueAt} />
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2.5">
                             {t.escalatedAt && <strong className="block font-semibold text-danger">Escalated</strong>}
                             <span className={t.acknowledgedAt ? "text-muted" : "font-semibold text-ink"}>
                               {t.acknowledgedAt ? "Acknowledged" : "New"}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2.5">
                             <span className="flex items-start justify-end gap-2">
                               {!t.acknowledgedAt && write && (
                                 <ActionButton action={acknowledgeTask.bind(null, t.id)}>Acknowledge</ActionButton>
                               )}
                               <Link
                                 href={`/staff/case/${t.sessionId}`}
-                                className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 text-[0.875rem] font-medium text-white no-underline hover:text-white"
+                                className="inline-flex min-h-9 items-center rounded-md bg-primary px-3 text-[0.875rem] font-medium text-white no-underline hover:bg-primary-dark hover:text-white"
                               >
                                 Open
                               </Link>

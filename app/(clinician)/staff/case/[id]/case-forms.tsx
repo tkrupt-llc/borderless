@@ -6,7 +6,7 @@ import { decide, logContact, saveSummary, signSummary, startReview } from "../..
 import { ActionButton } from "../../ui";
 import { STEP_NAMES } from "@/lib/rules/routing";
 
-const field = "rounded-lg border-[1.5px] border-line bg-bg px-3 py-2 text-caption";
+const field = "rounded-md border border-line bg-surface px-3 py-2 text-caption focus:border-primary";
 
 /** Opening the case starts the review timer and writes the audit entry. */
 export function StartReview({ sessionId }: { sessionId: string }) {
@@ -37,7 +37,7 @@ export function DecisionForm({ sessionId, proposalId, urgent }: { sessionId: str
           type="button"
           aria-expanded={overriding}
           onClick={() => setOverriding((o) => !o)}
-          className="min-h-10 cursor-pointer rounded-md border border-line bg-surface px-4 hover:bg-sage-soft text-caption font-medium"
+          className="min-h-9 cursor-pointer rounded-md border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft"
         >
           Override
         </button>
@@ -103,7 +103,7 @@ export function SummaryEditor({ sessionId, initialText }: { sessionId: string; i
               if (r.ok) setSaved(true);
             })
           }
-          className="min-h-10 cursor-pointer rounded-md border border-line bg-surface px-4 hover:bg-sage-soft text-caption font-medium disabled:cursor-default disabled:opacity-50"
+          className="min-h-9 cursor-pointer rounded-md border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft disabled:cursor-default disabled:opacity-50"
         >
           {pending ? "Saving…" : saved ? "Saved" : "Save edits"}
         </button>
@@ -126,7 +126,7 @@ export function ContactForm({ sessionId }: { sessionId: string }) {
     <div className="flex flex-col gap-2">
       <label className="flex flex-col gap-1 text-caption">
         <span className="font-semibold">Note (optional)</span>
-        <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} className={`${field} min-h-10`} />
+        <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} className={`${field} min-h-9`} />
       </label>
       <div className="flex flex-wrap gap-2">
         <ActionButton action={() => logContact(sessionId, "called_no_answer", note)}>Called, no answer</ActionButton>

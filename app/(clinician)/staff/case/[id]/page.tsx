@@ -12,8 +12,19 @@ import { caseRef } from "@/lib/case-ref";
 import { ActionButton, Countdown } from "../../ui";
 import { ContactForm, DecisionForm, StartReview, SummaryEditor } from "./case-forms";
 
-const card = "flex flex-col gap-3 rounded-lg border border-line-warm bg-surface p-5";
-const h2 = "text-[1rem] font-semibold";
+/** A section with a header bar, as in clinical work tools: title left, status right. */
+function Panel({ id, title, aside, children }: { id: string; title: string; aside?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="overflow-hidden rounded-lg border border-line-warm bg-surface">
+      <header className="flex min-h-12 flex-wrap items-center justify-between gap-2 border-b border-line-warm bg-sage-mist px-5 py-2.5">
+        <h2 id={id} className="text-[0.9375rem] font-semibold">{title}</h2>
+        {aside}
+      </header>
+      <div className="flex flex-col gap-3 px-5 py-4">{children}</div>
+    </section>
+  );
+}
+const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const ACTIVITY_WORDS: Record<string, string> = {
   consent_recorded: "Consent recorded", check_in_completed: "Check-in completed", red_flag_raised: "Red flag raised",
   contact_shared: "Contact details shared", callback_requested: "Call-back requested", case_viewed: "Case opened",
@@ -57,13 +68,34 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
     (a) => a.value > 0 && /^(PHQ9-9|QC_SUICIDE|ASQ|CSSRS_SCREENER|RED_FLAG|BPD_ADHD_EXTRA)/.test(a.item_id),
   );
 
+  // Where the case stands, in the order a clinician works through it.
+  const progress = [
+    { label: "Acknowledged", next: "Acknowledge the open tasks", done: data.tasks.every((t) => t.acknowledged_at || t.closed_at) },
+    { label: "Level decided", next: "Accept or override the proposed level", done: Boolean(decision) || !proposal },
+    { label: "Summary signed", next: "Check and sign the summary", done: signed },
+    ...(session.contact_phone
+      ? [{ label: "Patient contacted", next: "Call the patient and log the call", done: data.contacts.some((c) => c.outcome === "spoke") }]
+      : []),
+    { label: "Tasks closed", next: "Close the open tasks", done: openTasks.length === 0 },
+  ];
+  const nextStep = progress.find((p) => !p.done);
+  // Repeated lines (the same person opening the case several times) are shown once with a count.
+  const activity = data.activity.reduce<{ a: (typeof data.activity)[number]; n: number }[]>((rows, a) => {
+    const last = rows.at(-1);
+    if (last && last.a.action === a.action && last.a.actor === a.actor) last.n += 1;
+    else rows.push({ a, n: 1 });
+    return rows;
+  }, []);
+
   return (
     <StaffShell staff={staff} active="case">
       <StartReview sessionId={id} />
 
       {/* Header: which case, how urgent, and the facts needed before reading on. */}
       <div className="flex flex-col gap-3">
-        <Link href="/staff" className="self-start text-[0.8125rem]">← Queue</Link>
+        <nav aria-label="Breadcrumb" className="text-[0.8125rem] text-muted">
+          <Link href="/staff">Queue</Link> <span aria-hidden="true">/</span> <span aria-current="page">{caseRef(id)}</span>
+        </nav>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-[1.5rem] leading-tight font-semibold tracking-[-0.01em] tabular-nums">{caseRef(id)}</h1>
           {topTier && <PriorityBadge priority={topTier} />}
@@ -88,6 +120,37 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             </div>
           ))}
         </dl>
+        <div className="flex flex-col gap-3 rounded-lg border border-line-warm bg-surface px-5 py-3 lg:flex-row lg:items-center lg:justify-between">
+          <ol aria-label="Case progress" className="flex flex-wrap items-center gap-x-2 gap-y-2 text-[0.8125rem]">
+            {progress.map((p, i) => (
+              <li key={p.label} className="flex items-center gap-2">
+                {i > 0 && <span aria-hidden="true" className={`h-px w-5 ${p.done ? "bg-primary" : "bg-line"}`} />}
+                <span
+                  aria-hidden="true"
+                  className={`grid size-5 place-items-center rounded-full text-[0.6875rem] font-semibold ${
+                    p.done ? "bg-primary text-white" : p === nextStep ? "border-2 border-primary text-primary-dark" : "border border-line text-muted"
+                  }`}
+                >
+                  {p.done ? "✓" : i + 1}
+                </span>
+                <span className={p.done ? "text-text-2" : p === nextStep ? "font-semibold text-ink" : "text-muted"}>
+                  {p.label}
+                  <span className="sr-only">{p.done ? " (done)" : " (to do)"}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p className="text-[0.875rem]">
+            {nextStep ? (
+              <>
+                <span className="text-muted">Next: </span>
+                <strong className="font-semibold">{nextStep.next}</strong>
+              </>
+            ) : (
+              <strong className="font-semibold text-primary-dark">All steps done</strong>
+            )}
+          </p>
+        </div>
       </div>
 
       {!data.consents.clinician_review && !session.taken_over && (
@@ -97,13 +160,15 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
       <div className="grid gap-5 xl:grid-cols-[3fr_2fr]">
         <div className="flex flex-col gap-5">
           {/* --- Summary --------------------------------------------------- */}
-          <section className={card} aria-labelledby="summary-h">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="summary-h" className={h2}>Summary</h2>
-              <span className={`rounded-md px-2.5 py-0.5 text-small font-semibold ${signed ? "bg-primary text-white" : "bg-sage text-ink"}`}>
+          <Panel
+            id="summary-h"
+            title="Summary"
+            aside={
+              <span className={`rounded-md px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-primary text-white" : "border border-[#e3c27a] bg-[#fbefd2] text-[#5c3a00]"}`}>
                 {signed ? "AI-drafted, clinician-verified" : "AI-drafted, not yet verified"}
               </span>
-            </div>
+            }
+          >
             {signed || !write ? (
               <p className="whitespace-pre-line">{summaryText}</p>
             ) : summary ? (
@@ -127,12 +192,11 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 </dl>
               </details>
             )}
-          </section>
+          </Panel>
 
           {/* --- Red flags, with the rule that fired and the trigger ------- */}
           {data.redFlags.length > 0 && (
-            <section className={card} aria-labelledby="flags-h">
-              <h2 id="flags-h" className={h2}>Red flags</h2>
+            <Panel id="flags-h" title="Red flags">
               <ul className="flex flex-col gap-3">
                 {data.redFlags.map((r) => (
                   <li key={r.rule_id} className="flex flex-col gap-0.5">
@@ -159,12 +223,11 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                   })}
                 </ul>
               )}
-            </section>
+            </Panel>
           )}
 
           {/* --- Scores ---------------------------------------------------- */}
-          <section className={card} aria-labelledby="scores-h">
-            <h2 id="scores-h" className={h2}>Scores</h2>
+          <Panel id="scores-h" title="Scores">
             {data.scores.length === 0 ? (
               <p className="text-caption text-muted">No questionnaire was completed.</p>
             ) : (
@@ -178,12 +241,11 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 ))}
               </ul>
             )}
-          </section>
+          </Panel>
 
           {/* --- Conversation ---------------------------------------------- */}
           {data.messages.length > 0 && (
-            <section className={card} aria-labelledby="chat-h">
-              <h2 id="chat-h" className={h2}>Conversation</h2>
+            <Panel id="chat-h" title="Conversation">
               <ol className="flex flex-col gap-2 text-caption">
                 {data.messages.map((m) => (
                   <li key={m.id}>
@@ -192,14 +254,28 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                   </li>
                 ))}
               </ol>
-            </section>
+            </Panel>
           )}
+
+          <Panel id="activity-h" title="Activity">
+            <ol className="flex flex-col gap-1.5 text-[0.875rem]">
+              {activity.map(({ a, n }, i) => (
+                <li key={a.created_at + a.action + i} className="flex flex-wrap gap-x-3">
+                  <span className="w-28 shrink-0 text-muted tabular-nums">{time(a.created_at)}</span>
+                  <span className="font-medium">
+                    {ACTIVITY_WORDS[a.action] ?? a.action.replaceAll("_", " ")}
+                    {n > 1 && <span className="font-normal text-muted"> ×{n}</span>}
+                  </span>
+                  <span className="text-muted">{actorWord(a.actor)}</span>
+                </li>
+              ))}
+            </ol>
+          </Panel>
         </div>
 
         <div className="flex flex-col gap-5">
           {/* --- Proposed level and decision ------------------------------- */}
-          <section className={card} aria-labelledby="proposal-h">
-            <h2 id="proposal-h" className={h2}>Proposed level</h2>
+          <Panel id="proposal-h" title="Proposed level">
             {!proposal ? (
               <p className="text-caption text-muted">No proposal yet.</p>
             ) : (
@@ -225,11 +301,10 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 )}
               </>
             )}
-          </section>
+          </Panel>
 
           {/* --- Tasks and clocks ------------------------------------------ */}
-          <section className={card} aria-labelledby="tasks-h">
-            <h2 id="tasks-h" className={h2}>Open tasks</h2>
+          <Panel id="tasks-h" title="Open tasks">
             {openTasks.length === 0 ? (
               <p className="text-caption text-muted">None.</p>
             ) : (
@@ -252,11 +327,10 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 ))}
               </ul>
             )}
-          </section>
+          </Panel>
 
           {/* --- Contact ---------------------------------------------------- */}
-          <section className={card} aria-labelledby="contact-h">
-            <h2 id="contact-h" className={h2}>Contact</h2>
+          <Panel id="contact-h" title="Contact">
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-caption">
               <dt className="text-muted">Phone</dt>
               <dd>{session.contact_phone ?? "Not shared"}</dd>
@@ -278,11 +352,10 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
               </ul>
             )}
             {write && <ContactForm sessionId={id} />}
-          </section>
+          </Panel>
 
           {/* --- What the patient sees -------------------------------------- */}
-          <section className={card} aria-labelledby="receipt-h">
-            <h2 id="receipt-h" className={h2}>Patient&apos;s receipt</h2>
+          <Panel id="receipt-h" title="Patient's receipt">
             {data.receipt.length === 0 ? (
               <p className="text-caption text-muted">No receipt (crisis path, or no clinician review).</p>
             ) : (
@@ -301,22 +374,21 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 <ActionButton action={setReceiptStatus.bind(null, id, "first_contact_confirmed")}>First contact confirmed</ActionButton>
               </span>
             )}
-          </section>
+          </Panel>
 
           {/* --- Consent and history ---------------------------------------- */}
-          <section className={card} aria-labelledby="consent-h">
-            <h2 id="consent-h" className={h2}>Consent and history</h2>
+          <Panel id="consent-h" title="Consent and history">
             <ul className="text-caption">
               {Object.entries(data.consents).map(([purpose, granted]) => (
                 <li key={purpose}>
-                  {purpose.replaceAll("_", " ")}: <strong className="font-semibold">{granted ? "yes" : "no"}</strong>
+                  {sentence(purpose.replaceAll("_", " "))}: <strong className="font-semibold">{granted ? "Yes" : "No"}</strong>
                 </li>
               ))}
             </ul>
             <p className="text-caption">
               Known history:{" "}
               {[session.history_bpd && "BPD", session.history_adhd && "ADHD"].filter(Boolean).join(", ") || "none recorded"}
-              {session.history_source && ` (${session.history_source.replace("_", " ")})`}
+              {session.history_source && ` (${session.history_source.replaceAll("_", " ")})`}
             </p>
             {write && (
               <span className="flex flex-wrap gap-2">
@@ -324,24 +396,12 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 {!session.history_adhd && <ActionButton action={addHistory.bind(null, id, "adhd")}>Add ADHD history</ActionButton>}
               </span>
             )}
-          </section>
+          </Panel>
         </div>
       </div>
 
-      <section className={card} aria-labelledby="activity-h">
-        <h2 id="activity-h" className={h2}>Activity</h2>
-        <ol className="flex flex-col gap-1.5 text-[0.875rem]">
-          {data.activity.map((a, i) => (
-            <li key={a.created_at + a.action + i} className="flex flex-wrap gap-x-3">
-              <span className="w-32 shrink-0 text-muted tabular-nums">{time(a.created_at)}</span>
-              <span className="font-medium">{ACTIVITY_WORDS[a.action] ?? a.action.replaceAll("_", " ")}</span>
-              <span className="text-muted">{actorWord(a.actor)}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
 
-      <Link href="/staff" className="self-start text-caption">Back to the queue</Link>
+
     </StaffShell>
   );
 }

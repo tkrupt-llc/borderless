@@ -83,7 +83,7 @@ export function ActionButton({
             setError(r.ok ? "" : r.error);
           })
         }
-        className={`min-h-10 cursor-pointer rounded-md px-4 text-caption font-medium disabled:cursor-default disabled:opacity-50 ${
+        className={`min-h-9 cursor-pointer rounded-md px-3 text-[0.875rem] font-medium disabled:cursor-default disabled:opacity-50 ${
           variant === "primary" ? "bg-primary text-white" : "border border-line bg-surface text-ink hover:bg-sage-soft"
         }`}
       >
