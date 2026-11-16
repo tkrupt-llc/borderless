@@ -11,6 +11,7 @@ import { loadRuleFile } from "@/lib/rules/load";
 import { runSafetyRules } from "@/lib/rules/safety";
 import { proposeStep } from "@/lib/rules/routing";
 import { buildReceipt, type ReceiptView } from "@/lib/receipt/build";
+import { caseRef } from "@/lib/case-ref";
 import { factsFromScores, scoreAll, type Score } from "@/lib/rules/scoring";
 import consent from "@/content/consent.json";
 
@@ -78,7 +79,8 @@ export async function loadReceipt(): Promise<ReceiptView | null> {
     // The cookie, never an id from the URL, decides whose receipt this is.
     const id = await readSessionId();
     if (!id) return null;
-    return buildReceipt(await persist.loadReceiptData(id));
+    const view = buildReceipt(await persist.loadReceiptData(id));
+    return view && { ...view, ref: caseRef(id) };
   } catch (e) {
     console.error(e);
     return null;

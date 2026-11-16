@@ -5,6 +5,7 @@ import { isDbConfigured } from "@/lib/db/server";
 import { readSessionId, writeSessionId } from "@/lib/db/patient-session";
 import * as persist from "@/lib/check/persist";
 import { LANGUAGES, CLINICIAN_CHOICES } from "./options";
+import { caseRef } from "@/lib/case-ref";
 
 const Input = z.object({
   phone: z.string().trim().regex(/^\+?[0-9 ()-]{7,20}$/),
@@ -15,7 +16,7 @@ const Input = z.object({
 });
 
 export type CallbackResult =
-  | { ok: true; dueAt: string }
+  | { ok: true; dueAt: string; ref: string }
   | { ok: false; reason: "invalid" | "not_connected" | "error" };
 
 /**
@@ -40,7 +41,7 @@ export async function requestCallback(input: unknown): Promise<CallbackResult> {
       clinicianGender: d.clinician === "No preference" ? null : d.clinician,
     });
     const due = await persist.requestCallback(id);
-    return { ok: true, dueAt: due.toISOString() };
+    return { ok: true, dueAt: due.toISOString(), ref: caseRef(id) };
   } catch (e) {
     console.error(e);
     return { ok: false, reason: "error" };

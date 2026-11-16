@@ -8,13 +8,27 @@ type Result = { ok: true } | { ok: false; error: string };
 /** Re-reads the page from the server every few seconds, so new cases appear on their own. */
 export function AutoRefresh({ seconds = 5 }: { seconds?: number }) {
   const router = useRouter();
+  const [at, setAt] = useState<Date | null>(null);
   useEffect(() => {
-    const id = setInterval(() => {
-      if (document.visibilityState === "visible") router.refresh();
-    }, seconds * 1000);
-    return () => clearInterval(id);
+    const tick = () => {
+      if (document.visibilityState !== "visible") return;
+      router.refresh();
+      setAt(new Date());
+    };
+    const first = setTimeout(() => setAt(new Date()), 0);
+    const id = setInterval(tick, seconds * 1000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(id);
+    };
   }, [router, seconds]);
-  return null;
+  // Freshness is always visible (research: show how current the data is).
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[0.8125rem] text-muted">
+      <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
+      Live · updated {at ? at.toLocaleTimeString("en-GB") : "…"}
+    </span>
+  );
 }
 
 function format(ms: number): string {

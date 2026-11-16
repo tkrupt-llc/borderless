@@ -36,7 +36,7 @@ export function CallbackForm() {
   if (result?.ok) {
     return (
       <div role="status" className="rounded-2xl bg-sage px-4 py-3.5 text-text-on-sage">
-        <strong className="font-semibold text-ink">Your request is in.</strong>
+        <strong className="font-semibold text-ink">Your request is in. Reference {result.ref}.</strong>
         <p className="mt-1">
           A person from the care team will call you by <strong>{formatWhen(result.dueAt)}</strong>.
         </p>

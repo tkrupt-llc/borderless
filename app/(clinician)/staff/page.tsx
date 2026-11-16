@@ -1,115 +1,199 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { canWrite, requireStaff } from "@/lib/staff/auth";
-import { loadQueue } from "@/lib/staff/data";
+import { loadQueue, type QueueTask } from "@/lib/staff/data";
+import { caseRef } from "@/lib/case-ref";
 import { acknowledgeTask } from "./actions";
-import { PriorityBadge, StaffHeader, TASK_LABELS } from "./staff-header";
+import { PriorityBadge, StaffShell, TASK_LABELS } from "./staff-header";
 import { ActionButton, AutoRefresh, Countdown } from "./ui";
 
 const received = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
-// The queue: a triage table sorted by tier, then time left (research: a table,
-// not tiles). Only imminent cases interrupt, with a banner at the top.
+// The queue is a scanning tool (research): grouped by urgency, each row says
+// which case, why, and what to do next; the detail is one click away.
+const GROUPS = [
+  { tiers: ["imminent"], title: "Act now", note: "Respond within 15 minutes" },
+  { tiers: ["urgent"], title: "Act today", note: "Respond within 4 hours" },
+  { tiers: ["elevated", "normal"], title: "Routine", note: "Respond within one working day" },
+];
+const FILTERS = [
+  { id: "all", label: "All", match: () => true },
+  { id: "flags", label: "Red flags", match: (t: QueueTask) => t.type === "red_flag" },
+  { id: "reviews", label: "Check-ins", match: (t: QueueTask) => t.type === "care_request" },
+  { id: "calls", label: "Call-backs", match: (t: QueueTask) => t.type === "talk_to_person" || t.type === "callback" },
+  { id: "escalated", label: "Escalated", match: (t: QueueTask) => Boolean(t.escalatedAt) },
+];
+
+function nextAction(t: QueueTask): string {
+  if (t.type === "red_flag") return t.hasPhone ? "Call the patient" : "Review now (no phone shared)";
+  if (t.type === "talk_to_person" || t.type === "callback") return "Call back";
+  if (t.type === "care_request") return "Review and choose the next step";
+  return "Review";
+}
+
 export default function QueuePage({ searchParams }: PageProps<"/staff">) {
   return (
-    <main className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-6 px-5 py-6 text-base sm:px-8">
-      <Suspense fallback={<p className="text-muted">Loading the queue…</p>}>
-        <Queue searchParams={searchParams} />
-      </Suspense>
-    </main>
+    <Suspense fallback={<p className="p-8 text-muted">Loading the queue…</p>}>
+      <Queue searchParams={searchParams} />
+    </Suspense>
   );
 }
 
 async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["searchParams"] }) {
   const staff = await requireStaff();
-  const escalatedOnly = (await searchParams).view === "escalated";
+  const view = String((await searchParams).view ?? "all");
+  const filter = FILTERS.find((f) => f.id === view) ?? FILTERS[0];
   const all = await loadQueue();
-  const tasks = escalatedOnly ? all.filter((t) => t.escalatedAt) : all;
-  const imminent = all.filter((t) => t.priority === "imminent" && !t.acknowledgedAt);
+  const tasks = all.filter(filter.match);
   const write = canWrite(staff);
+  const now = new Date().toISOString();
+  const imminent = all.filter((t) => t.priority === "imminent" && !t.acknowledgedAt);
+  const stats = [
+    { label: "Imminent", value: all.filter((t) => t.priority === "imminent").length, alert: true },
+    { label: "Urgent", value: all.filter((t) => t.priority === "urgent").length },
+    { label: "Routine", value: all.filter((t) => t.priority === "normal" || t.priority === "elevated").length },
+    { label: "Overdue", value: all.filter((t) => t.dueAt < now).length, alert: true },
+    { label: "Not yet acknowledged", value: all.filter((t) => !t.acknowledgedAt).length },
+  ];
 
   return (
-    <>
-      <AutoRefresh />
-      <StaffHeader staff={staff} />
+    <StaffShell
+      staff={staff}
+      active={filter.id === "escalated" ? "escalated" : "queue"}
+      counts={{ open: all.length, escalated: all.filter((t) => t.escalatedAt).length }}
+    >
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-[1.5rem] leading-tight font-semibold tracking-[-0.01em]">Queue</h1>
+          <p className="text-[0.8125rem] text-muted">Synthetic data only · sorted by urgency, then time left</p>
+        </div>
+        <AutoRefresh />
+      </div>
 
       {imminent.length > 0 && (
-        <div role="alert" className="rounded-2xl bg-danger px-5 py-4 text-white">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-danger px-5 py-3.5 text-white">
           <strong className="font-semibold">
             {imminent.length} imminent {imminent.length === 1 ? "case needs" : "cases need"} a response within 15 minutes.
-          </strong>{" "}
-          <Link href={`/staff/case/${imminent[0].sessionId}`} className="text-white underline hover:text-white">
-            Open the first one
+          </strong>
+          <Link
+            href={`/staff/case/${imminent[0].sessionId}`}
+            className="inline-flex min-h-10 items-center rounded-lg bg-white px-4 font-semibold text-danger no-underline hover:text-danger"
+          >
+            Open {caseRef(imminent[0].sessionId)}
           </Link>
         </div>
       )}
 
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="font-serif text-[1.875rem] leading-tight font-normal">
-          {escalatedOnly ? "Escalated cases" : "Queue"}
-        </h1>
-        <p className="text-caption text-muted">
-          {tasks.length} open · {all.filter((t) => t.escalatedAt).length} escalated · updates every 5 seconds
-        </p>
-      </div>
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+        {stats.map((s) => (
+          <div key={s.label} className="flex flex-col-reverse rounded-xl border border-line-warm bg-surface px-4 py-3">
+            <dt className="text-[0.8125rem] text-muted">{s.label}</dt>
+            <dd className={`text-[1.75rem] leading-tight font-semibold tabular-nums ${s.alert && s.value > 0 ? "text-danger" : ""}`}>
+              {s.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <nav aria-label="Filter the queue" className="flex flex-wrap gap-2">
+        {FILTERS.map((f) => {
+          const on = f.id === filter.id;
+          return (
+            <Link
+              key={f.id}
+              href={f.id === "all" ? "/staff" : `/staff?view=${f.id}`}
+              aria-current={on ? "true" : undefined}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-[0.875rem] font-medium no-underline ${
+                on ? "bg-ink text-white hover:text-white" : "border border-line bg-surface text-ink"
+              }`}
+            >
+              {f.label}
+              <span className={`tabular-nums ${on ? "text-on-dark-2" : "text-muted"}`}>{all.filter(f.match).length}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
       {tasks.length === 0 ? (
-        <p className="rounded-2xl bg-surface px-5 py-6 text-text-2">
-          {escalatedOnly ? "No escalated cases." : "No open cases."}
+        <p className="rounded-xl border border-line-warm bg-surface px-5 py-8 text-center text-text-2">
+          {filter.id === "all" ? "No open cases." : `No open cases under "${filter.label}".`}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl bg-surface">
-          <table className="w-full min-w-[720px] border-collapse text-left text-caption">
-            <thead className="border-b border-line text-muted">
-              <tr>
-                {["Priority", "Why", "Path", "Received", "Time left", "Status", ""].map((h) => (
-                  <th key={h} scope="col" className="px-4 py-3 font-semibold">
-                    {h || <span className="sr-only">Actions</span>}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.map((t) => (
-                <tr key={t.id} className="border-b border-line-warm last:border-0">
-                  <td className="px-4 py-3">
-                    <PriorityBadge priority={t.priority} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="font-medium text-ink">{TASK_LABELS[t.type] ?? t.type}</span>
-                    {t.ruleId && <span className="block text-small text-muted">{t.ruleId}</span>}
-                  </td>
-                  <td className="px-4 py-3 capitalize">
-                    {t.path}
-                    {t.hasPhone && <span className="block text-small text-muted normal-case">Phone shared</span>}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">{received.format(new Date(t.createdAt))}</td>
-                  <td className="px-4 py-3">
-                    <Countdown dueAt={t.dueAt} />
-                  </td>
-                  <td className="px-4 py-3">
-                    {t.escalatedAt && <strong className="block font-semibold text-danger">Escalated to supervisor</strong>}
-                    <span className="block">{t.acknowledgedAt ? "Acknowledged" : "New"}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="flex flex-wrap items-start justify-end gap-2">
-                      {!t.acknowledgedAt && write && (
-                        <ActionButton action={acknowledgeTask.bind(null, t.id)}>Acknowledge</ActionButton>
-                      )}
-                      <Link
-                        href={`/staff/case/${t.sessionId}`}
-                        className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 font-medium text-white no-underline hover:text-white"
-                      >
-                        Open
-                      </Link>
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        GROUPS.map((group) => {
+          const rows = tasks.filter((t) => group.tiers.includes(t.priority));
+          if (rows.length === 0) return null;
+          return (
+            <section key={group.title} aria-labelledby={`g-${group.tiers[0]}`} className="flex flex-col gap-2">
+              <h2 id={`g-${group.tiers[0]}`} className="flex flex-wrap items-baseline gap-x-3 text-[1rem] font-semibold">
+                {group.title}
+                <span className="text-[0.8125rem] font-normal text-muted">
+                  {rows.length} · {group.note}
+                </span>
+              </h2>
+              <div className="overflow-x-auto rounded-xl border border-line-warm bg-surface">
+                <table className="w-full min-w-[860px] border-collapse text-left text-[0.875rem]">
+                  <thead className="bg-sage-mist text-[0.75rem] tracking-wide text-muted">
+                    <tr>
+                      {["Case", "Tier", "Reason", "Next action", "Received", "Clock", "Status", ""].map((h) => (
+                        <th key={h} scope="col" className="px-4 py-2.5 font-semibold">
+                          {h || <span className="sr-only">Actions</span>}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((t) => {
+                      const overdue = t.dueAt < now;
+                      const edge = t.priority === "imminent" || overdue ? "border-s-danger" : t.priority === "urgent" ? "border-s-ink" : "border-s-transparent";
+                      return (
+                        <tr key={t.id} className={`border-t border-line-warm ${!t.acknowledgedAt ? "bg-surface" : "bg-bg/60"}`}>
+                          <td className={`border-s-4 px-4 py-3 ${edge}`}>
+                            <Link href={`/staff/case/${t.sessionId}`} className="font-semibold whitespace-nowrap text-ink tabular-nums">
+                              {caseRef(t.sessionId)}
+                            </Link>
+                            <span className="block text-[0.75rem] whitespace-nowrap text-muted">{t.path === "contact" ? "No check-in" : `${t.path[0].toUpperCase()}${t.path.slice(1)} check`}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <PriorityBadge priority={t.priority} />
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="font-medium text-ink">{TASK_LABELS[t.type] ?? t.type}</span>
+                            {t.ruleId && <span className="block text-[0.75rem] text-muted">{t.ruleId}</span>}
+                          </td>
+                          <td className="px-4 py-3 text-text-2">{nextAction(t)}</td>
+                          <td className="px-4 py-3 whitespace-nowrap text-text-2">{received.format(new Date(t.createdAt))}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <Countdown dueAt={t.dueAt} />
+                          </td>
+                          <td className="px-4 py-3">
+                            {t.escalatedAt && <strong className="block font-semibold text-danger">Escalated</strong>}
+                            <span className={t.acknowledgedAt ? "text-muted" : "font-semibold text-ink"}>
+                              {t.acknowledgedAt ? "Acknowledged" : "New"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="flex items-start justify-end gap-2">
+                              {!t.acknowledgedAt && write && (
+                                <ActionButton action={acknowledgeTask.bind(null, t.id)}>Acknowledge</ActionButton>
+                              )}
+                              <Link
+                                href={`/staff/case/${t.sessionId}`}
+                                className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 text-[0.875rem] font-medium text-white no-underline hover:text-white"
+                              >
+                                Open
+                              </Link>
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          );
+        })
       )}
-    </>
+    </StaffShell>
   );
 }

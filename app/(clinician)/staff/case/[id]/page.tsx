@@ -7,12 +7,24 @@ import { STEP_NAMES } from "@/lib/rules/routing";
 import { summaryToText } from "@/lib/summary/build";
 import { bankItem } from "@/lib/item-bank";
 import { acknowledgeTask, addHistory, closeTask, setReceiptStatus } from "../../actions";
-import { PriorityBadge, StaffHeader, TASK_LABELS } from "../../staff-header";
+import { PriorityBadge, StaffShell, TASK_LABELS } from "../../staff-header";
+import { caseRef } from "@/lib/case-ref";
 import { ActionButton, Countdown } from "../../ui";
 import { ContactForm, DecisionForm, StartReview, SummaryEditor } from "./case-forms";
 
-const card = "flex flex-col gap-3 rounded-2xl bg-surface p-5";
-const h2 = "text-[1.125rem] font-semibold";
+const card = "flex flex-col gap-3 rounded-xl border border-line-warm bg-surface p-5";
+const h2 = "text-[1rem] font-semibold";
+const ACTIVITY_WORDS: Record<string, string> = {
+  consent_recorded: "Consent recorded", check_in_completed: "Check-in completed", red_flag_raised: "Red flag raised",
+  contact_shared: "Contact details shared", callback_requested: "Call-back requested", case_viewed: "Case opened",
+  task_acknowledged: "Task acknowledged", task_closed: "Task closed", task_escalated: "Escalated to supervisor",
+  proposal_accept: "Proposal accepted", proposal_override: "Proposal overridden", summary_edited: "Summary edited",
+  summary_signed: "Summary signed", receipt_booked: "Marked booked", receipt_first_contact_confirmed: "First contact confirmed",
+  contact_logged: "Contact logged", history_added: "History added", history_self_reported: "History self-reported",
+  safety_check_asked: "Safety check asked", safety_check_answered_no: "Safety check answered no",
+  ai_reply_blocked: "AI reply blocked by guardrail", ai_unavailable_fallback: "AI unavailable, questionnaire used",
+};
+const actorWord = (actor: string) => (actor.startsWith("clinician") ? "Clinician" : actor.startsWith("supervisor") ? "Supervisor" : actor === "patient" ? "Patient" : "System");
 const RECEIPT_WORDS: Record<string, string> = {
   received: "Received", reviewed: "Reviewed", accepted: "Accepted", re_routed: "Re-routed", booked: "Booked",
   first_contact_confirmed: "First contact confirmed", contact_attempted: "Tried to call", spoke: "Spoke with patient",
@@ -22,11 +34,9 @@ const time = (iso: string) =>
 
 export default function CasePage({ params }: PageProps<"/staff/case/[id]">) {
   return (
-    <main className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-6 px-5 py-6 text-base sm:px-8">
-      <Suspense fallback={<p className="text-muted">Loading the case…</p>}>
-        <Case params={params} />
-      </Suspense>
-    </main>
+    <Suspense fallback={<p className="p-8 text-muted">Loading the case…</p>}>
+      <Case params={params} />
+    </Suspense>
   );
 }
 
@@ -41,31 +51,50 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
   const signed = Boolean(summary?.signed_at);
   const summaryText = summary?.edited?.text ?? summaryToText(data.draftLines);
   const openTasks = data.tasks.filter((t) => !t.closed_at);
+  const topTier = ["imminent", "urgent", "elevated", "normal"].find((tier) => openTasks.some((t) => t.priority === tier));
   // The answers a clinician most needs to see verbatim: any item above zero on the risk instruments.
   const riskAnswers = data.answers.filter(
     (a) => a.value > 0 && /^(PHQ9-9|QC_SUICIDE|ASQ|CSSRS_SCREENER|RED_FLAG|BPD_ADHD_EXTRA)/.test(a.item_id),
   );
 
   return (
-    <>
+    <StaffShell staff={staff} active="case">
       <StartReview sessionId={id} />
-      <StaffHeader staff={staff} />
 
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="font-serif text-[1.875rem] leading-tight font-normal">
-          Case <span className="text-muted">{id.slice(0, 8)}</span>
-        </h1>
-        <p className="text-caption text-muted">
-          <span className="capitalize">{session.path}</span> check-in · started {time(session.created_at)}
-          {session.taken_over && " · taken over by a red flag"}
-        </p>
+      {/* Header: which case, how urgent, and the facts needed before reading on. */}
+      <div className="flex flex-col gap-3">
+        <Link href="/staff" className="self-start text-[0.8125rem]">← Queue</Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-[1.5rem] leading-tight font-semibold tracking-[-0.01em] tabular-nums">{caseRef(id)}</h1>
+          {topTier && <PriorityBadge priority={topTier} />}
+          {openTasks.some((t) => t.escalated_at) && (
+            <span className="rounded-md border border-danger px-2 py-0.5 text-[0.8125rem] font-semibold text-danger">Escalated</span>
+          )}
+          <span className={`rounded-md px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-primary text-white" : "border border-line text-text-2"}`}>
+            {signed ? "Signed" : "Not yet signed"}
+          </span>
+        </div>
+        <dl className="flex flex-wrap gap-x-8 gap-y-2 rounded-xl border border-line-warm bg-surface px-5 py-3 text-[0.875rem]">
+          {[
+            ["Path", session.path === "contact" ? "No check-in (call-back only)" : `${session.path[0].toUpperCase()}${session.path.slice(1)} check-in`],
+            ["Received", time(session.created_at)],
+            ["Phone", session.contact_phone ?? "Not shared"],
+            ["Language", session.preferred_language ?? "Not given"],
+            ["Proposed", proposal ? (proposal.urgent ? "Urgent pathway" : `Step ${proposal.step}`) : "None yet"],
+          ].map(([k, v]) => (
+            <div key={k}>
+              <dt className="text-[0.75rem] text-muted">{k}</dt>
+              <dd className="font-medium">{v}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
 
       {!data.consents.clinician_review && !session.taken_over && (
         <p className="rounded-2xl bg-sage-soft px-5 py-3 text-caption">This person did not agree to clinician review.</p>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[3fr_2fr]">
+      <div className="grid gap-5 xl:grid-cols-[3fr_2fr]">
         <div className="flex flex-col gap-5">
           {/* --- Summary --------------------------------------------------- */}
           <section className={card} aria-labelledby="summary-h">
@@ -143,7 +172,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 {data.scores.map((s) => (
                   <li key={s.instrument}>
                     <span className="text-caption text-muted">{s.instrument}</span>
-                    <span className="block font-serif text-[1.5rem] leading-tight">{s.total}</span>
+                    <span className="block text-[1.5rem] leading-tight font-semibold tabular-nums">{s.total}</span>
                     <span className="text-caption">{s.band.replaceAll("_", " ")}</span>
                   </li>
                 ))}
@@ -175,7 +204,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
               <p className="text-caption text-muted">No proposal yet.</p>
             ) : (
               <>
-                <p className="font-serif text-[1.375rem] leading-snug">
+                <p className="text-[1.25rem] leading-snug font-semibold">
                   {proposal.urgent ? "Urgent pathway" : `Step ${proposal.step}: ${STEP_NAMES[proposal.step ?? 0]}`}
                 </p>
                 <ul className="list-disc ps-5 text-caption text-text-2">
@@ -299,7 +328,20 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
         </div>
       </div>
 
+      <section className={card} aria-labelledby="activity-h">
+        <h2 id="activity-h" className={h2}>Activity</h2>
+        <ol className="flex flex-col gap-1.5 text-[0.875rem]">
+          {data.activity.map((a, i) => (
+            <li key={a.created_at + a.action + i} className="flex flex-wrap gap-x-3">
+              <span className="w-32 shrink-0 text-muted tabular-nums">{time(a.created_at)}</span>
+              <span className="font-medium">{ACTIVITY_WORDS[a.action] ?? a.action.replaceAll("_", " ")}</span>
+              <span className="text-muted">{actorWord(a.actor)}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       <Link href="/staff" className="self-start text-caption">Back to the queue</Link>
-    </>
+    </StaffShell>
   );
 }

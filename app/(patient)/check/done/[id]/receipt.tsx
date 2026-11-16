@@ -49,6 +49,12 @@ export function Receipt() {
         <h1 className="font-serif text-[1.875rem] leading-tight font-normal">
           Thank you. Your check-in is <em className="text-primary">in.</em>
         </h1>
+        {view?.ref && (
+          <p className="text-caption text-muted">
+            Your reference: <strong className="font-semibold text-ink">{view.ref}</strong>. Your care team sees the same
+            code.
+          </p>
+        )}
       </div>
 
       {view ? (

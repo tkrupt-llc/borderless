@@ -104,6 +104,12 @@ export async function loadCase(sessionId: string) {
       )
     : [];
 
+  // The audit trail for this case, newest first (research: keep the audit trail visible).
+  const activity = rows<{ actor: string; action: string; created_at: string }>(
+    await db().from("audit_events").select("actor, action, created_at").eq("session_id", sessionId).order("created_at", { ascending: false }).limit(40),
+    "activity",
+  );
+
   const messageText = new Map(messages.map((m) => [m.id, m.text]));
   const latestConsent = Object.fromEntries(consents.map((c) => [c.purpose, c.granted]));
   const draftLines = buildSummary({
@@ -129,5 +135,6 @@ export async function loadCase(sessionId: string) {
     contacts,
     summary: summaryRows[0] ?? null,
     draftLines,
+    activity,
   };
 }

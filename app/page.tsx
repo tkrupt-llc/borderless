@@ -52,6 +52,11 @@ export default function Landing() {
                 <Link href="/start" className={primaryBtn}>Start check-in</Link>
                 <Link href="/help-now" className={outlineBtn}>I need help now</Link>
               </div>
+              <p className="text-base text-text-2">
+                Not ready for a check-in?{" "}
+                <Link href="/talk" className="font-medium">Talk to a person</Link>: leave your number and the care team
+                will call you.
+              </p>
             </div>
           </div>
           <HillsHero />
@@ -181,13 +186,34 @@ export default function Landing() {
           </div>
         </section>
 
-        <section id="clinicians" className={`${wrap} pt-20 sm:pt-24`}>
+        <section className={`${wrap} pt-20 sm:pt-24`}>
           <div className="flex flex-wrap items-center justify-between gap-8 rounded-[28px] bg-sage-soft p-8 sm:p-12">
             <p className="min-w-0 flex-[1_1_520px] font-serif text-[1.625rem] leading-[1.3] sm:text-[2rem]">
               Feeling better is rarely a <em className="text-primary">straight line.</em> Missed check-ins and harder
               weeks are part of it.
             </p>
             <Link href="/start" className={primaryBtn}>Start check-in</Link>
+          </div>
+        </section>
+        <section id="clinicians" className={`${wrap} pt-20 sm:pt-24`}>
+          <h2 className={`${h2} mb-10`}>
+            For <em className="text-primary">clinicians</em>
+          </h2>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-5">
+            {[
+              ["One queue, sorted by urgency", "Red flags come first with a response clock: 15 minutes, 4 hours or one working day."],
+              ["A summary you can check", "Each line shows the person's own words. You edit it, then sign it."],
+              ["You decide", "Accept the proposed step in one click, or override it with a reason. Nothing is decided by AI."],
+            ].map(([title, body]) => (
+              <div key={title} className="flex flex-col gap-2 rounded-3xl bg-surface p-7">
+                <h3 className="text-[1.3125rem] font-semibold">{title}</h3>
+                <p className="text-text-2">{body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <Link href="/staff" className={outlineBtn}>Care team sign-in</Link>
+            <p className="text-base text-muted">For clinicians and supervisors of the service.</p>
           </div>
         </section>
       </main>
@@ -204,6 +230,12 @@ export default function Landing() {
           >
             I need help now
           </Link>
+        </div>
+        <div className={`${wrap} flex flex-wrap gap-x-6 gap-y-2 border-t border-white/15 py-5 text-base`}>
+          <Link href="/talk" className="text-on-dark-2 hover:text-white">Talk to a person</Link>
+          <Link href="/coping" className="text-on-dark-2 hover:text-white">Coping cards</Link>
+          <Link href="/staff" className="text-on-dark-2 hover:text-white">Care team sign-in</Link>
+          <span className="text-on-dark-2">Prototype. Synthetic data only.</span>
         </div>
       </footer>
     </div>

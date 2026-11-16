@@ -5,6 +5,7 @@ import { RESULT_KEY, useStoredValue } from "@/lib/check/local-answers";
 import { ChevronRight } from "@/components/icons";
 import wording from "@/content/result-wording.json";
 import { LaterChoices } from "./later-choices";
+import { caseRef } from "@/lib/case-ref";
 
 type StoredResult = {
   path: string;
@@ -77,7 +78,7 @@ export function ResultCard() {
 
       <p className="text-text-2">
         {result.sentToClinician
-          ? "Your answers have been sent. A clinician will read them and choose your next step with you."
+          ? `Your answers have been sent${result.sessionId ? ` (reference ${caseRef(result.sessionId)})` : ""}. A clinician will read them and choose your next step with you.`
           : "Your answers stayed with you. No one will contact you about them."}
       </p>
 
