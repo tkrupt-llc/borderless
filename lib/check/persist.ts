@@ -3,6 +3,7 @@ import { db } from "@/lib/db/server";
 import { bankItem } from "@/lib/item-bank";
 import type { RuleFile } from "@/lib/contracts/rules";
 import type { Score } from "@/lib/rules/scoring";
+import type { Proposal } from "@/lib/rules/routing";
 import { dueAt, nextWorkingDay } from "@/lib/rules/tiers";
 import consent from "@/content/consent.json";
 
@@ -107,6 +108,22 @@ export async function raiseRedFlags(
   ) as { rule_id: string }[];
   const already = new Set(existing.map((e) => e.rule_id));
 
+  // The first red flag also records the "urgent" proposal the clinician will see.
+  const takeover = fired.filter((r) => r.then.some((a) => a.action === "takeover_session"));
+  if (already.size === 0 && takeover.length > 0) {
+    check(
+      await db().from("triage_proposals").insert({
+        session_id: sessionId,
+        step: null,
+        urgent: true,
+        rule_ids: takeover.map((r) => r.id),
+        reasons: takeover.map((r) => r.description),
+        ruleset_version: "red_flags",
+      }),
+      "save urgent proposal",
+    );
+  }
+
   for (const rule of fired) {
     if (already.has(rule.id)) continue;
     const task = rule.then.find((a) => a.action === "create_task");
@@ -129,7 +146,21 @@ export async function raiseRedFlags(
  * End of a check-in: store the scores, the receipt's first status and, with
  * clinician-review consent, a review task due in one working day.
  */
-export async function finishCheckIn(sessionId: string, scores: Score[], clinicianReview: boolean) {
+/** True if the AI chat recorded this history field for the session. */
+export async function hasExtractedField(sessionId: string, field: string): Promise<boolean> {
+  const rows = check(
+    await db().from("extracted_fields").select("id").eq("session_id", sessionId).eq("field", field).limit(1),
+    "read extracted fields",
+  ) as unknown[];
+  return rows.length > 0;
+}
+
+export async function finishCheckIn(
+  sessionId: string,
+  scores: Score[],
+  clinicianReview: boolean,
+  proposal: Proposal | null = null,
+) {
   if (scores.length > 0) {
     check(
       await db()
@@ -149,6 +180,19 @@ export async function finishCheckIn(sessionId: string, scores: Score[], clinicia
   if (!clinicianReview) {
     await audit("check_in_completed", sessionId, "session", { sent_to_clinician: false });
     return;
+  }
+  if (proposal && proposal.step !== null) {
+    check(
+      await db().from("triage_proposals").insert({
+        session_id: sessionId,
+        step: proposal.step,
+        urgent: false,
+        rule_ids: proposal.ruleIds,
+        reasons: proposal.reasons,
+        ruleset_version: proposal.rulesetVersion,
+      }),
+      "save proposal",
+    );
   }
   check(await db().from("receipt_events").insert({ session_id: sessionId, status: "received" }), "receipt");
   check(

@@ -1,0 +1,103 @@
+# Stepped-care routing. Owned by the psychiatrist; every change bumps the version.
+# DRAFT from the tech spec table ("Requirement 2"): the psychiatrist finalises the
+# thresholds. The AI never chooses the step, and a clinician accepts or overrides it.
+#
+# Every matching rule fires. The proposed step is the HIGHEST step proposed,
+# then limited by any cap (lib/rules/routing.ts). Any red flag makes the
+# proposal "urgent" instead, whatever these rules say.
+#
+# Steps: 0 self-help, 1 community or counsellor, 2 primary care,
+#        3 psychologist or tele-mental health, 4 psychiatrist.
+
+ruleset: routing
+version: "0.1"
+owner: psychiatrist
+
+rules:
+  # --- Full check-in (PHQ-9 and GAD-7) -------------------------------------
+  - id: RT-FULL-MINIMAL
+    description: PHQ-9 and GAD-7 both under 5
+    when:
+      all:
+        - { fact: score.PHQ9.total, op: "<", value: 5 }
+        - { fact: score.GAD7.total, op: "<", value: 5 }
+    then:
+      - action: propose_step
+        step: 0
+
+  - id: RT-FULL-MILD
+    description: PHQ-9 or GAD-7 in the mild range (5 or more)
+    when:
+      any:
+        - { fact: score.PHQ9.total, op: ">=", value: 5 }
+        - { fact: score.GAD7.total, op: ">=", value: 5 }
+    then:
+      - action: propose_step
+        step: 1
+
+  - id: RT-PHYSICAL-CONDITION
+    description: Mild or higher scores together with a physical health condition
+    when:
+      all:
+        - { fact: field.medical_conditions, op: "==", value: true }
+        - any:
+            - { fact: score.PHQ9.total, op: ">=", value: 5 }
+            - { fact: score.GAD7.total, op: ">=", value: 5 }
+    then:
+      - action: propose_step
+        step: 2
+
+  - id: RT-FULL-MODERATE
+    description: PHQ-9 or GAD-7 in the moderate range (10 or more)
+    when:
+      any:
+        - { fact: score.PHQ9.total, op: ">=", value: 10 }
+        - { fact: score.GAD7.total, op: ">=", value: 10 }
+    then:
+      - action: propose_step
+        step: 3
+
+  - id: RT-FUNCTIONAL-IMPACT
+    description: Problems make daily life very or extremely difficult (PHQ-9 item 10)
+    when: { fact: item.PHQ9.10, op: ">=", value: 2 }
+    then:
+      - action: propose_step
+        step: 3
+
+  - id: RT-FULL-HIGH
+    description: PHQ-9 or GAD-7 at 15 or more
+    when:
+      any:
+        - { fact: score.PHQ9.total, op: ">=", value: 15 }
+        - { fact: score.GAD7.total, op: ">=", value: 15 }
+    then:
+      - action: propose_step
+        step: 4
+
+  # --- Quick check (PHQ-2 and GAD-2) ---------------------------------------
+  - id: RT-QUICK-NEGATIVE
+    description: Quick check with both gates negative
+    when:
+      all:
+        - { fact: score.PHQ2.positive, op: "==", value: false }
+        - { fact: score.GAD2.positive, op: "==", value: false }
+    then:
+      - action: propose_step
+        step: 0
+
+  - id: RT-QUICK-POSITIVE
+    description: Quick check with a positive mood or worry gate (full check-in advised)
+    when:
+      any:
+        - { fact: score.PHQ2.positive, op: "==", value: true }
+        - { fact: score.GAD2.positive, op: "==", value: true }
+    then:
+      - action: propose_step
+        step: 1
+
+  - id: RT-QUICK-CAP
+    description: A quick check alone never proposes more than step 1
+    when: { fact: path.quick, op: "==", value: true }
+    then:
+      - action: cap_step
+        maxStep: 1

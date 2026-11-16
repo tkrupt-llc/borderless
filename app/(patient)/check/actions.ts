@@ -9,6 +9,7 @@ import * as persist from "@/lib/check/persist";
 import { factsFromAnswers, type Facts } from "@/lib/rules/engine";
 import { loadRuleFile } from "@/lib/rules/load";
 import { runSafetyRules } from "@/lib/rules/safety";
+import { proposeStep } from "@/lib/rules/routing";
 import { factsFromScores, scoreAll, type Score } from "@/lib/rules/scoring";
 import consent from "@/content/consent.json";
 
@@ -156,7 +157,14 @@ export async function finishCheckIn(input: unknown): Promise<FinishResult> {
     if (!session) return { ok: false, reason: "no_session" };
     const consents = await persist.getConsents(session.id);
     const sentToClinician = consents.clinician_review === true;
-    await persist.finishCheckIn(session.id, scores, sentToClinician);
+    // Stepped-care proposal from the routing rules; a clinician accepts or overrides it.
+    const proposal = proposeStep(loadRuleFile("routing"), {
+      ...factsFromAnswers(answers),
+      ...factsFromScores(scores),
+      "path.quick": path === "quick",
+      "field.medical_conditions": await persist.hasExtractedField(session.id, "medical_conditions"),
+    });
+    await persist.finishCheckIn(session.id, scores, sentToClinician, proposal);
     return { ok: true, sessionId: session.id, scores, sentToClinician };
   } catch (e) {
     console.error(e);

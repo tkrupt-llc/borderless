@@ -6,7 +6,7 @@ import type { RuleFile } from "@/lib/contracts/rules";
 
 // Rule files are read on the server only. next.config.ts traces content/ into the
 // deployment. A rule file that fails its contract stops the app loudly.
-export type RuleFileName = "red-flags" | "bpd-adhd";
+export type RuleFileName = "red-flags" | "bpd-adhd" | "routing";
 const cache = new Map<RuleFileName, RuleFile>();
 
 export function loadRuleFile(name: RuleFileName): RuleFile {
