@@ -13,7 +13,7 @@ import consent from "@/content/consent.json";
  * on, rather than silently losing an answer or a red flag.
  */
 
-type Path = "quick" | "full" | "crisis";
+type Path = "quick" | "full" | "crisis" | "contact";
 export type ConsentChoices = Record<string, boolean>;
 
 function check<T>(result: { data: T; error: { message: string } | null }, what: string): T {
@@ -283,10 +283,34 @@ export async function logEvent(sessionId: string, action: string, metadata: obje
   await audit(action, sessionId, "session", metadata);
 }
 
-export async function saveContact(sessionId: string, phone: string, callbackTime: string | null) {
-  check(
-    await db().from("sessions").update({ contact_phone: phone, callback_time: callbackTime }).eq("id", sessionId),
-    "save contact",
-  );
+export async function saveContact(
+  sessionId: string,
+  phone: string,
+  callbackTime: string | null,
+  preferences: { language?: string | null; clinicianGender?: string | null } = {},
+) {
+  const update: Record<string, unknown> = { contact_phone: phone, callback_time: callbackTime };
+  if (preferences.language !== undefined) update.preferred_language = preferences.language;
+  if (preferences.clinicianGender !== undefined) update.preferred_clinician_gender = preferences.clinicianGender;
+  check(await db().from("sessions").update(update).eq("id", sessionId), "save contact");
   await audit("contact_shared", sessionId, "session");
+}
+
+/**
+ * "Talk to a person": a non-urgent call-back task due in one working day.
+ * One open request per session; asking again only updates the contact details.
+ */
+export async function requestCallback(sessionId: string): Promise<Date> {
+  const open = check(
+    await db().from("tasks").select("due_at").eq("session_id", sessionId).eq("type", "talk_to_person").is("closed_at", null).limit(1),
+    "read call-back task",
+  ) as { due_at: string }[];
+  if (open[0]) return new Date(open[0].due_at);
+  const due = nextWorkingDay(new Date());
+  check(
+    await db().from("tasks").insert({ session_id: sessionId, type: "talk_to_person", priority: "normal", due_at: due.toISOString() }),
+    "call-back task",
+  );
+  await audit("callback_requested", sessionId, "session");
+  return due;
 }
