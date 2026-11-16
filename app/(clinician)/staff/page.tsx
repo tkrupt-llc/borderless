@@ -6,6 +6,8 @@ import { acknowledgeTask } from "./actions";
 import { PriorityBadge, StaffHeader, TASK_LABELS } from "./staff-header";
 import { ActionButton, AutoRefresh, Countdown } from "./ui";
 
+const received = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
 // The queue: a triage table sorted by tier, then time left (research: a table,
 // not tiles). Only imminent cases interrupt, with a banner at the top.
 export default function QueuePage({ searchParams }: PageProps<"/staff">) {
@@ -60,7 +62,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
           <table className="w-full min-w-[720px] border-collapse text-left text-caption">
             <thead className="border-b border-line text-muted">
               <tr>
-                {["Priority", "Why", "Path", "Time left", "Status", ""].map((h) => (
+                {["Priority", "Why", "Path", "Received", "Time left", "Status", ""].map((h) => (
                   <th key={h} scope="col" className="px-4 py-3 font-semibold">
                     {h || <span className="sr-only">Actions</span>}
                   </th>
@@ -81,6 +83,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                     {t.path}
                     {t.hasPhone && <span className="block text-small text-muted normal-case">Phone shared</span>}
                   </td>
+                  <td className="px-4 py-3 whitespace-nowrap">{received.format(new Date(t.createdAt))}</td>
                   <td className="px-4 py-3">
                     <Countdown dueAt={t.dueAt} />
                   </td>
