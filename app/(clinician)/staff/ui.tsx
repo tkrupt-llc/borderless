@@ -83,8 +83,8 @@ export function ActionButton({
             setError(r.ok ? "" : r.error);
           })
         }
-        className={`min-h-11 cursor-pointer rounded-full px-4 text-caption font-medium disabled:cursor-default disabled:opacity-50 ${
-          variant === "primary" ? "bg-primary text-white" : "border-[1.5px] border-ink text-ink"
+        className={`min-h-10 cursor-pointer rounded-md px-4 text-caption font-medium disabled:cursor-default disabled:opacity-50 ${
+          variant === "primary" ? "bg-primary text-white" : "border border-line bg-surface text-ink hover:bg-sage-soft"
         }`}
       >
         {pending ? "Saving…" : children}

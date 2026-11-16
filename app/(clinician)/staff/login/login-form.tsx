@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { signIn } from "./actions";
 
-const input = "min-h-12 rounded-xl border-[1.5px] border-line bg-surface px-3 text-body";
+const input = "min-h-12 rounded-lg border-[1.5px] border-line bg-surface px-3 text-body";
 
 export function LoginForm() {
   const [state, action, pending] = useActionState(signIn, null);
@@ -20,7 +20,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="flex min-h-12 cursor-pointer items-center justify-center rounded-full bg-primary px-6 font-medium text-white disabled:cursor-wait"
+        className="flex min-h-12 cursor-pointer items-center justify-center rounded-md bg-primary px-6 font-medium text-white disabled:cursor-wait"
       >
         {pending ? "Signing in…" : "Sign in"}
       </button>

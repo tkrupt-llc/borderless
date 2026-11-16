@@ -30,6 +30,24 @@
   --on-dark-2: #d9decf;
 }
 
+/*
+ * Care-team console: a cool neutral palette, as in clinical work tools.
+ * Olive stays for main actions only, red for imminent risk and overdue.
+ */
+.console {
+  --bg: #f3f4f2;
+  --sage: #e4e9dc;
+  --sage-soft: #eef0eb;
+  --sage-mist: #f6f7f5;
+  --ink: #1b201c;
+  --text-2: #394039;
+  --muted: #5b625c;
+  --line: #d2d6d0;
+  --line-warm: #e1e4df;
+  background: var(--bg);
+  color: var(--ink);
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);

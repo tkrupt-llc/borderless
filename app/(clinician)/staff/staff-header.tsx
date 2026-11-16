@@ -18,20 +18,20 @@ export function StaffShell({
   children: React.ReactNode;
 }) {
   const item = (on: boolean) =>
-    `flex min-h-11 items-center justify-between rounded-lg px-3 text-[0.9375rem] no-underline ${
-      on ? "bg-white/12 font-semibold text-white hover:text-white" : "text-on-dark-2 hover:bg-white/8 hover:text-white"
+    `flex min-h-10 items-center justify-between rounded-md px-3 text-[0.9375rem] no-underline ${
+      on ? "bg-sage font-semibold text-ink hover:text-ink" : "text-text-2 hover:bg-sage-soft hover:text-ink"
     }`;
-  const count = "rounded-full bg-white/15 px-2 py-0.5 text-[0.75rem] font-semibold text-white tabular-nums";
+  const count = "rounded-full bg-surface px-2 py-0.5 text-[0.75rem] font-semibold text-text-2 tabular-nums ring-1 ring-line";
   return (
     <div className="flex min-h-dvh w-full flex-col font-sans text-[0.9375rem] leading-normal lg:flex-row">
-      <aside className="flex shrink-0 flex-col gap-4 bg-ink px-4 py-4 text-on-dark lg:sticky lg:top-0 lg:h-dvh lg:w-60 lg:py-6">
+      <aside className="flex shrink-0 flex-col gap-4 border-b border-line-warm bg-surface px-4 py-4 lg:sticky lg:top-0 lg:h-dvh lg:w-60 lg:border-e lg:border-b-0 lg:py-6">
         <div className="flex items-center gap-2 px-2">
           <svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true">
-            <path d="M32.3 9.7 A16 16 0 1 0 32.3 30.3" fill="none" stroke="#C8D3B0" strokeWidth="5" strokeLinecap="round" />
+            <path d="M32.3 9.7 A16 16 0 1 0 32.3 30.3" fill="none" stroke="var(--primary)" strokeWidth="5" strokeLinecap="round" />
             <circle cx="27" cy="20" r="3.6" fill="var(--clay)" />
           </svg>
-          <span className="text-[1.0625rem] font-semibold tracking-[-0.01em] text-white">borderless</span>
-          <span className="rounded bg-white/12 px-1.5 py-0.5 text-[0.6875rem] font-semibold whitespace-nowrap text-on-dark-2">Care team</span>
+          <span className="text-[1.0625rem] font-semibold tracking-[-0.01em] text-ink">borderless</span>
+          <span className="rounded bg-sage-soft px-1.5 py-0.5 text-[0.6875rem] font-semibold whitespace-nowrap text-muted">Care team</span>
         </div>
         <nav aria-label="Console" className="flex gap-1 lg:flex-col">
           <Link href="/staff" className={item(active === "queue")} aria-current={active === "queue" ? "page" : undefined}>
@@ -40,20 +40,22 @@ export function StaffShell({
           </Link>
           <Link href="/staff?view=escalated" className={item(active === "escalated")} aria-current={active === "escalated" ? "page" : undefined}>
             <span>Escalated</span>
-            {counts && counts.escalated > 0 && <span className={`${count} bg-danger`}>{counts.escalated}</span>}
+            {counts && counts.escalated > 0 && (
+              <span className="rounded-full bg-danger px-2 py-0.5 text-[0.75rem] font-semibold text-white tabular-nums">{counts.escalated}</span>
+            )}
           </Link>
         </nav>
-        <form action={signOut} className="mt-auto flex items-center justify-between gap-3 border-t border-white/15 px-2 pt-4 lg:flex-col lg:items-stretch">
+        <form action={signOut} className="mt-auto flex items-center justify-between gap-3 border-t border-line-warm px-2 pt-4 lg:flex-col lg:items-stretch">
           <span className="flex min-w-0 flex-col">
-            <span className="truncate text-[0.8125rem] text-white">{staff.email}</span>
-            <span className="text-[0.75rem] text-on-dark-2 capitalize">
+            <span className="truncate text-[0.8125rem] text-ink">{staff.email}</span>
+            <span className="text-[0.75rem] text-muted capitalize">
               {staff.role}
               {staff.role === "judge" && " · view only"}
             </span>
           </span>
           <button
             type="submit"
-            className="min-h-10 cursor-pointer rounded-lg border border-white/30 px-3 text-[0.8125rem] font-medium text-white hover:bg-white/8"
+            className="min-h-10 cursor-pointer rounded-md border border-line bg-surface px-3 text-[0.8125rem] font-medium text-ink hover:bg-sage-soft"
           >
             Sign out
           </button>
@@ -75,7 +77,7 @@ export const TASK_LABELS: Record<string, string> = {
 
 const TIER_STYLE: Record<string, string> = {
   imminent: "bg-danger text-white",
-  urgent: "bg-ink text-white",
+  urgent: "border border-[#e3c27a] bg-[#fbefd2] text-[#5c3a00]",
   elevated: "bg-sage text-ink",
   normal: "border border-line bg-surface text-text-2",
 };

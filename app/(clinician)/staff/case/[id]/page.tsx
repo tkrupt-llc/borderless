@@ -12,7 +12,7 @@ import { caseRef } from "@/lib/case-ref";
 import { ActionButton, Countdown } from "../../ui";
 import { ContactForm, DecisionForm, StartReview, SummaryEditor } from "./case-forms";
 
-const card = "flex flex-col gap-3 rounded-xl border border-line-warm bg-surface p-5";
+const card = "flex flex-col gap-3 rounded-lg border border-line-warm bg-surface p-5";
 const h2 = "text-[1rem] font-semibold";
 const ACTIVITY_WORDS: Record<string, string> = {
   consent_recorded: "Consent recorded", check_in_completed: "Check-in completed", red_flag_raised: "Red flag raised",
@@ -74,7 +74,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             {signed ? "Signed" : "Not yet signed"}
           </span>
         </div>
-        <dl className="flex flex-wrap gap-x-8 gap-y-2 rounded-xl border border-line-warm bg-surface px-5 py-3 text-[0.875rem]">
+        <dl className="flex flex-wrap gap-x-8 gap-y-2 rounded-lg border border-line-warm bg-surface px-5 py-3 text-[0.875rem]">
           {[
             ["Path", session.path === "contact" ? "No check-in (call-back only)" : `${session.path[0].toUpperCase()}${session.path.slice(1)} check-in`],
             ["Received", time(session.created_at)],
@@ -91,7 +91,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
       </div>
 
       {!data.consents.clinician_review && !session.taken_over && (
-        <p className="rounded-2xl bg-sage-soft px-5 py-3 text-caption">This person did not agree to clinician review.</p>
+        <p className="rounded-lg bg-sage-soft px-5 py-3 text-caption">This person did not agree to clinician review.</p>
       )}
 
       <div className="grid gap-5 xl:grid-cols-[3fr_2fr]">
@@ -100,7 +100,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
           <section className={card} aria-labelledby="summary-h">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 id="summary-h" className={h2}>Summary</h2>
-              <span className={`rounded-full px-2.5 py-0.5 text-small font-semibold ${signed ? "bg-primary text-white" : "bg-sage text-ink"}`}>
+              <span className={`rounded-md px-2.5 py-0.5 text-small font-semibold ${signed ? "bg-primary text-white" : "bg-sage text-ink"}`}>
                 {signed ? "AI-drafted, clinician-verified" : "AI-drafted, not yet verified"}
               </span>
             </div>
@@ -114,7 +114,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             {signed && summary?.signed_at && <p className="text-small text-muted">Signed {time(summary.signed_at)}</p>}
             {data.draftLines.some((l) => l.quote) && (
               <details className="text-caption">
-                <summary className="min-h-11 cursor-pointer content-center text-primary-dark underline">
+                <summary className="min-h-10 cursor-pointer content-center text-primary-dark underline">
                   Patient&apos;s own words behind each line
                 </summary>
                 <dl className="flex flex-col gap-2 pt-1">
@@ -215,7 +215,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                   ))}
                 </ul>
                 {decision ? (
-                  <p className="rounded-xl bg-sage-soft px-4 py-3 text-caption">
+                  <p className="rounded-lg bg-sage-soft px-4 py-3 text-caption">
                     <strong className="font-semibold">{decision.action === "accept" ? "Accepted" : `Overridden to step ${decision.new_step}`}</strong>{" "}
                     {time(decision.created_at)}
                     {decision.reason && <span className="block text-text-2">Reason: {decision.reason}</span>}

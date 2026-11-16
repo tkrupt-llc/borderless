@@ -71,7 +71,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
       </div>
 
       {imminent.length > 0 && (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-danger px-5 py-3.5 text-white">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-danger px-5 py-3.5 text-white">
           <strong className="font-semibold">
             {imminent.length} imminent {imminent.length === 1 ? "case needs" : "cases need"} a response within 15 minutes.
           </strong>
@@ -86,7 +86,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
         {stats.map((s) => (
-          <div key={s.label} className="flex flex-col-reverse rounded-xl border border-line-warm bg-surface px-4 py-3">
+          <div key={s.label} className="flex flex-col-reverse rounded-lg border border-line-warm bg-surface px-4 py-3">
             <dt className="text-[0.8125rem] text-muted">{s.label}</dt>
             <dd className={`text-[1.75rem] leading-tight font-semibold tabular-nums ${s.alert && s.value > 0 ? "text-danger" : ""}`}>
               {s.value}
@@ -104,18 +104,18 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
               href={f.id === "all" ? "/staff" : `/staff?view=${f.id}`}
               aria-current={on ? "true" : undefined}
               className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-[0.875rem] font-medium no-underline ${
-                on ? "bg-ink text-white hover:text-white" : "border border-line bg-surface text-ink"
+                on ? "border border-primary bg-sage text-ink hover:text-ink" : "border border-line bg-surface text-ink hover:bg-sage-soft"
               }`}
             >
               {f.label}
-              <span className={`tabular-nums ${on ? "text-on-dark-2" : "text-muted"}`}>{all.filter(f.match).length}</span>
+              <span className={`tabular-nums ${on ? "text-text-2" : "text-muted"}`}>{all.filter(f.match).length}</span>
             </Link>
           );
         })}
       </nav>
 
       {tasks.length === 0 ? (
-        <p className="rounded-xl border border-line-warm bg-surface px-5 py-8 text-center text-text-2">
+        <p className="rounded-lg border border-line-warm bg-surface px-5 py-8 text-center text-text-2">
           {filter.id === "all" ? "No open cases." : `No open cases under "${filter.label}".`}
         </p>
       ) : (
@@ -130,7 +130,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                   {rows.length} · {group.note}
                 </span>
               </h2>
-              <div className="overflow-x-auto rounded-xl border border-line-warm bg-surface">
+              <div className="overflow-x-auto rounded-lg border border-line-warm bg-surface">
                 <table className="w-full min-w-[860px] border-collapse text-left text-[0.875rem]">
                   <thead className="bg-sage-mist text-[0.75rem] tracking-wide text-muted">
                     <tr>
@@ -144,7 +144,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                   <tbody>
                     {rows.map((t) => {
                       const overdue = t.dueAt < now;
-                      const edge = t.priority === "imminent" || overdue ? "border-s-danger" : t.priority === "urgent" ? "border-s-ink" : "border-s-transparent";
+                      const edge = t.priority === "imminent" || overdue ? "border-s-danger" : t.priority === "urgent" ? "border-s-[#d9a441]" : "border-s-transparent";
                       return (
                         <tr key={t.id} className={`border-t border-line-warm ${!t.acknowledgedAt ? "bg-surface" : "bg-bg/60"}`}>
                           <td className={`border-s-4 px-4 py-3 ${edge}`}>
@@ -178,7 +178,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                               )}
                               <Link
                                 href={`/staff/case/${t.sessionId}`}
-                                className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 text-[0.875rem] font-medium text-white no-underline hover:text-white"
+                                className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 text-[0.875rem] font-medium text-white no-underline hover:text-white"
                               >
                                 Open
                               </Link>
