@@ -207,6 +207,32 @@ export async function finishCheckIn(
   await audit("check_in_completed", sessionId, "session", { sent_to_clinician: true });
 }
 
+/** Everything the patient's receipt timeline needs, for their own session. */
+export async function loadReceiptData(sessionId: string) {
+  const events = check(
+    await db().from("receipt_events").select("status, reason, created_at").eq("session_id", sessionId).order("created_at"),
+    "receipt events",
+  ) as { status: string; reason: string | null; created_at: string }[];
+  const proposals = check(
+    await db().from("triage_proposals").select("id, step, urgent, created_at").eq("session_id", sessionId).order("created_at"),
+    "proposals",
+  ) as { id: string; step: number | null; urgent: boolean }[];
+  const proposal = proposals.find((p) => p.urgent) ?? proposals.at(-1) ?? null;
+  const decisions = proposal
+    ? (check(
+        await db().from("clinician_decisions").select("action, new_step, created_at").eq("proposal_id", proposal.id).order("created_at"),
+        "decisions",
+      ) as { action: string; new_step: number | null }[])
+    : [];
+  const decision = decisions.at(-1);
+  return {
+    events: events.map((e) => ({ status: e.status, reason: e.reason, createdAt: e.created_at })),
+    proposal: proposal ? { step: proposal.step, urgent: proposal.urgent } : null,
+    decision: decision ? { action: decision.action, newStep: decision.new_step } : null,
+    followUp: (await getConsents(sessionId)).follow_up === true,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Chat
 // ---------------------------------------------------------------------------

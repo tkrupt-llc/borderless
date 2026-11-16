@@ -10,6 +10,7 @@ import { factsFromAnswers, type Facts } from "@/lib/rules/engine";
 import { loadRuleFile } from "@/lib/rules/load";
 import { runSafetyRules } from "@/lib/rules/safety";
 import { proposeStep } from "@/lib/rules/routing";
+import { buildReceipt, type ReceiptView } from "@/lib/receipt/build";
 import { factsFromScores, scoreAll, type Score } from "@/lib/rules/scoring";
 import consent from "@/content/consent.json";
 
@@ -63,6 +64,24 @@ export async function recordLaterConsents(input: unknown): Promise<{ ok: true } 
   } catch (e) {
     console.error(e);
     return { ok: false, reason: "error" };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The receipt timeline, for the session behind this browser's cookie only
+// ---------------------------------------------------------------------------
+
+/** null when there is nothing on the server to show (no database, no session, or no clinician review). */
+export async function loadReceipt(): Promise<ReceiptView | null> {
+  if (!isDbConfigured()) return null;
+  try {
+    // The cookie, never an id from the URL, decides whose receipt this is.
+    const id = await readSessionId();
+    if (!id) return null;
+    return buildReceipt(await persist.loadReceiptData(id));
+  } catch (e) {
+    console.error(e);
+    return null;
   }
 }
 
