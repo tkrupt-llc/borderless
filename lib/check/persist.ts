@@ -455,3 +455,16 @@ export async function raiseNotOnTrack(sessionId: string, reasons: string[]) {
   );
   await audit("not_on_track", sessionId, "session", { reasons });
 }
+
+/** Stores a finished safety screen (ASQ score); its red flags were raised answer by answer. */
+export async function finishSafetyScreen(sessionId: string, scores: Score[]) {
+  if (scores.length > 0) {
+    check(
+      await db().from("scores").insert(
+        scores.map((s) => ({ session_id: sessionId, instrument: s.instrument, total: s.total, band: s.band, computed_by_rule: "lib/rules/scoring.ts" })),
+      ),
+      "save safety scores",
+    );
+  }
+  await audit("safety_screen_completed", sessionId, "session", { scores: scores.map((s) => `${s.instrument}:${s.band}`) });
+}

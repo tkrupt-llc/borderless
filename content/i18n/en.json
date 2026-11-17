@@ -12,7 +12,7 @@
   "check": {
     "leadIn": "We ask everyone this question.",
     "leadInStatus": "DRAFT: the psychiatrist supplies the approved lead-in wording.",
-    "leadInItems": ["QC_SUICIDE-1", "PHQ9-9"]
+    "leadInItems": ["QC_SUICIDE-1", "PHQ9-9", "ASQ-1"]
   },
   "trust": {
     "reviewedBy": "Questions and safety rules reviewed by [Psychiatrist name], Consultant Psychiatrist",

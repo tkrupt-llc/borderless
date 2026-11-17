@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { checkAnswers, finishCheckIn, type CheckResult, type FinishResult } from "../../actions";
 import { markSubmitted, saveAnswer, useStoredAnswer } from "@/lib/check/local-answers";
+import { nextAskedIndex } from "@/lib/check/conditions";
 
 type Option = { value: number; label: string };
 
@@ -11,13 +12,15 @@ export function AnswerList({
   path,
   itemId,
   options,
-  nextHref,
+  itemIds,
+  index,
 }: {
   path: string;
   itemId: string;
   options: Option[];
-  /** null on the last question */
-  nextHref: string | null;
+  /** Every question on this path, in order; some are asked only after certain answers. */
+  itemIds: string[];
+  index: number;
 }) {
   const router = useRouter();
   const stored = useStoredAnswer(path, itemId);
@@ -40,14 +43,19 @@ export function AnswerList({
       }
       // Never move on without a completed safety check.
       if (!result.ok) {
-        if (result.reason === "no_session") router.replace(`/check/${path}/consent`);
+        if (result.reason === "no_session") router.replace(path === "safety" ? "/help-now" : `/check/${path}/consent`);
         else setFailed(true);
         return;
       }
-      if (result.takeover) {
+      // A red flag sends the person to the crisis page. On the safety questions
+      // they are already on the crisis route: the on-call clinician has been
+      // alerted, and the remaining safety questions continue.
+      if (result.takeover && path !== "safety") {
         router.replace("/help-now");
         return;
       }
+      const next = nextAskedIndex(itemIds, index, answers);
+      const nextHref = next === null ? null : `/check/${path}/${next + 1}`;
       if (nextHref) {
         router.push(nextHref);
         return;
@@ -59,7 +67,7 @@ export function AnswerList({
         finished = { ok: false, reason: "error" };
       }
       if (!finished.ok) {
-        if (finished.reason === "no_session") router.replace(`/check/${path}/consent`);
+        if (finished.reason === "no_session") router.replace(path === "safety" ? "/help-now" : `/check/${path}/consent`);
         else setFailed(true);
         return;
       }

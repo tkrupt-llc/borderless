@@ -6,6 +6,7 @@ import { ChevronRight } from "@/components/icons";
 import wording from "@/content/result-wording.json";
 import { LaterChoices } from "./later-choices";
 import { MyTrend } from "./my-trend";
+import { SafetyDone } from "./safety-done";
 import { caseRef } from "@/lib/case-ref";
 
 type StoredResult = {
@@ -39,6 +40,10 @@ export function ResultCard() {
         <Link href="/start">Start a check-in</Link>
       </div>
     );
+  }
+
+  if (result.path === "safety") {
+    return <SafetyDone positive={result.scores.some((s) => s.instrument === "ASQ" && s.band !== "negative")} />;
   }
 
   const shown = result.scores.filter((s) => instruments[s.instrument]?.bands[s.band]);

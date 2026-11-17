@@ -7,6 +7,9 @@ export const PATHS = {
   full: ["PHQ9", "GAD7"],
   // A follow-up asks the full PHQ-9 and GAD-7, so change can be measured.
   followup: ["PHQ9", "GAD7"],
+  // From the crisis page: ASQ, then the C-SSRS screener if the ASQ is positive
+  // (some questions are conditional: lib/check/conditions.ts).
+  safety: ["ASQ", "CSSRS_SCREENER"],
 } as const satisfies Record<string, Instrument[]>;
 export type PathId = keyof typeof PATHS;
 
@@ -21,6 +24,8 @@ const SECTION: Partial<Record<Instrument, string>> = {
   GAD2: "Worry",
   GAD7: "Worry",
   QC_SUICIDE: "Safety",
+  ASQ: "Safety questions",
+  CSSRS_SCREENER: "A few more safety questions",
 };
 
 export type Step = {

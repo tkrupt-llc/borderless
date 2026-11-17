@@ -30,8 +30,7 @@ async function Question({ params }: { params: PageProps<"/check/[path]/[step]">[
   const current = steps[index];
   if (!Number.isInteger(index) || !current) notFound();
 
-  const backHref = index === 0 ? "/start" : `/check/${path}/${index}`;
-  const nextHref = index + 1 < steps.length ? `/check/${path}/${index + 2}` : null;
+  const backHref = index === 0 ? (path === "safety" ? "/help-now" : "/start") : `/check/${path}/${index}`;
   const progress = Math.round(((index + 1) / steps.length) * 100);
 
   return (
@@ -73,7 +72,8 @@ async function Question({ params }: { params: PageProps<"/check/[path]/[step]">[
           path={path}
           itemId={current.item.id}
           options={current.item.options.map((o) => ({ value: o.value, label: o.label.en }))}
-          nextHref={nextHref}
+          itemIds={steps.map((st) => st.item.id)}
+          index={index}
         />
 
         <details className="text-caption">

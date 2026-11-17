@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { isPathId, itemIdsFor, PATHS, type PathId } from "@/lib/check/paths";
+import { isPathId, itemIdsFor, PATHS, stepsFor, type PathId } from "@/lib/check/paths";
+import { allAskedAnswered } from "@/lib/check/conditions";
 import { isValidAnswer } from "@/lib/item-bank";
 import { isDbConfigured } from "@/lib/db/server";
 import { readSessionId, writeSessionId } from "@/lib/db/patient-session";
@@ -33,13 +34,17 @@ const StartInput = z.object({
 
 export async function startCheckIn(input: unknown): Promise<{ ok: true } | Fail> {
   const parsed = StartInput.safeParse(input);
-  if (!parsed.success || !isPathId(parsed.data.path)) return { ok: false, reason: "invalid" };
+  // Follow-ups and the safety questions start from their own entry points, not this consent screen.
+  if (!parsed.success || !isPathId(parsed.data.path) || parsed.data.path === "followup" || parsed.data.path === "safety") {
+    return { ok: false, reason: "invalid" };
+  }
+  const path = parsed.data.path;
   const known = new Set(consent.purposes.map((p) => p.id));
   const choices = Object.fromEntries(Object.entries(parsed.data.consents).filter(([k]) => known.has(k)));
 
   if (!isDbConfigured()) return { ok: true };
   try {
-    const id = await persist.createSession(parsed.data.path, parsed.data.discreet, choices);
+    const id = await persist.createSession(path, parsed.data.discreet, choices);
     await writeSessionId(id);
     return { ok: true };
   } catch (e) {
@@ -109,11 +114,16 @@ function parseAnswers(input: unknown): { path: PathId; answers: Record<string, n
   return { path: parsed.data.path, answers };
 }
 
-/** The session behind the cookie, if it belongs to this path. */
+/**
+ * The session behind the cookie, if it belongs to this path. The safety
+ * questions belong to whatever case the person already has (so a red flag in
+ * a quick check escalates the same case), or to the crisis case they started.
+ */
 async function currentSession(path: PathId) {
   const id = await readSessionId();
   if (!id) return null;
   const session = await persist.getSession(id);
+  if (path === "safety") return session;
   return session && session.path === path ? session : null;
 }
 
@@ -170,7 +180,9 @@ export async function finishCheckIn(input: unknown): Promise<FinishResult> {
   const parsed = parseAnswers(input);
   if (!parsed) return { ok: false, reason: "invalid" };
   const { path, answers } = parsed;
-  if (Object.keys(answers).length !== itemIdsFor(path).size) return { ok: false, reason: "invalid" };
+  // Conditional questions (ASQ / C-SSRS): every question that should have been asked is answered.
+  const ordered = stepsFor(path).map((st) => st.item.id);
+  if (!allAskedAnswered(ordered, answers)) return { ok: false, reason: "invalid" };
 
   const instruments = new Set<string>(PATHS[path]);
   const scores = scoreAll(answers).filter((s) => instruments.has(s.instrument));
@@ -181,6 +193,11 @@ export async function finishCheckIn(input: unknown): Promise<FinishResult> {
   try {
     const session = await currentSession(path);
     if (!session) return { ok: false, reason: "no_session" };
+    if (path === "safety") {
+      // The red flags were raised answer by answer; this only stores the screen.
+      await persist.finishSafetyScreen(session.id, saved);
+      return { ok: true, sessionId: session.id, scores, sentToClinician: true };
+    }
     const consents = await persist.getConsents(session.id);
     const sentToClinician = consents.clinician_review === true;
     // Stepped-care proposal from the routing rules; a clinician accepts or overrides it.
@@ -222,5 +239,32 @@ export async function loadMyTrend(): Promise<MyTrend | null> {
   } catch (e) {
     console.error(e);
     return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Safety questions from the crisis page
+// ---------------------------------------------------------------------------
+
+/**
+ * Uses the person's current case if this browser has one; otherwise opens a
+ * crisis case. Choosing to answer is a request for the on-call clinician to
+ * see the answers, recorded as clinician-review consent.
+ */
+export async function startSafetyScreen(): Promise<{ ok: true } | Fail> {
+  if (!isDbConfigured()) return { ok: true };
+  try {
+    const id = await readSessionId();
+    if (id && (await persist.getSession(id))) return { ok: true };
+    const created = await persist.createSession("crisis", false, { clinician_review: true });
+    await writeSessionId(created);
+    // Same as opening the crisis page during a check-in: RF-HELP-NOW, so a
+    // clinician follows up even if every safety answer is "no".
+    const fired = runSafetyRules({ redFlags: loadRuleFile("red-flags"), bpdAdhd: loadRuleFile("bpd-adhd") }, { "flag.help_now": true }).fired;
+    await persist.raiseRedFlags(created, fired, "opened the crisis page");
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, reason: "error" };
   }
 }

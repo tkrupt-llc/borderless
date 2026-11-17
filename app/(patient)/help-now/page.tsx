@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PatientHeader } from "@/components/patient-header";
-import { BreathingIcon, PhoneIcon } from "@/components/icons";
+import { BreathingIcon, ChevronRight, PhoneIcon } from "@/components/icons";
 import en from "@/content/i18n/en.json";
 import { AlertCareTeam } from "./alert-care-team";
 
@@ -58,6 +58,17 @@ export default function HelpNowPage() {
           <span className="sr-only"> (opens in a new tab)</span>
         </a>
         <AlertCareTeam />
+        {/* Optional safety questions (ASQ, then the C-SSRS screener if positive). */}
+        <Link
+          href="/help-now/questions"
+          className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border-[1.5px] border-line bg-surface px-4 py-3.5 text-ink no-underline hover:text-ink"
+        >
+          <span className="flex flex-col">
+            <strong className="text-base font-semibold">Answer a few safety questions</strong>
+            <span className="text-small text-muted">So the on-call clinician knows how best to help</span>
+          </span>
+          <ChevronRight />
+        </Link>
       </div>
 
       <div className="flex flex-col gap-2.5 px-5 pt-5">
@@ -89,7 +100,7 @@ export default function HelpNowPage() {
         <Link href="/coping" className="inline-flex min-h-11 items-center self-start text-caption text-primary-dark underline underline-offset-2">
           All coping cards
         </Link>
-        {/* TODO: optional ASQ route (/check/asq) once its wording is approved. */}
+
       </div>
     </>
   );
