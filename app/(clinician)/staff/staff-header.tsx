@@ -15,6 +15,11 @@ const AlertIcon = () => (
     <path d="M12 10v4M12 17.5v.01" />
   </svg>
 );
+const ChartIcon = () => (
+  <svg {...icon}>
+    <path d="M4 20V10M10 20V4M16 20v-7M21 20H3" />
+  </svg>
+);
 const SearchIcon = () => (
   <svg {...icon} width={16} height={16}>
     <circle cx="11" cy="11" r="6.5" />
@@ -34,7 +39,7 @@ export function StaffShell({
   children,
 }: {
   staff: Staff;
-  active: "queue" | "escalated" | "case";
+  active: "queue" | "escalated" | "case" | "insights";
   counts?: { open: number; escalated: number };
   children: React.ReactNode;
 }) {
@@ -55,7 +60,7 @@ export function StaffShell({
           <span className="text-[1rem] font-semibold tracking-[-0.01em] text-ink">borderless</span>
           <span className="text-[0.75rem] font-medium text-muted">Care team</span>
         </div>
-        <nav aria-label="Console" className="flex gap-1 lg:flex-col">
+        <nav aria-label="Console" className="flex flex-wrap gap-1 lg:flex-col lg:flex-nowrap">
           <p className="hidden px-3 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted uppercase lg:block">Work</p>
           <Link href="/staff" className={item(active === "queue")} aria-current={active === "queue" ? "page" : undefined}>
             <InboxIcon />
@@ -68,6 +73,11 @@ export function StaffShell({
             {counts && counts.escalated > 0 && (
               <span className="ms-auto rounded-full bg-danger px-2 py-0.5 text-[0.75rem] font-semibold text-white tabular-nums">{counts.escalated}</span>
             )}
+          </Link>
+          <p className="hidden px-3 pt-3 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted uppercase lg:block">Service</p>
+          <Link href="/staff/insights" className={item(active === "insights")} aria-current={active === "insights" ? "page" : undefined}>
+            <ChartIcon />
+            <span>Insights</span>
           </Link>
         </nav>
         <form action={signOut} className="mt-auto flex flex-col gap-3 border-t border-line-warm px-2 pt-4">
