@@ -97,3 +97,37 @@ export function ActionButton({
     </span>
   );
 }
+
+const REPLY_TONE: Record<string, string> = {
+  imminent: "bg-danger text-white",
+  urgent: "bg-[#f4e3d3] text-[#6b3e1c]",
+  elevated: "bg-[#e9e4f5] text-[#463c6e]",
+  normal: "bg-[#edf0f1] text-[#34505b]",
+};
+const REPLY_WORD: Record<string, string> = { imminent: "Imminent", urgent: "Urgent", elevated: "Elevated", normal: "Routine" };
+
+/** "Urgent · 3 h 12 m": the tier and its live reply-by clock in one badge (DESIGN v2). Overdue says so in words. */
+export function ReplyBy({ priority, dueAt }: { priority: string; dueAt: string }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    tick();
+    const id = setInterval(tick, 15_000);
+    return () => clearInterval(id);
+  }, []);
+  const word = REPLY_WORD[priority] ?? priority;
+  const tone = REPLY_TONE[priority] ?? REPLY_TONE.normal;
+  if (now === null) return <span className={`rounded-full px-2.5 py-1 text-[0.75rem] font-semibold whitespace-nowrap ${tone}`}>{word}</span>;
+  const left = new Date(dueAt).getTime() - now;
+  const mins = Math.round(Math.abs(left) / 60_000);
+  const span = mins >= 1440 ? `${Math.floor(mins / 1440)} d ${Math.floor((mins % 1440) / 60)} h` : mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} m` : `${mins} m`;
+  return left >= 0 ? (
+    <span className={`rounded-full px-2.5 py-1 text-[0.75rem] font-semibold whitespace-nowrap ${tone}`}>
+      {word} · {span}
+    </span>
+  ) : (
+    <span className="rounded-full border border-danger bg-surface px-2.5 py-1 text-[0.75rem] font-semibold whitespace-nowrap text-danger">
+      {word} · overdue {span}
+    </span>
+  );
+}

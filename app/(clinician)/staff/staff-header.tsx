@@ -21,6 +21,11 @@ const ChartIcon = () => (
     <path d="M4 20V10M10 20V4M16 20v-7M21 20H3" />
   </svg>
 );
+const RepeatIcon = () => (
+  <svg {...icon}>
+    <path d="M4 12a8 8 0 0 1 13.7-5.6L20 9M20 4v5h-5M20 12a8 8 0 0 1-13.7 5.6L4 15M4 20v-5h5" />
+  </svg>
+);
 const SearchIcon = () => (
   <svg {...icon} width={16} height={16}>
     <circle cx="11" cy="11" r="6.5" />
@@ -40,8 +45,8 @@ export function StaffShell({
   children,
 }: {
   staff: Staff;
-  active: "queue" | "escalated" | "case" | "insights";
-  counts?: { open: number; escalated: number };
+  active: "queue" | "escalated" | "followups" | "case" | "insights";
+  counts?: { open: number; escalated: number; followups?: number };
   children: React.ReactNode;
 }) {
   const item = (on: boolean) =>
@@ -58,15 +63,22 @@ export function StaffShell({
             <path d="M32.3 9.7 A16 16 0 1 0 32.3 30.3" fill="none" stroke="var(--brand)" strokeWidth="5" strokeLinecap="round" />
             <circle cx="27" cy="20" r="3.6" fill="var(--clay)" />
           </svg>
-          <span className="text-[1rem] font-semibold tracking-[-0.01em] text-ink">borderless</span>
-          <span className="text-[0.75rem] font-medium text-muted">Care team</span>
+          <span className="flex flex-col leading-tight">
+            <span className="text-[1rem] font-semibold tracking-[-0.01em] text-ink">borderless</span>
+            <span className="text-[0.75rem] text-muted">Clinician console</span>
+          </span>
         </div>
         <nav aria-label="Console" className="flex flex-wrap gap-1 lg:flex-col lg:flex-nowrap">
           <p className="hidden px-3 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted uppercase lg:block">Work</p>
           <Link href="/staff" className={item(active === "queue")} aria-current={active === "queue" ? "page" : undefined}>
             <InboxIcon />
-            <span>Queue</span>
+            <span>Review queue</span>
             {counts && <span className={count}>{counts.open}</span>}
+          </Link>
+          <Link href="/staff?view=followups" className={item(active === "followups")} aria-current={active === "followups" ? "page" : undefined}>
+            <RepeatIcon />
+            <span>Follow-ups due</span>
+            {counts?.followups ? <span className={count}>{counts.followups}</span> : null}
           </Link>
           <Link href="/staff?view=escalated" className={item(active === "escalated")} aria-current={active === "escalated" ? "page" : undefined}>
             <AlertIcon />
@@ -78,10 +90,14 @@ export function StaffShell({
           <p className="hidden px-3 pt-3 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted uppercase lg:block">Service</p>
           <Link href="/staff/insights" className={item(active === "insights")} aria-current={active === "insights" ? "page" : undefined}>
             <ChartIcon />
-            <span>Insights</span>
+            <span>Service overview</span>
           </Link>
         </nav>
-        <form action={signOut} className="mt-auto flex flex-col gap-3 border-t border-line-warm px-2 pt-4">
+        <div className="mx-1 mt-auto hidden rounded-xl bg-sage-soft px-3.5 py-3 text-[0.8125rem] text-text-2 lg:block">
+          <strong className="block text-ink">Duty supervisor</strong>
+          Any case that misses its reply-by time goes to them automatically.
+        </div>
+        <form action={signOut} className="mt-auto flex flex-col gap-3 border-t border-line-warm px-2 pt-4 lg:mt-0">
           <span className="flex items-center gap-3">
             <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-brand text-[0.75rem] font-semibold text-white">
               {initials}

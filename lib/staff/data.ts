@@ -189,3 +189,26 @@ export async function loadImminentAlerts(): Promise<{ id: string; sessionId: str
     "imminent alerts",
   ).map((t) => ({ id: t.id, sessionId: t.session_id, createdAt: t.created_at }));
 }
+
+/** Latest score per questionnaire for each case in the queue, e.g. "PHQ-9 19 · GAD-7 12". */
+export async function loadQueueScores(sessionIds: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  if (sessionIds.length === 0) return out;
+  const data = rows<{ session_id: string; instrument: string; total: number; created_at: string }>(
+    await db().from("scores").select("session_id, instrument, total, created_at").in("session_id", sessionIds).order("created_at"),
+    "queue scores",
+  );
+  const LABEL: Record<string, string> = { PHQ9: "PHQ-9", GAD7: "GAD-7", PHQ2: "PHQ-2", GAD2: "GAD-2", ASQ: "ASQ" };
+  const latest = new Map<string, Map<string, number>>();
+  for (const r of data) {
+    const m = latest.get(r.session_id) ?? new Map<string, number>();
+    m.set(r.instrument, r.total);
+    latest.set(r.session_id, m);
+  }
+  for (const [id, m] of latest) {
+    // Full questionnaires when present, otherwise the two-item screens.
+    const pick = m.has("PHQ9") || m.has("GAD7") ? ["PHQ9", "GAD7"] : ["PHQ2", "GAD2", "ASQ"];
+    out.set(id, pick.filter((i) => m.has(i)).map((i) => `${LABEL[i]} ${m.get(i)}`).join(" · "));
+  }
+  return out;
+}

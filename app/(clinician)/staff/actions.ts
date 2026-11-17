@@ -74,6 +74,18 @@ export async function acknowledgeCase(sessionId: string): Promise<Result> {
   });
 }
 
+/** Hands a case to the duty supervisor now, without waiting for its clock to run out. */
+export async function escalateCase(sessionId: string): Promise<Result> {
+  return run(async (staff) => {
+    const id = uuid.parse(sessionId);
+    must(
+      await db().from("tasks").update({ escalated_at: new Date().toISOString() }).eq("session_id", id).is("closed_at", null).is("escalated_at", null),
+      "escalate",
+    );
+    await audit(staff, "manual_escalation", "session", id, id);
+  });
+}
+
 export async function closeTask(taskId: string): Promise<Result> {
   return run(async (staff) => {
     const id = uuid.parse(taskId);
