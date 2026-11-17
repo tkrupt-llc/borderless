@@ -31,7 +31,7 @@ export function ReturningHome() {
         Welcome <em className="text-primary">back.</em>
       </h1>
 
-      <div className="anim-pop flex flex-col gap-3.5 rounded-3xl bg-surface p-6 shadow-[0_12px_40px_rgba(31,42,28,0.08)]">
+      <div className="anim-pop anim-delay-1 flex flex-col gap-3.5 rounded-3xl bg-surface p-6 shadow-[0_12px_40px_rgba(31,42,28,0.08)]">
         <span className="text-[0.75rem] font-semibold tracking-[0.06em] text-primary-dark uppercase">Your one next step</span>
         {followUp && due ? (
           <>
@@ -76,7 +76,7 @@ export function ReturningHome() {
         )}
       </div>
 
-      <div className="anim-pop flex flex-col gap-2 pt-1">
+      <div className="anim-pop anim-delay-2 flex flex-col gap-2 pt-1">
         <p className="text-caption text-muted">If today is harder:</p>
         <div className="flex flex-wrap gap-2">
           <Link href="/coping" className={chip}>Coping cards</Link>

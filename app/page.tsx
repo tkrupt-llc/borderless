@@ -229,6 +229,9 @@ export default function Landing() {
               <div className="flex flex-wrap gap-3">
                 <Link href="/start" className={primaryBtn}>Start check-in</Link>
                 <Link href="/help-now" className={outlineBtn}>I need help now</Link>
+                <Link href="/demo" className="tap inline-flex min-h-12 items-center rounded-full px-3 py-3.5 font-medium text-primary-dark underline underline-offset-2">
+                  See how it works
+                </Link>
               </div>
               <p className="text-base text-text-2">
                 Not ready for a check-in? <Link href="/talk" className="font-medium">Talk to a person</Link>: leave your
@@ -265,6 +268,12 @@ export default function Landing() {
               </MiniScreen>
             </div>
           ))}
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line pt-8">
+            <p className="text-text-2">See a check-in and the clinician console side by side, with practice data.</p>
+            <Link href="/demo" className={outlineBtn}>
+              Try the live demo
+            </Link>
+          </div>
         </section>
 
         <section className={`reveal ${wrap} pt-[72px]`}>
@@ -383,9 +392,14 @@ export default function Landing() {
                   </p>
                 </div>
               ))}
-              <Link href="/staff" className="inline-flex min-h-11 items-center self-start font-semibold text-blue">
-                Care team sign-in →
-              </Link>
+              <div className="flex flex-wrap gap-x-6">
+                <Link href="/demo" className="inline-flex min-h-11 items-center font-semibold text-blue">
+                  See the queue in the live demo →
+                </Link>
+                <Link href="/staff" className="inline-flex min-h-11 items-center font-semibold text-blue">
+                  Care team sign-in →
+                </Link>
+              </div>
             </div>
             <div
               role="img"

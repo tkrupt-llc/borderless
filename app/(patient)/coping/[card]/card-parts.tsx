@@ -34,7 +34,20 @@ export function BreathingPacer({ fill = "var(--sage-deep)", ring = "var(--sage-s
   const left = breathingIn ? IN_SECONDS - at : CYCLE_SECONDS - at;
   return (
     <div className="flex flex-col items-center gap-4 py-2">
-      <div className="flex size-52 items-center justify-center rounded-full" style={{ background: ring }} aria-hidden="true">
+      <div className="relative flex size-52 items-center justify-center rounded-full" style={{ background: ring }} aria-hidden="true">
+        <svg key={`ring-${running}`} viewBox="0 0 180 180" className="pointer-events-none absolute inset-0 size-full -rotate-90">
+          <circle
+            cx="90"
+            cy="90"
+            r="80"
+            fill="none"
+            stroke="var(--blue)"
+            strokeWidth="4"
+            strokeLinecap="round"
+            className={running ? "anim-breath-ring" : ""}
+            style={running ? undefined : { strokeDasharray: 502, strokeDashoffset: 502 }}
+          />
+        </svg>
         <div
           className="flex size-44 items-center justify-center rounded-full ease-in-out"
           style={{
