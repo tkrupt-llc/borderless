@@ -331,3 +331,37 @@ export async function flagNotHelping(sessionId: string, cardId: string): Promise
   );
   await audit("coping_not_helping", sessionId, "session", { card: cardId });
 }
+
+/**
+ * "Delete my data". Deleting the session removes everything linked to it
+ * (answers, scores, chat, contact details, tasks, receipt) through the
+ * database's cascades, and the audit lines for it. One safety exception: while
+ * an urgent or imminent red flag is still open, the care team keeps the record
+ * until they have been in touch; the request is logged so they can act on it.
+ * (Draft policy, for the psychiatrist to approve.)
+ */
+export async function deleteSessionData(sessionId: string): Promise<"deleted" | "held"> {
+  const openRisk = check(
+    await db()
+      .from("tasks")
+      .select("id")
+      .eq("session_id", sessionId)
+      .eq("type", "red_flag")
+      .in("priority", ["imminent", "urgent"])
+      .is("closed_at", null)
+      .limit(1),
+    "read open red flags",
+  ) as { id: string }[];
+  if (openRisk[0]) {
+    await audit("deletion_requested", sessionId, "session");
+    return "held";
+  }
+  check(await db().from("audit_events").delete().eq("session_id", sessionId), "delete audit lines");
+  check(await db().from("sessions").delete().eq("id", sessionId), "delete session");
+  // A count-only record that a deletion happened, with nothing that links it to the person.
+  check(
+    await db().from("audit_events").insert({ actor: "patient", action: "data_deleted", object_type: "session", object_id: null, session_id: null }),
+    "log deletion",
+  );
+  return "deleted";
+}

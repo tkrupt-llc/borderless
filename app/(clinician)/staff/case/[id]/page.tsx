@@ -10,7 +10,7 @@ import { acknowledgeTask, addHistory, closeTask, setReceiptStatus } from "../../
 import { PriorityBadge, StaffShell, TASK_LABELS } from "../../staff-header";
 import { caseRef } from "@/lib/case-ref";
 import { ActionButton, Countdown } from "../../ui";
-import { ContactForm, DecisionForm, StartReview, SummaryEditor } from "./case-forms";
+import { ContactForm, DecisionForm, DeleteCaseButton, StartReview, SummaryEditor } from "./case-forms";
 
 /** A section with a header bar, as in clinical work tools: title left, status right. */
 function Panel({ id, title, aside, children }: { id: string; title: string; aside?: React.ReactNode; children: React.ReactNode }) {
@@ -31,7 +31,7 @@ const ACTIVITY_WORDS: Record<string, string> = {
   task_acknowledged: "Task acknowledged", task_closed: "Task closed", task_escalated: "Escalated to supervisor",
   proposal_accept: "Proposal accepted", proposal_override: "Proposal overridden", summary_edited: "Summary edited",
   summary_signed: "Summary signed", receipt_booked: "Marked booked", receipt_first_contact_confirmed: "First contact confirmed",
-  contact_logged: "Contact logged", coping_not_helping: "Coping card not helping", history_added: "History added", history_self_reported: "History self-reported",
+  contact_logged: "Contact logged", deletion_requested: "Patient asked to delete their data", coping_not_helping: "Coping card not helping", history_added: "History added", history_self_reported: "History self-reported",
   safety_check_asked: "Safety check asked", safety_check_answered_no: "Safety check answered no",
   ai_reply_blocked: "AI reply blocked by guardrail", ai_unavailable_fallback: "AI unavailable, questionnaire used",
 };
@@ -105,6 +105,9 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             {openTasks.some((t) => t.escalated_at) && (
               <span className="rounded-md border border-danger px-2 py-0.5 text-[0.8125rem] font-semibold text-danger">Escalated</span>
             )}
+            {data.activity.some((a) => a.action === "deletion_requested") && (
+              <span className="rounded-lg border border-line bg-sky px-2 py-0.5 text-[0.8125rem] font-semibold text-blue">Deletion requested</span>
+            )}
             <span className={`rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-brand text-white" : "border border-line text-text-2"}`}>
               {signed ? "Signed" : "Not yet signed"}
             </span>
@@ -156,6 +159,16 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
           </p>
         </div>
       </div>
+
+      {data.activity.some((a) => a.action === "deletion_requested") && (
+        <div role="note" className="flex flex-col gap-2 rounded-xl border border-line bg-sky px-5 py-3.5">
+          <p className="text-[0.875rem]">
+            <strong className="font-semibold">The patient asked to delete their data.</strong> It is kept only while a red flag is
+            open. Once you&apos;ve been in touch and closed the red flag task, delete it.
+          </p>
+          {write && <DeleteCaseButton sessionId={id} />}
+        </div>
+      )}
 
       {!data.consents.clinician_review && !session.taken_over && (
         <p className="rounded-lg bg-sage-soft px-5 py-3 text-caption">This person did not agree to clinician review.</p>

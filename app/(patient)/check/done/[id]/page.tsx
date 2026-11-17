@@ -23,6 +23,9 @@ export default function ReceiptPage() {
           <ChevronRight />
         </Link>
         <p className="text-small text-muted">If things get worse before then, tap &ldquo;I need help now&rdquo;.</p>
+        <Link href="/my-data" className="inline-flex min-h-11 items-center self-start text-caption text-primary-dark underline underline-offset-2">
+          See or delete your data
+        </Link>
       </div>
     </>
   );

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { decide, logContact, saveSummary, signSummary, startReview } from "../../actions";
+import { decide, deleteCaseData, logContact, saveSummary, signSummary, startReview } from "../../actions";
 import { ActionButton } from "../../ui";
 import { STEP_NAMES } from "@/lib/rules/routing";
 
@@ -133,6 +133,53 @@ export function ContactForm({ sessionId }: { sessionId: string }) {
         <ActionButton action={() => logContact(sessionId, "called_no_answer", note)}>Called, no answer</ActionButton>
         <ActionButton action={() => logContact(sessionId, "spoke", note)}>Spoke with patient</ActionButton>
       </div>
+    </div>
+  );
+}
+
+/** Deletes the case after the patient asked; then back to the queue. */
+export function DeleteCaseButton({ sessionId }: { sessionId: string }) {
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
+  const [pending, start] = useTransition();
+  const [error, setError] = useState("");
+  return (
+    <div className="flex flex-col gap-2">
+      {confirming ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-caption font-semibold">Delete everything for this case? This can&apos;t be undone.</span>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              start(async () => {
+                const r = await deleteCaseData(sessionId).catch(() => ({ ok: false as const, error: "That didn't work." }));
+                if (r.ok) router.push("/staff");
+                else setError(r.error);
+              })
+            }
+            className="min-h-9 cursor-pointer rounded-lg bg-danger px-3 text-[0.875rem] font-medium text-white disabled:opacity-60"
+          >
+            {pending ? "Deleting…" : "Yes, delete"}
+          </button>
+          <button type="button" onClick={() => setConfirming(false)} className="min-h-9 cursor-pointer rounded-lg border border-line bg-surface px-3 text-[0.875rem] font-medium">
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="min-h-9 cursor-pointer self-start rounded-lg border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft"
+        >
+          Delete the patient&apos;s data
+        </button>
+      )}
+      {error && (
+        <p role="alert" className="text-small text-danger">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

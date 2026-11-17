@@ -177,3 +177,28 @@ export async function addHistory(sessionId: string, kind: "bpd" | "adhd"): Promi
     await audit(staff, "history_added", "session", id, id, { kind: k });
   });
 }
+
+/**
+ * Finishes a patient's held deletion request once the care team has been in
+ * touch: only after the patient asked, and only when no red flag is still open.
+ */
+export async function deleteCaseData(sessionId: string): Promise<Result> {
+  const staff = await requireStaff();
+  if (!canWrite(staff)) return { ok: false, error: "This account can view cases but not change them." };
+  try {
+    const id = uuid.parse(sessionId);
+    const asked = await db().from("audit_events").select("id").eq("session_id", id).eq("action", "deletion_requested").limit(1);
+    must(asked, "read request");
+    if (!asked.data?.length) return { ok: false, error: "The patient hasn't asked for their data to be deleted." };
+    const openFlags = await db().from("tasks").select("id").eq("session_id", id).eq("type", "red_flag").is("closed_at", null).limit(1);
+    must(openFlags, "read red flags");
+    if (openFlags.data?.length) return { ok: false, error: "Close the red flag task first, once you've been in touch." };
+    must(await db().from("audit_events").delete().eq("session_id", id), "delete audit lines");
+    must(await db().from("sessions").delete().eq("id", id), "delete session");
+    await audit(staff, "data_deleted", "session", "deleted", null);
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, error: "That didn't work. Please try again." };
+  }
+}

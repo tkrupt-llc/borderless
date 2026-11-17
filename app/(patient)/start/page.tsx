@@ -74,6 +74,9 @@ export default function StartPage() {
               <li key={line}>{line}</li>
             ))}
           </ul>
+          <Link href="/my-data" className="mt-1.5 inline-flex min-h-11 items-center text-caption text-primary-dark underline underline-offset-2">
+            See or delete your data
+          </Link>
         </section>
         <DiscreetToggle />
       </div>
