@@ -92,35 +92,39 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
       <StartReview sessionId={id} />
 
       {/* Header: which case, how urgent, and the facts needed before reading on. */}
-      <div className="flex flex-col gap-3">
-        <nav aria-label="Breadcrumb" className="text-[0.8125rem] text-muted">
-          <Link href="/staff">Queue</Link> <span aria-hidden="true">/</span> <span aria-current="page">{caseRef(id)}</span>
-        </nav>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-[1.5rem] leading-tight font-semibold tracking-[-0.01em] tabular-nums">{caseRef(id)}</h1>
-          {topTier && <PriorityBadge priority={topTier} />}
-          {openTasks.some((t) => t.escalated_at) && (
-            <span className="rounded-md border border-danger px-2 py-0.5 text-[0.8125rem] font-semibold text-danger">Escalated</span>
-          )}
-          <span className={`rounded-md px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-primary text-white" : "border border-line text-text-2"}`}>
-            {signed ? "Signed" : "Not yet signed"}
-          </span>
+      <nav aria-label="Breadcrumb" className="-mb-2 text-[0.8125rem] text-muted">
+        <Link href="/staff">Queue</Link> <span aria-hidden="true">/</span> <span aria-current="page">{caseRef(id)}</span>
+      </nav>
+
+      {/* Case banner: stays in view while scrolling, like the patient banner in clinical records. */}
+      <div className="z-10 overflow-hidden lg:sticky lg:top-0 rounded-lg border border-line-warm bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3 px-5 py-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] tabular-nums">{caseRef(id)}</h1>
+            {topTier && <PriorityBadge priority={topTier} />}
+            {openTasks.some((t) => t.escalated_at) && (
+              <span className="rounded-md border border-danger px-2 py-0.5 text-[0.8125rem] font-semibold text-danger">Escalated</span>
+            )}
+            <span className={`rounded-md px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-primary text-white" : "border border-line text-text-2"}`}>
+              {signed ? "Signed" : "Not yet signed"}
+            </span>
+          </div>
+          <dl className="flex flex-wrap gap-x-6 gap-y-1 text-[0.8125rem]">
+            {[
+              ["Path", session.path === "contact" ? "Call-back only" : `${session.path[0].toUpperCase()}${session.path.slice(1)} check-in`],
+              ["Received", time(session.created_at)],
+              ["Phone", session.contact_phone ?? "Not shared"],
+              ["Language", session.preferred_language ?? "Not given"],
+              ["Proposed", proposal ? (proposal.urgent ? "Urgent pathway" : `Step ${proposal.step}`) : "None yet"],
+            ].map(([k, v]) => (
+              <div key={k}>
+                <dt className="text-[0.6875rem] font-semibold tracking-[0.06em] text-muted uppercase">{k}</dt>
+                <dd className="font-medium">{v}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
-        <dl className="flex flex-wrap gap-x-8 gap-y-2 rounded-lg border border-line-warm bg-surface px-5 py-3 text-[0.875rem]">
-          {[
-            ["Path", session.path === "contact" ? "No check-in (call-back only)" : `${session.path[0].toUpperCase()}${session.path.slice(1)} check-in`],
-            ["Received", time(session.created_at)],
-            ["Phone", session.contact_phone ?? "Not shared"],
-            ["Language", session.preferred_language ?? "Not given"],
-            ["Proposed", proposal ? (proposal.urgent ? "Urgent pathway" : `Step ${proposal.step}`) : "None yet"],
-          ].map(([k, v]) => (
-            <div key={k}>
-              <dt className="text-[0.75rem] text-muted">{k}</dt>
-              <dd className="font-medium">{v}</dd>
-            </div>
-          ))}
-        </dl>
-        <div className="flex flex-col gap-3 rounded-lg border border-line-warm bg-surface px-5 py-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-2 border-t border-line-warm bg-sage-mist px-5 py-2.5 lg:flex-row lg:items-center lg:justify-between">
           <ol aria-label="Case progress" className="flex flex-wrap items-center gap-x-2 gap-y-2 text-[0.8125rem]">
             {progress.map((p, i) => (
               <li key={p.label} className="flex items-center gap-2">

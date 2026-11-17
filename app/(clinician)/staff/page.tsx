@@ -41,7 +41,9 @@ export default function QueuePage({ searchParams }: PageProps<"/staff">) {
 
 async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["searchParams"] }) {
   const staff = await requireStaff();
-  const view = String((await searchParams).view ?? "all");
+  const params = await searchParams;
+  const view = String(params.view ?? "all");
+  const notFound = typeof params.notfound === "string" ? params.notfound : null;
   const filter = FILTERS.find((f) => f.id === view) ?? FILTERS[0];
   const all = await loadQueue();
   const tasks = all.filter(filter.match);
@@ -65,10 +67,17 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[1.5rem] leading-tight font-semibold tracking-[-0.01em]">Queue</h1>
-          <p className="text-[0.8125rem] text-muted">Synthetic data only · sorted by urgency, then time left</p>
+          <p className="text-[0.8125rem] text-muted">Open cases, most urgent first, then by time left</p>
         </div>
         <AutoRefresh />
       </div>
+
+      {notFound !== null && (
+        <p role="status" className="rounded-lg border border-line bg-surface px-4 py-2.5 text-[0.875rem]">
+          {notFound ? <>No case found for <strong className="font-semibold">{notFound}</strong>.</> : "Type a case reference to search."}{" "}
+          References look like BL-AF09B5.
+        </p>
+      )}
 
       {imminent.length > 0 && (
         <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-danger px-5 py-3.5 text-white">
@@ -84,31 +93,33 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
         </div>
       )}
 
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+      <dl className="grid grid-cols-2 overflow-hidden rounded-lg border border-line-warm bg-surface sm:grid-cols-3 xl:grid-cols-5">
         {stats.map((s) => (
-          <div key={s.label} className="flex flex-col-reverse rounded-lg border border-line-warm bg-surface px-4 py-2.5">
-            <dt className="text-[0.8125rem] text-muted">{s.label}</dt>
-            <dd className={`text-[1.375rem] leading-tight font-semibold tabular-nums ${s.alert && s.value > 0 ? "text-danger" : ""}`}>
+          <div key={s.label} className="flex flex-col-reverse gap-0.5 border-line-warm px-5 py-3 not-first:border-s max-xl:border-t">
+            <dt className="text-[0.75rem] font-medium text-muted">{s.label}</dt>
+            <dd className={`text-[1.375rem] leading-tight font-semibold tabular-nums ${s.alert && s.value > 0 ? "text-danger" : "text-ink"}`}>
               {s.value}
             </dd>
           </div>
         ))}
       </dl>
 
-      <nav aria-label="Filter the queue" className="flex flex-wrap gap-2">
+      <nav aria-label="Filter the queue" className="-mb-2 flex gap-1 overflow-x-auto border-b border-line">
         {FILTERS.map((f) => {
           const on = f.id === filter.id;
           return (
             <Link
               key={f.id}
               href={f.id === "all" ? "/staff" : `/staff?view=${f.id}`}
-              aria-current={on ? "true" : undefined}
-              className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-[0.875rem] font-medium no-underline ${
-                on ? "border border-primary bg-sage text-ink hover:text-ink" : "border border-line bg-surface text-ink hover:bg-sage-soft"
+              aria-current={on ? "page" : undefined}
+              className={`-mb-px inline-flex min-h-10 items-center gap-2 border-b-2 px-3 text-[0.875rem] whitespace-nowrap no-underline ${
+                on ? "border-primary font-semibold text-ink hover:text-ink" : "border-transparent font-medium text-muted hover:border-line hover:text-ink"
               }`}
             >
               {f.label}
-              <span className={`tabular-nums ${on ? "text-text-2" : "text-muted"}`}>{all.filter(f.match).length}</span>
+              <span className={`rounded-full px-1.5 text-[0.75rem] tabular-nums ${on ? "bg-sage text-ink" : "bg-sage-soft text-muted"}`}>
+                {all.filter(f.match).length}
+              </span>
             </Link>
           );
         })}
@@ -132,7 +143,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
               </h2>
               <div className="overflow-x-auto rounded-lg border border-line-warm bg-surface">
                 <table className="w-full min-w-[860px] border-collapse text-left text-[0.875rem]">
-                  <thead className="bg-sage-mist text-[0.75rem] tracking-wide text-muted">
+                  <thead className="bg-sage-mist text-[0.6875rem] tracking-[0.06em] text-muted uppercase">
                     <tr>
                       {["Case", "Tier", "Reason", "Next action", "Received", "Clock", "Status", ""].map((h) => (
                         <th key={h} scope="col" className="px-4 py-2 font-semibold">

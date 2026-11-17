@@ -136,3 +136,19 @@ export async function loadCase(sessionId: string) {
     activity,
   };
 }
+
+/**
+ * Finds a case from its reference (BL- plus the first 6 hex characters of the
+ * session id), using a range on the id. Returns the ids that match.
+ */
+export async function findCase(ref: string): Promise<string[]> {
+  const hex = /^(?:BL-?)?([0-9a-f]{6})$/i.exec(ref.trim())?.[1]?.toLowerCase();
+  if (!hex) return [];
+  const result = await db()
+    .from("sessions")
+    .select("id")
+    .gte("id", `${hex}00-0000-0000-0000-000000000000`)
+    .lte("id", `${hex}ff-ffff-ffff-ffff-ffffffffffff`)
+    .limit(5);
+  return rows<{ id: string }>(result, "find case").map((r) => r.id);
+}
