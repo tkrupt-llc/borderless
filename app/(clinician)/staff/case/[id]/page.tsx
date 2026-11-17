@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { canWrite, requireStaff } from "@/lib/staff/auth";
-import { loadCase } from "@/lib/staff/data";
+import { loadCase, loadCaseTrend } from "@/lib/staff/data";
+import { seriesFrom, TrendChart } from "@/components/trend-chart";
 import { STEP_NAMES } from "@/lib/rules/routing";
 import { summaryToText } from "@/lib/summary/build";
 import { bankItem } from "@/lib/item-bank";
@@ -31,7 +32,7 @@ const ACTIVITY_WORDS: Record<string, string> = {
   task_acknowledged: "Task acknowledged", task_closed: "Task closed", task_escalated: "Escalated to supervisor",
   proposal_accept: "Proposal accepted", proposal_override: "Proposal overridden", summary_edited: "Summary edited",
   summary_signed: "Summary signed", receipt_booked: "Marked booked", receipt_first_contact_confirmed: "First contact confirmed",
-  contact_logged: "Contact logged", deletion_requested: "Patient asked to delete their data", coping_not_helping: "Coping card not helping", history_added: "History added", history_self_reported: "History self-reported",
+  contact_logged: "Contact logged", follow_up_started: "Follow-up started", follow_up_link_created: "Follow-up link given", not_on_track: "Not on track", deletion_requested: "Patient asked to delete their data", coping_not_helping: "Coping card not helping", history_added: "History added", history_self_reported: "History self-reported",
   safety_check_asked: "Safety check asked", safety_check_answered_no: "Safety check answered no",
   ai_reply_blocked: "AI reply blocked by guardrail", ai_unavailable_fallback: "AI unavailable, questionnaire used",
 };
@@ -55,8 +56,11 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
   const staff = await requireStaff();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const data = await loadCase(id);
+  const [data, chain] = await Promise.all([loadCase(id), loadCaseTrend(id)]);
   if (!data) notFound();
+  const trend = chain && chain.sessions.length > 1 ? seriesFrom(chain.points) : [];
+  const pathLabel = (p: string) =>
+    p === "contact" ? "Call-back only" : p === "followup" ? "Follow-up check-in" : `${p[0].toUpperCase()}${p.slice(1)} check-in`;
   const write = canWrite(staff);
   const { session, proposal, decision, summary } = data;
   const signed = Boolean(summary?.signed_at);
@@ -114,7 +118,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
           </div>
           <dl className="flex flex-wrap gap-x-6 gap-y-1 text-[0.8125rem]">
             {[
-              ["Path", session.path === "contact" ? "Call-back only" : `${session.path[0].toUpperCase()}${session.path.slice(1)} check-in`],
+              ["Path", pathLabel(session.path)],
               ["Received", time(session.created_at)],
               ["Phone", session.contact_phone ?? "Not shared"],
               ["Language", session.preferred_language ?? "Not given"],
@@ -259,6 +263,34 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
               </ul>
             )}
           </Panel>
+
+          {/* --- Follow-up trend: the person's check-ins over time ------ */}
+          {chain && chain.sessions.length > 1 && (
+            <Panel id="trend-h" title="Over time" aside={<span className="text-[0.75rem] text-muted">{chain.sessions.length} check-ins · lower is better</span>}>
+              <ol className="flex flex-col gap-1 text-[0.8125rem]">
+                {chain.sessions.map((c, i) => (
+                  <li key={c.id} className="flex flex-wrap gap-x-2">
+                    <span className="w-24 text-muted">{i === 0 ? "First" : `Follow-up ${i}`}</span>
+                    {c.id === id ? (
+                      <strong className="font-semibold tabular-nums">{caseRef(c.id)} (this case)</strong>
+                    ) : (
+                      <Link href={`/staff/case/${c.id}`} className="tabular-nums">{caseRef(c.id)}</Link>
+                    )}
+                    <span className="text-muted">{time(c.created_at)} · {pathLabel(c.path)}</span>
+                  </li>
+                ))}
+              </ol>
+              {trend.length > 0 ? (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {trend.map((s) => (
+                    <TrendChart key={s.title} series={s} color="var(--primary)" />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[0.875rem] text-muted">No scores to compare yet.</p>
+              )}
+            </Panel>
+          )}
 
           {/* --- Conversation ---------------------------------------------- */}
           {data.messages.length > 0 && (

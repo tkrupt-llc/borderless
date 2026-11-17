@@ -4,6 +4,15 @@ import { useEffect, useState } from "react";
 import { loadReceipt } from "../../actions";
 import { RESULT_KEY, SUBMITTED_AT_KEY, useStoredValue } from "@/lib/check/local-answers";
 import { buildReceipt, type ReceiptStep, type ReceiptView } from "@/lib/receipt/build";
+import { FollowUpLink } from "@/components/follow-up-link";
+
+function readToken(raw: string | null): string | null {
+  try {
+    return raw ? (JSON.parse(raw).followUpToken ?? null) : null;
+  } catch {
+    return null;
+  }
+}
 
 function readFollowUp(raw: string | null): boolean {
   try {
@@ -21,6 +30,7 @@ function readFollowUp(raw: string | null): boolean {
 export function Receipt() {
   const submittedAt = useStoredValue(SUBMITTED_AT_KEY);
   const followUp = readFollowUp(useStoredValue(RESULT_KEY));
+  const followUpToken = readToken(useStoredValue(RESULT_KEY));
   const [server, setServer] = useState<ReceiptView | null>(null);
 
   useEffect(() => {
@@ -68,6 +78,11 @@ export function Receipt() {
           There is no check-in to show in this browser. If you sent one from another device, your care team still has
           it.
         </p>
+      )}
+      {followUp && followUpToken && (
+        <div className="px-5 pt-3">
+          <FollowUpLink token={followUpToken} from={submittedAt ?? undefined} />
+        </div>
       )}
     </>
   );

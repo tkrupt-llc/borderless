@@ -152,3 +152,23 @@ export async function findCase(ref: string): Promise<string[]> {
     .limit(5);
   return rows<{ id: string }>(result, "find case").map((r) => r.id);
 }
+
+/** The person's chain of check-ins (first one plus follow-ups) with every score, oldest first. */
+export async function loadCaseTrend(sessionId: string) {
+  const self = rows<{ id: string; parent_session_id: string | null }>(
+    await db().from("sessions").select("id, parent_session_id").eq("id", sessionId),
+    "session chain",
+  )[0];
+  if (!self) return null;
+  const rootId = self.parent_session_id ?? self.id;
+  const sessions = rows<{ id: string; path: string; created_at: string }>(
+    await db().from("sessions").select("id, path, created_at").or(`id.eq.${rootId},parent_session_id.eq.${rootId}`).order("created_at"),
+    "chain sessions",
+  );
+  if (sessions.length < 2) return { rootId, sessions, points: [] };
+  const points = rows<{ session_id: string; instrument: string; total: number; band: string; created_at: string }>(
+    await db().from("scores").select("session_id, instrument, total, band, created_at").in("session_id", sessions.map((s) => s.id)).order("created_at"),
+    "chain scores",
+  ).map((r) => ({ sessionId: r.session_id, at: r.created_at, instrument: r.instrument, total: r.total, band: r.band }));
+  return { rootId, sessions, points };
+}

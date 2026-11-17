@@ -28,6 +28,7 @@ function nextAction(t: QueueTask): string {
   if (t.type === "red_flag") return t.hasPhone ? "Call the patient" : "Review now (no phone shared)";
   if (t.type === "talk_to_person" || t.type === "callback") return "Call back";
   if (t.type === "care_request") return "Review and choose the next step";
+  if (t.type === "not_on_track") return t.hasPhone ? "Call about the change" : "Review the change";
   if (t.type === "not_helping") return t.hasPhone ? "Call to check in" : "Review the case";
   return "Review";
 }
@@ -163,7 +164,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                             <Link href={`/staff/case/${t.sessionId}`} className="font-semibold whitespace-nowrap text-ink tabular-nums">
                               {caseRef(t.sessionId)}
                             </Link>
-                            <span className="block text-[0.75rem] whitespace-nowrap text-muted">{t.path === "contact" ? "No check-in" : `${t.path[0].toUpperCase()}${t.path.slice(1)} check`}</span>
+                            <span className="block text-[0.75rem] whitespace-nowrap text-muted">{t.path === "contact" ? "No check-in" : t.path === "followup" ? "Follow-up" : `${t.path[0].toUpperCase()}${t.path.slice(1)} check`}</span>
                           </td>
                           <td className="px-4 py-2.5">
                             <PriorityBadge priority={t.priority} />

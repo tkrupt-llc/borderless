@@ -14,6 +14,7 @@ import { buildReceipt, type ReceiptView } from "@/lib/receipt/build";
 import { caseRef } from "@/lib/case-ref";
 import { factsFromScores, scoreAll, type Score } from "@/lib/rules/scoring";
 import consent from "@/content/consent.json";
+import { derivedScreens, notOnTrack } from "@/lib/followup/trend";
 
 // Without Supabase keys (tests, or a deploy before set-up) the flow still runs
 // and the rules still fire; nothing is saved.
@@ -53,7 +54,7 @@ export async function startCheckIn(input: unknown): Promise<{ ok: true } | Fail>
 
 const LaterInput = z.object({ path: z.string(), consents: z.record(z.string(), z.boolean()) });
 
-export async function recordLaterConsents(input: unknown): Promise<{ ok: true } | Fail> {
+export async function recordLaterConsents(input: unknown): Promise<{ ok: true; followUpToken?: string } | Fail> {
   const parsed = LaterInput.safeParse(input);
   if (!parsed.success || !isPathId(parsed.data.path)) return { ok: false, reason: "invalid" };
   if (!isDbConfigured()) return { ok: true };
@@ -61,6 +62,8 @@ export async function recordLaterConsents(input: unknown): Promise<{ ok: true } 
     const session = await currentSession(parsed.data.path);
     if (!session) return { ok: false, reason: "no_session" };
     await persist.addConsents(session.id, "result", parsed.data.consents);
+    // Saying yes to a follow-up gives the person their private link back.
+    if (parsed.data.consents.follow_up === true) return { ok: true, followUpToken: await persist.ensureFollowUpToken(session.id) };
     return { ok: true };
   } catch (e) {
     console.error(e);
@@ -171,6 +174,8 @@ export async function finishCheckIn(input: unknown): Promise<FinishResult> {
 
   const instruments = new Set<string>(PATHS[path]);
   const scores = scoreAll(answers).filter((s) => instruments.has(s.instrument));
+  // A follow-up also stores PHQ-2 / GAD-2 (its first two items), so it can be compared with a quick check.
+  const saved = path === "followup" ? [...scores, ...derivedScreens(answers)] : scores;
   if (!isDbConfigured()) return { ok: true, sessionId: null, scores, sentToClinician: false };
 
   try {
@@ -185,10 +190,37 @@ export async function finishCheckIn(input: unknown): Promise<FinishResult> {
       "path.quick": path === "quick",
       "field.medical_conditions": await persist.hasExtractedField(session.id, "medical_conditions"),
     });
-    await persist.finishCheckIn(session.id, scores, sentToClinician, proposal);
+    await persist.finishCheckIn(session.id, saved, sentToClinician, proposal);
+    if (path === "followup" && sentToClinician) {
+      // Compare with the check-in before this one; a reliable worsening goes to the care team.
+      const { points } = await persist.loadTrend(session.id);
+      const earlier = points.filter((p) => p.sessionId !== session.id);
+      const lastId = earlier.at(-1)?.sessionId;
+      const reasons = notOnTrack(earlier.filter((p) => p.sessionId === lastId), saved);
+      if (reasons.length > 0) await persist.raiseNotOnTrack(session.id, reasons);
+    }
     return { ok: true, sessionId: session.id, scores, sentToClinician };
   } catch (e) {
     console.error(e);
     return { ok: false, reason: "error" };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Follow-up trend, for the session behind this browser's cookie only
+// ---------------------------------------------------------------------------
+
+export type MyTrend = { points: { at: string; instrument: string; total: number; band: string }[]; checkIns: number };
+
+export async function loadMyTrend(): Promise<MyTrend | null> {
+  if (!isDbConfigured()) return null;
+  try {
+    const id = await readSessionId();
+    if (!id) return null;
+    const { points, sessions } = await persist.loadTrend(id);
+    return { points: points.map(({ at, instrument, total, band }) => ({ at, instrument, total, band })), checkIns: sessions.length };
+  } catch (e) {
+    console.error(e);
+    return null;
   }
 }

@@ -5,6 +5,8 @@ import { bankFile } from "@/lib/item-bank";
 export const PATHS = {
   quick: ["PHQ2", "GAD2", "QC_SUICIDE"],
   full: ["PHQ9", "GAD7"],
+  // A follow-up asks the full PHQ-9 and GAD-7, so change can be measured.
+  followup: ["PHQ9", "GAD7"],
 } as const satisfies Record<string, Instrument[]>;
 export type PathId = keyof typeof PATHS;
 

@@ -6,6 +6,7 @@ import type { Score } from "@/lib/rules/scoring";
 import type { Proposal } from "@/lib/rules/routing";
 import { dueAt, nextWorkingDay } from "@/lib/rules/tiers";
 import consent from "@/content/consent.json";
+import { newFollowUpToken } from "@/lib/followup/trend";
 
 /**
  * Database writes for the patient flow. Server only, service-role client.
@@ -13,7 +14,7 @@ import consent from "@/content/consent.json";
  * on, rather than silently losing an answer or a red flag.
  */
 
-type Path = "quick" | "full" | "crisis" | "contact";
+type Path = "quick" | "full" | "crisis" | "contact" | "followup";
 export type ConsentChoices = Record<string, boolean>;
 
 function check<T>(result: { data: T; error: { message: string } | null }, what: string): T {
@@ -364,4 +365,93 @@ export async function deleteSessionData(sessionId: string): Promise<"deleted" | 
     "log deletion",
   );
   return "deleted";
+}
+
+// ---------------------------------------------------------------------------
+// Follow-up check-ins
+// ---------------------------------------------------------------------------
+
+/** The first check-in of a chain (a follow-up points at it). */
+async function rootOf(sessionId: string): Promise<string> {
+  const row = check(
+    await db().from("sessions").select("id, parent_session_id").eq("id", sessionId).maybeSingle(),
+    "read session chain",
+  ) as { id: string; parent_session_id: string | null } | null;
+  if (!row) throw new Error("no session");
+  return row.parent_session_id ?? row.id;
+}
+
+/** The private follow-up token for this person's chain, created on first use. */
+export async function ensureFollowUpToken(sessionId: string): Promise<string> {
+  const root = await rootOf(sessionId);
+  const row = check(
+    await db().from("sessions").select("follow_up_token").eq("id", root).single(),
+    "read follow-up token",
+  ) as { follow_up_token: string | null };
+  if (row.follow_up_token) return row.follow_up_token;
+  const token = newFollowUpToken();
+  check(await db().from("sessions").update({ follow_up_token: token }).eq("id", root), "save follow-up token");
+  await audit("follow_up_link_created", root, "session");
+  return token;
+}
+
+export async function findFollowUpRoot(token: string): Promise<{ id: string; created_at: string } | null> {
+  return check(
+    await db().from("sessions").select("id, created_at").eq("follow_up_token", token).maybeSingle(),
+    "find follow-up",
+  ) as { id: string; created_at: string } | null;
+}
+
+/**
+ * Starts a follow-up as its own session, linked to the first check-in. It
+ * carries over what the person already told us (contact preferences, known
+ * history) and their latest consent choices, so they are not asked again.
+ */
+export async function createFollowUpSession(rootId: string): Promise<string> {
+  const root = check(
+    await db()
+      .from("sessions")
+      .select("discreet_mode, contact_phone, preferred_language, preferred_clinician_gender, callback_time, history_bpd, history_adhd, history_source")
+      .eq("id", rootId)
+      .single(),
+    "read first check-in",
+  ) as Record<string, unknown>;
+  const created = check(
+    await db().from("sessions").insert({ ...root, path: "followup", parent_session_id: rootId }).select("id").single(),
+    "create follow-up",
+  ) as { id: string };
+  const choices = await getConsents(rootId);
+  const rows = Object.entries(choices).map(([purpose, granted]) => ({ session_id: created.id, purpose, granted, version: consent.version }));
+  if (rows.length) check(await db().from("consent_records").insert(rows), "carry over consents");
+  await audit("follow_up_started", created.id, "session", { parent: rootId });
+  return created.id;
+}
+
+export type TrendPoint = { sessionId: string; at: string; instrument: string; total: number; band: string };
+
+/** Every score in this person's chain (first check-in and follow-ups), oldest first. */
+export async function loadTrend(sessionId: string): Promise<{ rootId: string; sessions: { id: string; path: string; created_at: string }[]; points: TrendPoint[] }> {
+  const rootId = await rootOf(sessionId);
+  const sessions = check(
+    await db().from("sessions").select("id, path, created_at").or(`id.eq.${rootId},parent_session_id.eq.${rootId}`).order("created_at"),
+    "read chain",
+  ) as { id: string; path: string; created_at: string }[];
+  const rows = check(
+    await db().from("scores").select("session_id, instrument, total, band, created_at").in("session_id", sessions.map((s) => s.id)).order("created_at"),
+    "read chain scores",
+  ) as { session_id: string; instrument: string; total: number; band: string; created_at: string }[];
+  return {
+    rootId,
+    sessions,
+    points: rows.map((r) => ({ sessionId: r.session_id, at: r.created_at, instrument: r.instrument, total: r.total, band: r.band })),
+  };
+}
+
+/** A "not on track" task for the care team: due within one working day. */
+export async function raiseNotOnTrack(sessionId: string, reasons: string[]) {
+  check(
+    await db().from("tasks").insert({ session_id: sessionId, type: "not_on_track", priority: "elevated", due_at: dueAt("elevated", new Date()).toISOString() }),
+    "not-on-track task",
+  );
+  await audit("not_on_track", sessionId, "session", { reasons });
 }

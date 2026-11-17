@@ -47,7 +47,7 @@ async function InsightsView() {
       {/* Headline numbers. */}
       <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)] sm:grid-cols-3 xl:grid-cols-5">
         {[
-          { label: "Check-ins started", value: String(data.started), sub: `${data.quick} quick · ${data.full} full` },
+          { label: "Check-ins started", value: String(data.started), sub: `${data.quick} quick · ${data.full} full${data.followUps ? ` · ${data.followUps} follow-up` : ""}` },
           { label: "Completed", value: pct(data.completed, data.started), sub: `${data.completed} of ${data.started}` },
           { label: "Sent to a clinician", value: String(data.sentToClinician), sub: plural(data.callbacks, "call-back request", "call-back requests") },
           { label: "Red flags raised", value: String(data.flagsTotal), sub: plural(data.takenOver, "chat handed to a person", "chats handed to people") },

@@ -83,7 +83,7 @@ export function buildReceipt(input: ReceiptInput): ReceiptView | null {
         : "A clinician will contact you.",
     Boolean(firstContact),
   );
-  if (input.followUp) add("follow_up", "Follow-up check-in", "In about 4 weeks. We'll remind you.", false);
+  if (input.followUp) add("follow_up", "Follow-up check-in", "In about 4 weeks. Use your follow-up link.", false);
 
   // The first step not yet done is "now"; later ones are "next".
   let nowGiven = false;

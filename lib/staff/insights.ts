@@ -90,6 +90,7 @@ export async function loadInsights(now = new Date()) {
     callbacks: tasks.filter((t) => t.type === "talk_to_person" || t.type === "callback").length,
     quick: checkIns.filter((s) => s.path === "quick").length,
     full: checkIns.filter((s) => s.path === "full").length,
+    followUps: checkIns.filter((s) => s.path === "followup").length,
     takenOver: sessions.filter((s) => s.taken_over).length,
     daily,
     flagsByRule: [...byRule.values()].sort((a, b) => b.n - a.n),

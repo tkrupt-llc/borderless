@@ -5,6 +5,7 @@ import { RESULT_KEY, useStoredValue } from "@/lib/check/local-answers";
 import { ChevronRight } from "@/components/icons";
 import wording from "@/content/result-wording.json";
 import { LaterChoices } from "./later-choices";
+import { MyTrend } from "./my-trend";
 import { caseRef } from "@/lib/case-ref";
 
 type StoredResult = {
@@ -46,7 +47,8 @@ export function ResultCard() {
   return (
     <div className="flex flex-col gap-4 px-5 pt-5">
       <h1 className="font-serif text-[1.875rem] leading-tight font-normal">
-        What your answers <em className="text-primary">show</em>
+        {result.path === "followup" ? "Your follow-up " : "What your answers "}
+        <em className="text-primary">{result.path === "followup" ? "results" : "show"}</em>
       </h1>
 
       <ul className="flex flex-col gap-2.5">
@@ -82,7 +84,8 @@ export function ResultCard() {
           : "Your answers stayed with you. No one will contact you about them."}
       </p>
 
-      <LaterChoices path={result.path} />
+      {/* A follow-up already carries the earlier choices; it shows the trend instead. */}
+      {result.path === "followup" ? <MyTrend /> : <LaterChoices path={result.path} />}
 
       <div className="flex flex-col gap-2.5 pb-2">
         {result.sentToClinician && (

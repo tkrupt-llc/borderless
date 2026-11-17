@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { recordLaterConsents } from "../../actions";
 import { updateStoredResult } from "@/lib/check/local-answers";
 import consent from "@/content/consent.json";
+import { FollowUpLink } from "@/components/follow-up-link";
 
 // Asked here rather than before the questions (research: ask only what is
 // needed, when it matters). Nothing is pre-ticked; each choice is logged.
@@ -14,6 +15,7 @@ export function LaterChoices({ path }: { path: string }) {
     Object.fromEntries(LATER.map((p) => [p.id, p.default])),
   );
   const [status, setStatus] = useState<"idle" | "saved" | "failed">("idle");
+  const [token, setToken] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function save(e: React.FormEvent) {
@@ -22,7 +24,8 @@ export function LaterChoices({ path }: { path: string }) {
       try {
         const r = await recordLaterConsents({ path, consents: choices });
         if (!r.ok) throw new Error(r.reason);
-        updateStoredResult({ followUp: choices.follow_up === true });
+        updateStoredResult({ followUp: choices.follow_up === true, followUpToken: r.followUpToken ?? null });
+        setToken(r.followUpToken ?? null);
         setStatus("saved");
       } catch {
         setStatus("failed");
@@ -61,6 +64,7 @@ export function LaterChoices({ path }: { path: string }) {
       <p role="status" className="text-caption text-text-2">
         {status === "saved" ? "Saved." :status === "failed" ? "That didn't save. Please try again." : ""}
       </p>
+      {token && <FollowUpLink token={token} />}
     </form>
   );
 }
