@@ -120,10 +120,7 @@ export function StaffShell({
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line-warm bg-surface px-5 py-2 lg:px-8">
-          <span className="inline-flex items-center gap-2 rounded-md border border-[#e3c27a] bg-[#fbefd2] px-2 py-0.5 text-[0.75rem] font-semibold text-[#5c3a00]">
-            Demo environment · synthetic data only
-          </span>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="ms-auto flex flex-wrap items-center gap-3">
           <ImminentAlert />
           <form action="/staff/find" role="search" className="flex items-center gap-2">
             <label className="flex h-9 items-center gap-2 rounded-md border border-line bg-bg px-3 text-muted focus-within:border-primary focus-within:bg-surface">
@@ -157,6 +154,7 @@ export const TASK_LABELS: Record<string, string> = {
   care_request: "Check-in to review",
   not_helping: "Coping card not helping",
   not_on_track: "Not on track",
+  patient_message: "Message from patient",
 };
 
 const TIER_STYLE: Record<string, string> = {

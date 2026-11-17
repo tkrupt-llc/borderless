@@ -57,7 +57,15 @@ export function Receipt() {
     <>
       <div className="flex flex-col gap-1.5 px-5 pt-5">
         <h1 className="font-serif text-[1.875rem] leading-tight font-normal">
-          Thank you. Your check-in is <em className="text-primary">in.</em>
+          {view && view.steps.length === 0 ? (
+            <>
+              Your <em className="text-primary">messages</em>
+            </>
+          ) : (
+            <>
+              Thank you. Your check-in is <em className="text-primary">in.</em>
+            </>
+          )}
         </h1>
         {view?.ref && (
           <p className="text-caption text-muted">
@@ -68,20 +76,28 @@ export function Receipt() {
       </div>
 
       {view?.messages && view.messages.length > 0 && (
-        <section aria-labelledby="msgs-h" className="mx-5 mt-4 flex flex-col gap-2 rounded-2xl bg-sky px-4 py-3.5">
+        <section aria-labelledby="msgs-h" className="mx-5 mt-4 flex flex-col gap-2.5 rounded-2xl bg-sky px-4 py-3.5">
           <h2 id="msgs-h" className="text-[0.8125rem] font-semibold tracking-[0.06em] text-blue uppercase">
-            From your care team
+            {view.messages.some((m) => !m.fromPatient) ? "Messages with your care team" : "Your message to your care team"}
           </h2>
           {view.messages.map((m) => (
-            <p key={m.at} className="anim-pop text-blue-ink">
-              {m.body}
-              <span className="mt-0.5 block text-small text-muted">{formatWhen(m.at)}</span>
-            </p>
+            <div
+              key={m.at}
+              className={`anim-pop max-w-[90%] px-3 py-2 ${
+                m.fromPatient ? "self-end rounded-[14px_14px_4px_14px] bg-primary text-white" : "self-start rounded-[14px_14px_14px_4px] bg-surface text-blue-ink"
+              }`}
+            >
+              <span className={`block text-small font-semibold ${m.fromPatient ? "text-on-dark" : "text-blue"}`}>
+                {m.fromPatient ? "You" : "Your care team"}
+              </span>
+              <p className="whitespace-pre-line">{m.body}</p>
+              <span className={`mt-0.5 block text-small ${m.fromPatient ? "text-on-dark" : "text-muted"}`}>{formatWhen(m.at)}</span>
+            </div>
           ))}
         </section>
       )}
 
-      {view ? (
+      {view && view.steps.length === 0 ? null : view ? (
         <ol aria-live="polite" className="flex flex-1 flex-col px-5 pt-5">
           {view.steps.map((step, i) => (
             <Step key={step.key} step={step} last={i === view.steps.length - 1} />

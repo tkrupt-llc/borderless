@@ -473,12 +473,34 @@ export async function finishSafetyScreen(sessionId: string, scores: Score[]) {
 }
 
 /** Messages the care team sent from the console ("Reply to patient"), oldest first. */
-export async function loadPatientMessages(sessionId: string): Promise<{ body: string; at: string }[]> {
+export async function loadPatientMessages(sessionId: string): Promise<{ body: string; at: string; fromPatient: boolean }[]> {
   const rows = check(
-    await db().from("patient_messages").select("body, created_at").eq("session_id", sessionId).order("created_at"),
+    await db().from("patient_messages").select("body, created_at, from_patient").eq("session_id", sessionId).order("created_at"),
     "patient messages",
-  ) as { body: string; created_at: string }[];
-  return rows.map((r) => ({ body: r.body, at: r.created_at }));
+  ) as { body: string; created_at: string; from_patient: boolean }[];
+  return rows.map((r) => ({ body: r.body, at: r.created_at, fromPatient: r.from_patient }));
+}
+
+/**
+ * A message from the patient to their care team. A normal message opens a
+ * review task due in one working day (one open task per case); a message with
+ * a risk phrase is raised as a red flag by the caller instead.
+ */
+export async function savePatientMessage(sessionId: string, body: string, openTask: boolean) {
+  check(await db().from("patient_messages").insert({ session_id: sessionId, body, from_patient: true }), "save message");
+  if (openTask) {
+    const open = check(
+      await db().from("tasks").select("id").eq("session_id", sessionId).eq("type", "patient_message").is("closed_at", null).limit(1),
+      "read message task",
+    ) as { id: string }[];
+    if (open.length === 0) {
+      check(
+        await db().from("tasks").insert({ session_id: sessionId, type: "patient_message", priority: "normal", due_at: nextWorkingDay(new Date()).toISOString() }),
+        "message task",
+      );
+    }
+  }
+  await audit("patient_message_received", sessionId, "session");
 }
 
 // ---------------------------------------------------------------------------

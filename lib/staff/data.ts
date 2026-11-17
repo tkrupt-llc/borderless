@@ -71,7 +71,7 @@ export async function loadCase(sessionId: string) {
     rows<T>(await db().from(table).select(cols).eq("session_id", sessionId).order(order, { ascending: true }), table);
 
   // One parallel batch: every query for the case goes out at once.
-  const [sessionRows, consents, scores, answers, redFlags, messages, fields, proposals, tasks, receipt, contacts, summaryRows, activityRows] =
+  const [sessionRows, consents, scores, answers, redFlags, messages, fields, proposals, tasks, receipt, contacts, summaryRows, activityRows, teamMessages] =
     await Promise.all([
       db().from("sessions").select("*").eq("id", sessionId).then((r) =>
         rows<{
@@ -103,6 +103,7 @@ export async function loadCase(sessionId: string) {
       // The audit trail for this case, newest first (research: keep the audit trail visible).
       db().from("audit_events").select("actor, action, created_at").eq("session_id", sessionId).order("created_at", { ascending: false }).limit(40)
         .then((r) => rows<{ actor: string; action: string; created_at: string }>(r, "activity")),
+      one<{ body: string; from_patient: boolean; created_at: string }>("patient_messages", "body, from_patient, created_at"),
     ]);
   const session = sessionRows[0];
   if (!session) return null;
@@ -138,6 +139,7 @@ export async function loadCase(sessionId: string) {
     summary: summaryRows[0] ?? null,
     draftLines,
     activity,
+    teamMessages,
   };
 }
 

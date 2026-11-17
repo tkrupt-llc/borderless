@@ -18,7 +18,7 @@ export type ReceiptInput = {
 
 export type ReceiptStep = { key: string; title: string; body: string; state: "done" | "now" | "next" };
 /** ref: the case reference the care team also sees (added by the server). */
-export type ReceiptView = { sentAt: string; steps: ReceiptStep[]; ref?: string; messages?: { body: string; at: string }[] };
+export type ReceiptView = { sentAt: string; steps: ReceiptStep[]; ref?: string; messages?: { body: string; at: string; fromPatient?: boolean }[] };
 
 const fmt = new Intl.DateTimeFormat("en-GB", {
   weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true,

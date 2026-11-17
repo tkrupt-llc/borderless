@@ -89,7 +89,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
             {view.id === "escalated" ? "Escalated" : view.id === "followups" ? "Follow-ups" : "Review"}{" "}
             <em className="text-blue">{view.id === "escalated" || view.id === "followups" ? "cases" : "queue"}</em>
           </h1>
-          <p className="mt-1 text-[0.875rem] text-muted">Sorted by reply-by time · Synthetic demo data</p>
+          <p className="mt-1 text-[0.875rem] text-muted">Sorted by reply-by time</p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <AutoRefresh />

@@ -18,7 +18,7 @@ export default function CopingPage() {
         <h1 className="font-serif text-[1.875rem] leading-tight font-normal">
           Coping <em className="text-primary">cards</em>
         </h1>
-        <p className="text-base text-text-2">Pick one. There&apos;s no wrong choice. Colours show what each card helps with.</p>
+        <p className="text-base text-text-2">Pick one. There&apos;s no wrong choice.</p>
       </div>
 
       <ul className="grid auto-rows-fr grid-cols-2 gap-2.5 px-5 py-4">

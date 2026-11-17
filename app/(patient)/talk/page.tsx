@@ -1,37 +1,37 @@
+import Link from "next/link";
+import { Backdrop } from "@/components/backdrop";
 import { PatientHeader } from "@/components/patient-header";
-import { CallbackForm } from "./callback-form";
+import { TalkOptions } from "./talk-options";
 
-// "Talk to a person": the non-urgent route to a human. A short form creates a
-// call-back task for the care team (due in one working day). The 24/7 line from
-// the approved emergency wording stays available for anyone who wants to talk now.
+// "Talk to someone" (design canvas 2c): the non-urgent route to a real person.
+// A clear way out to urgent help sits above the options.
 export default function TalkPage() {
   return (
     <>
+      <Backdrop side="left" />
       <PatientHeader />
-      <div className="flex flex-col gap-4 px-5 pt-5">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-[1.875rem] leading-tight font-normal">
-            Talk to a <em className="text-primary">person</em>
+      <div className="flex flex-col gap-4 px-5 pt-6">
+        <div className="anim-pop">
+          <p className="text-caption text-muted">Not urgent</p>
+          <h1 className="mt-1 font-serif text-[1.875rem] leading-tight font-normal">
+            Talk to <em className="text-primary">someone</em>
           </h1>
-          <p className="text-text-2">
-            Leave your number and someone from the care team will call you within one working day. You don&apos;t need
-            to do a check-in first.
-          </p>
+          <p className="mt-1.5 text-text-2">A real person from your care team. Choose what suits you.</p>
         </div>
 
-        <CallbackForm />
+        {/* Crisis content never animates or waits (design motion rules). */}
+        <Link
+          href="/help-now"
+          className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border-2 border-danger bg-surface px-3.5 py-3 text-ink no-underline hover:text-ink"
+        >
+          <span className="flex flex-col">
+            <strong className="font-semibold">Might you be in danger?</strong>
+            <span className="text-caption text-text-2">Don&apos;t wait. Get help now.</span>
+          </span>
+          <span className="rounded-full bg-danger px-3.5 py-2 text-caption font-semibold whitespace-nowrap text-white">I need help now</span>
+        </Link>
 
-        <div className="flex flex-col gap-2 border-t border-line-warm pt-4">
-          <p className="font-semibold">Want to talk to someone right now?</p>
-          <a
-            href="tel:800725462"
-            className="flex min-h-12 items-center justify-center rounded-full border-[1.5px] border-ink px-6 font-medium text-ink no-underline"
-          >
-            Call 800-SAKINA, 24/7
-          </a>
-          <p className="text-caption text-muted">The number is 800 725462.</p>
-          <p className="text-caption text-muted">If you are in danger now, tap &ldquo;I need help now&rdquo;.</p>
-        </div>
+        <TalkOptions />
       </div>
     </>
   );

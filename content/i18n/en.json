@@ -24,12 +24,11 @@
       "No name or account is needed to start.",
       "Only your care team sees your answers. Never your employer.",
       "You choose what is shared, and can change your mind.",
-      "You can delete your data at any time.",
-      "This prototype uses made-up data only."
+      "You can delete your data at any time."
     ]
   },
   "footer": {
-    "talkToPerson": "Talk to a person",
+    "talkToPerson": "Talk to someone · not urgent",
     "helpNow": "I need help now"
   },
   "emergency": {

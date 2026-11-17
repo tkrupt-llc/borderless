@@ -152,6 +152,16 @@ rules:
       - action: create_task
         tier: urgent
 
+  # --- "Talk to someone": a message to the care team ------------------------
+  - id: RF-MESSAGE-PHRASE
+    description: 'DRAFT: a message to the care team contains a risk phrase (content/rules/phrases.json)'
+    when: { fact: flag.message_risk_phrase, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: urgent
+
   # --- Always-visible button -----------------------------------------------
   - id: RF-HELP-NOW
     description: The person pressed "I need help now"

@@ -7,7 +7,6 @@ export default function StaffLoginPage() {
       <Logo size="lg" />
       <div>
         <h1 className="font-serif text-[1.875rem] leading-tight font-normal">Care team sign-in</h1>
-        <p className="mt-1 text-caption text-muted">Prototype. Synthetic data only.</p>
       </div>
       <LoginForm />
     </main>

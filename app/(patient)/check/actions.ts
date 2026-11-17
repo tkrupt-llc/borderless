@@ -90,7 +90,9 @@ export async function loadReceipt(): Promise<ReceiptView | null> {
     if (!id) return null;
     const [data, messages] = await Promise.all([persist.loadReceiptData(id), persist.loadPatientMessages(id)]);
     const view = buildReceipt(data);
-    return view && { ...view, ref: caseRef(id), messages };
+    if (view) return { ...view, ref: caseRef(id), messages };
+    // No check-in, only messages ("Talk to someone"): show the conversation on its own.
+    return messages.length > 0 ? { sentAt: messages[0].at, steps: [], ref: caseRef(id), messages } : null;
   } catch (e) {
     console.error(e);
     return null;

@@ -187,8 +187,7 @@ export default function Landing() {
               While you <em className="text-primary">wait</em>
             </h2>
             <p className="max-w-[420px] text-body text-text-2">
-              Short exercises you can use any time, approved by a psychiatrist. Each colour shows what a card helps with: calming, grounding,
-              self-soothing, clarity or mood lifting.
+              Short exercises you can use any time, approved by a psychiatrist.
             </p>
           </div>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-5">
@@ -261,7 +260,6 @@ export default function Landing() {
                 <span className="text-[0.8125rem] text-ai-ink">AI-drafted note (check against answers)</span>
                 <span>Sleep and low mood for about 6 weeks; work stress; lives with family.</span>
               </div>
-              <span className="mt-3 text-[0.75rem] text-muted">Synthetic demo data</span>
             </div>
           </div>
         </section>
@@ -296,7 +294,6 @@ export default function Landing() {
             <div className="flex min-w-0 flex-[1_1_300px] flex-col gap-3">
               <Logo size="lg" />
               <p className="max-w-[340px] text-text-2">Earlier, safer mental wellbeing support. Every check-in is read by a clinician.</p>
-              <p className="text-small text-muted">Prototype. Synthetic data only.</p>
             </div>
             <nav aria-label="Footer" className="flex flex-wrap gap-12 text-[0.9375rem]">
               <div className="flex flex-col gap-2">

@@ -92,7 +92,6 @@ export const STEPS: { title: string; body: string; screen: React.ReactNode; labe
             <span className={`rounded-full px-2.5 py-1 text-[0.75rem] font-semibold whitespace-nowrap ${tone}`}>{badge}</span>
           </div>
         ))}
-        <span className="text-[0.75rem] text-muted">Synthetic demo data</span>
       </>
     ),
   },

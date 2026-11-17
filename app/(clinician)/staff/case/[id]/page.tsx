@@ -314,6 +314,24 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             </Panel>
           )}
 
+          {data.teamMessages.length > 0 && (
+            <Panel id="msgs-h" title="Messages">
+              <ol className="flex flex-col gap-2 text-caption">
+                {data.teamMessages.map((m) => (
+                  <li
+                    key={m.created_at}
+                    className={`max-w-[85%] rounded-xl px-3 py-2 ${m.from_patient ? "self-start bg-sage-mist" : "self-end bg-sky"}`}
+                  >
+                    <span className="block text-[0.75rem] font-semibold text-muted">
+                      {m.from_patient ? "Patient" : "Care team"} · {time(m.created_at)}
+                    </span>
+                    <span className="whitespace-pre-line">{m.body}</span>
+                  </li>
+                ))}
+              </ol>
+            </Panel>
+          )}
+
           <Panel id="activity-h" title="Activity">
             <ol className="flex flex-col gap-1.5 text-[0.875rem]">
               {activity.map(({ a, n }, i) => (
