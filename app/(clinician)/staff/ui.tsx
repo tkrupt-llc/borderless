@@ -131,3 +131,19 @@ export function ReplyBy({ priority, dueAt }: { priority: string; dueAt: string }
     </span>
   );
 }
+
+/** Compact live time left, e.g. "11 min", "3 h 12 m", or "overdue 2 h 05 m" (design canvas queue rows). */
+export function TimeLeft({ dueAt, className = "" }: { dueAt: string; className?: string }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    tick();
+    const id = setInterval(tick, 15_000);
+    return () => clearInterval(id);
+  }, []);
+  if (now === null) return <span className={className}>…</span>;
+  const left = new Date(dueAt).getTime() - now;
+  const mins = Math.round(Math.abs(left) / 60_000);
+  const span = mins >= 1440 ? `${Math.floor(mins / 1440)} d ${Math.floor((mins % 1440) / 60)} h` : mins >= 60 ? `${Math.floor(mins / 60)} h ${String(mins % 60).padStart(2, "0")} m` : `${mins} min`;
+  return <span className={`tabular-nums ${className}`}>{left >= 0 ? span : `overdue ${span}`}</span>;
+}

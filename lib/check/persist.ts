@@ -471,3 +471,12 @@ export async function finishSafetyScreen(sessionId: string, scores: Score[]) {
   }
   await audit("safety_screen_completed", sessionId, "session", { scores: scores.map((s) => `${s.instrument}:${s.band}`) });
 }
+
+/** Messages the care team sent from the console ("Reply to patient"), oldest first. */
+export async function loadPatientMessages(sessionId: string): Promise<{ body: string; at: string }[]> {
+  const rows = check(
+    await db().from("patient_messages").select("body, created_at").eq("session_id", sessionId).order("created_at"),
+    "patient messages",
+  ) as { body: string; created_at: string }[];
+  return rows.map((r) => ({ body: r.body, at: r.created_at }));
+}

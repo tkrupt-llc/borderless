@@ -7,6 +7,7 @@ import { canWrite, requireStaff, type Staff } from "@/lib/staff/auth";
 import { loadCase, loadImminentAlerts } from "@/lib/staff/data";
 import { summaryToText } from "@/lib/summary/build";
 import { serviceById } from "@/lib/directory";
+import { dueAt, nextWorkingDay } from "@/lib/rules/tiers";
 
 // Every action checks the signed-in role, writes with the service client and
 // leaves an audit entry. Judges can view but not change anything.
@@ -250,4 +251,49 @@ export async function referToService(sessionId: string, serviceId: string): Prom
 export async function imminentAlerts(): Promise<{ id: string; sessionId: string; createdAt: string }[]> {
   await requireStaff();
   return loadImminentAlerts();
+}
+
+/** "Reply to patient": a short message the person sees on their receipt timeline. */
+export async function replyToPatient(sessionId: string, body: string): Promise<Result> {
+  return run(async (staff) => {
+    const id = uuid.parse(sessionId);
+    const text = z.string().trim().min(3).max(1000).parse(body);
+    must(await db().from("patient_messages").insert({ session_id: id, body: text, sent_by: staff.id }), "message");
+    await audit(staff, "patient_message_sent", "session", id, id, { length: text.length });
+  });
+}
+
+/**
+ * "Change urgency": the clinician's judgement over the rules' tier. Moves every
+ * open task to the new priority and restarts its clock; the reason is required
+ * and kept in the audit trail.
+ */
+export async function changeUrgency(sessionId: string, priority: string, reason: string): Promise<Result> {
+  return run(async (staff) => {
+    const id = uuid.parse(sessionId);
+    const to = z.enum(["imminent", "urgent", "elevated", "normal"]).parse(priority);
+    const why = z.string().trim().min(5).max(500).parse(reason);
+    const now = new Date();
+    const due = to === "normal" ? nextWorkingDay(now) : dueAt(to, now);
+    const { data, error } = await db()
+      .from("tasks")
+      .update({ priority: to, due_at: due.toISOString() })
+      .eq("session_id", id)
+      .is("closed_at", null)
+      .select("id");
+    must({ error }, "change urgency");
+    if (!data?.length) throw new Error("no open tasks");
+    await audit(staff, "urgency_changed", "session", id, id, { to, reason: why });
+  });
+}
+
+/** "Mark reviewed": acknowledges and closes the case's open tasks (it leaves the queue). */
+export async function markReviewed(sessionId: string): Promise<Result> {
+  return run(async (staff) => {
+    const id = uuid.parse(sessionId);
+    const now = new Date().toISOString();
+    must(await db().from("tasks").update({ acknowledged_at: now, acknowledged_by: staff.id }).eq("session_id", id).is("acknowledged_at", null).is("closed_at", null), "acknowledge");
+    must(await db().from("tasks").update({ closed_at: now }).eq("session_id", id).is("closed_at", null), "close");
+    await audit(staff, "case_reviewed", "session", id, id);
+  });
 }

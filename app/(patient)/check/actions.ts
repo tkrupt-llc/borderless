@@ -87,8 +87,9 @@ export async function loadReceipt(): Promise<ReceiptView | null> {
     // The cookie, never an id from the URL, decides whose receipt this is.
     const id = await readSessionId();
     if (!id) return null;
-    const view = buildReceipt(await persist.loadReceiptData(id));
-    return view && { ...view, ref: caseRef(id) };
+    const [data, messages] = await Promise.all([persist.loadReceiptData(id), persist.loadPatientMessages(id)]);
+    const view = buildReceipt(data);
+    return view && { ...view, ref: caseRef(id), messages };
   } catch (e) {
     console.error(e);
     return null;

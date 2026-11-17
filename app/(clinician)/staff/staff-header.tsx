@@ -42,11 +42,14 @@ export function StaffShell({
   staff,
   active,
   counts,
+  bare = false,
   children,
 }: {
   staff: Staff;
   active: "queue" | "escalated" | "followups" | "case" | "insights";
   counts?: { open: number; escalated: number; followups?: number };
+  /** Panes fill the work area edge to edge (the review workspace). */
+  bare?: boolean;
   children: React.ReactNode;
 }) {
   const item = (on: boolean) =>
@@ -137,7 +140,11 @@ export function StaffShell({
           </form>
           </div>
         </header>
-        <main className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-6 lg:px-8">{children}</main>
+        {bare ? (
+          <main className="flex min-w-0 flex-1 flex-col">{children}</main>
+        ) : (
+          <main className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-6 lg:px-8">{children}</main>
+        )}
       </div>
     </div>
   );

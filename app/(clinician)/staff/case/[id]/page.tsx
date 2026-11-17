@@ -11,6 +11,7 @@ import { acknowledgeTask, addHistory, closeTask, referToService, setReceiptStatu
 import { DIRECTORY_IS_EXAMPLE, serviceById, servicesForStep } from "@/lib/directory";
 import { PriorityBadge, StaffShell, TASK_LABELS } from "../../staff-header";
 import { caseRef } from "@/lib/case-ref";
+import { ACTIVITY_WORDS, actorWord } from "@/lib/staff/activity-words";
 import { clinicById } from "@/lib/clinics";
 import { ActionButton, Countdown } from "../../ui";
 import { ContactForm, DecisionForm, DeleteCaseButton, StartReview, SummaryEditor } from "./case-forms";
@@ -28,17 +29,6 @@ function Panel({ id, title, aside, children }: { id: string; title: string; asid
   );
 }
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
-const ACTIVITY_WORDS: Record<string, string> = {
-  consent_recorded: "Consent recorded", check_in_completed: "Check-in completed", red_flag_raised: "Red flag raised",
-  contact_shared: "Contact details shared", callback_requested: "Call-back requested", case_viewed: "Case opened",
-  task_acknowledged: "Task acknowledged", task_closed: "Task closed", task_escalated: "Escalated to supervisor",
-  proposal_accept: "Proposal accepted", proposal_override: "Proposal overridden", summary_edited: "Summary edited",
-  summary_signed: "Summary signed", receipt_booked: "Marked booked", receipt_first_contact_confirmed: "First contact confirmed",
-  contact_logged: "Contact logged", safety_screen_completed: "Safety questions answered", referred: "Referred to a service", follow_up_started: "Follow-up started", follow_up_link_created: "Follow-up link given", not_on_track: "Not on track", deletion_requested: "Patient asked to delete their data", coping_not_helping: "Coping card not helping", history_added: "History added", history_self_reported: "History self-reported",
-  safety_check_asked: "Safety check asked", safety_check_answered_no: "Safety check answered no",
-  ai_reply_blocked: "AI reply blocked by guardrail", ai_unavailable_fallback: "AI unavailable, questionnaire used",
-};
-const actorWord = (actor: string) => (actor.startsWith("clinician") ? "Clinician" : actor.startsWith("supervisor") ? "Supervisor" : actor === "patient" ? "Patient" : "System");
 const RECEIPT_WORDS: Record<string, string> = {
   received: "Received", reviewed: "Reviewed", accepted: "Accepted", re_routed: "Re-routed", booked: "Booked",
   first_contact_confirmed: "First contact confirmed", contact_attempted: "Tried to call", spoke: "Spoke with patient",

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { loadReceipt } from "../../actions";
 import { RESULT_KEY, SUBMITTED_AT_KEY, useStoredValue } from "@/lib/check/local-answers";
-import { buildReceipt, type ReceiptStep, type ReceiptView } from "@/lib/receipt/build";
+import { buildReceipt, formatWhen, type ReceiptStep, type ReceiptView } from "@/lib/receipt/build";
 import { FollowUpLink } from "@/components/follow-up-link";
 
 function readToken(raw: string | null): string | null {
@@ -66,6 +66,20 @@ export function Receipt() {
           </p>
         )}
       </div>
+
+      {view?.messages && view.messages.length > 0 && (
+        <section aria-labelledby="msgs-h" className="mx-5 mt-4 flex flex-col gap-2 rounded-2xl bg-sky px-4 py-3.5">
+          <h2 id="msgs-h" className="text-[0.8125rem] font-semibold tracking-[0.06em] text-blue uppercase">
+            From your care team
+          </h2>
+          {view.messages.map((m) => (
+            <p key={m.at} className="anim-pop text-blue-ink">
+              {m.body}
+              <span className="mt-0.5 block text-small text-muted">{formatWhen(m.at)}</span>
+            </p>
+          ))}
+        </section>
+      )}
 
       {view ? (
         <ol aria-live="polite" className="flex flex-1 flex-col px-5 pt-5">

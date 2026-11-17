@@ -103,14 +103,25 @@ export default function Landing() {
         </section>
 
         <section className={`reveal ${wrap} pt-[72px]`}>
-          <p className="mb-5 text-caption font-semibold tracking-[0.08em] text-muted uppercase">How quickly a person replies</p>
+          <p className="text-caption font-semibold tracking-[0.08em] text-muted uppercase">Reply-time targets</p>
+          <p className="mt-1.5 mb-5 text-caption text-text-2">
+            Each clinic sets its own times. The system flags any case that runs late to the duty supervisor.
+          </p>
           <dl className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] border-t border-line">
-            {[
-              ["15 min", "If you may be in immediate danger"],
-              ["4 hours", "If things are urgent"],
-              ["1 day", "For everyone else (one working day)"],
-              ["7", "Coping cards approved by a psychiatrist"],
-            ].map(([value, label]) => (
+            {(
+              [
+                [
+                  "At once",
+                  <>
+                    If you may be in immediate danger, the on-call clinician is alerted straight away.{" "}
+                    <strong className="text-ink">Don&apos;t wait: call 999 or 998.</strong>
+                  </>,
+                ],
+                ["4 hours", "Target for urgent check-ins"],
+                ["1 day", "Target for everyone else (one working day)"],
+                ["7", "Coping cards approved by a psychiatrist"],
+              ] as const
+            ).map(([value, label]) => (
               <div key={value} className="flex flex-col-reverse border-b border-line py-6 pr-6">
                 <dt className="mt-2.5 text-base text-text-2">{label}</dt>
                 <dd className="font-serif text-[3rem] leading-none text-primary-dark">{value}</dd>
@@ -258,7 +269,7 @@ export default function Landing() {
         <section className={`reveal ${wrap} pt-[72px]`}>
           <div className="flex flex-col items-center gap-6 border-t border-line pt-16 text-center">
             <TypedLine />
-            <p className="max-w-[520px] text-text-2">Check in today and see exactly when a person will reply.</p>
+            <p className="max-w-[520px] text-text-2">Check in today and see when to expect a reply from a real person.</p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link href="/start" className={primaryBtn}>Start check-in</Link>
               <Link href="/demo" className={outlineBtn}>See the live demo</Link>

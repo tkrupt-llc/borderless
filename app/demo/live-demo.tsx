@@ -21,7 +21,7 @@ type Tier = "imminent" | "urgent" | "elevated" | "normal";
 
 const QUICK = stepsFor("quick");
 const SAFETY = stepsFor("safety").filter((s) => s.item.instrument === "ASQ");
-const DUE: Record<Tier, string> = { imminent: "15 min", urgent: "4 h", elevated: "1 day", normal: "1 day" };
+const DUE: Record<Tier, string> = { imminent: "now", urgent: "4 h", elevated: "1 day", normal: "1 day" };
 const TIER_WORD: Record<Tier, string> = { imminent: "Imminent", urgent: "Urgent", elevated: "Elevated", normal: "Routine" };
 const TONE: Record<Tier | "none" | "progress", string> = {
   imminent: "bg-danger text-white",
@@ -358,7 +358,7 @@ export function LiveDemo({ rules }: { rules: Rules }) {
             {tier === "imminent" && (
               <div role="alert" className="anim-slide flex flex-wrap items-center justify-between gap-2.5 rounded-[14px] bg-danger px-4 py-3 text-white">
                 <span className="flex flex-col">
-                  <strong>Imminent · BL-DEMO01 · reply in 15 min</strong>
+                  <strong>Imminent · BL-DEMO01 · act now</strong>
                   <span className="text-[0.8125rem] text-[#fbe9e7]">{ruleText}</span>
                 </span>
                 <span className="rounded-full bg-white px-3.5 py-2 text-[0.875rem] font-semibold text-danger">Open and call now</span>
