@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { isPathId, itemIdsFor, PATHS, stepsFor, type PathId } from "@/lib/check/paths";
-import { allAskedAnswered } from "@/lib/check/conditions";
+import { allAskedAnswered, isAsked } from "@/lib/check/conditions";
+import { canSkip, SKIPPED, splitSkips } from "@/lib/check/skip";
 import { isValidAnswer } from "@/lib/item-bank";
 import { isDbConfigured } from "@/lib/db/server";
 import { readSessionId, writeSessionId } from "@/lib/db/patient-session";
@@ -102,17 +103,26 @@ export async function loadReceipt(): Promise<ReceiptView | null> {
 
 const AnswersInput = z.object({
   path: z.string(),
-  answers: z.record(z.string(), z.number().int().min(0).max(3)),
+  // -1 is "Prefer not to say" (lib/check/skip.ts); only allowed on non-safety questions.
+  answers: z.record(z.string(), z.number().int().min(SKIPPED).max(3)),
 });
 
-function parseAnswers(input: unknown): { path: PathId; answers: Record<string, number> } | null {
+type ParsedAnswers = {
+  path: PathId;
+  /** Real answers only: what the rules read and what is scored. */
+  answers: Record<string, number>;
+  /** Real answers plus skips: what is stored and what counts as "asked". */
+  all: Record<string, number>;
+};
+
+function parseAnswers(input: unknown): ParsedAnswers | null {
   const parsed = AnswersInput.safeParse(input);
   if (!parsed.success || !isPathId(parsed.data.path)) return null;
   const allowed = itemIdsFor(parsed.data.path);
-  const answers = Object.fromEntries(Object.entries(parsed.data.answers).filter(([id]) => allowed.has(id)));
-  // Every value must be one of its item's options; anything else is refused, never guessed.
-  if (!Object.entries(answers).every(([id, value]) => isValidAnswer(id, value))) return null;
-  return { path: parsed.data.path, answers };
+  const all = Object.fromEntries(Object.entries(parsed.data.answers).filter(([id]) => allowed.has(id)));
+  // Every value must be one of its item's options (or a skip where skipping is allowed); anything else is refused, never guessed.
+  if (!Object.entries(all).every(([id, value]) => (value === SKIPPED ? canSkip(id) : isValidAnswer(id, value)))) return null;
+  return { path: parsed.data.path, answers: splitSkips(all).answers, all };
 }
 
 /**
@@ -138,7 +148,7 @@ export type CheckResult = { ok: true; takeover: boolean } | Fail;
 export async function checkAnswers(input: unknown): Promise<CheckResult> {
   const parsed = parseAnswers(input);
   if (!parsed) return { ok: false, reason: "invalid" };
-  const { path, answers } = parsed;
+  const { path, answers, all } = parsed;
 
   const run = (history: Facts) =>
     runSafetyRules(
@@ -160,7 +170,7 @@ export async function checkAnswers(input: unknown): Promise<CheckResult> {
 
   const result = run({ "history.bpd": session.history_bpd, "history.adhd": session.history_adhd });
   try {
-    await persist.saveAnswers(session.id, answers);
+    await persist.saveAnswers(session.id, all);
     await persist.raiseRedFlags(session.id, result.fired, "questionnaire answer");
   } catch (e) {
     console.error(e);
@@ -180,10 +190,10 @@ export type FinishResult =
 export async function finishCheckIn(input: unknown): Promise<FinishResult> {
   const parsed = parseAnswers(input);
   if (!parsed) return { ok: false, reason: "invalid" };
-  const { path, answers } = parsed;
-  // Conditional questions (ASQ / C-SSRS): every question that should have been asked is answered.
+  const { path, answers, all } = parsed;
+  // Conditional questions (ASQ / C-SSRS): every question that should have been asked is answered (or skipped, where allowed).
   const ordered = stepsFor(path).map((st) => st.item.id);
-  if (!allAskedAnswered(ordered, answers)) return { ok: false, reason: "invalid" };
+  if (!allAskedAnswered(ordered, all)) return { ok: false, reason: "invalid" };
 
   const instruments = new Set<string>(PATHS[path]);
   const scores = scoreAll(answers).filter((s) => instruments.has(s.instrument));
@@ -267,5 +277,90 @@ export async function startSafetyScreen(): Promise<{ ok: true } | Fail> {
   } catch (e) {
     console.error(e);
     return { ok: false, reason: "error" };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pause and finish later
+// ---------------------------------------------------------------------------
+
+/** Keeps this check-in for 7 days so the person can finish it later on this device. */
+export async function pauseCheckIn(): Promise<{ ok: boolean }> {
+  if (!isDbConfigured()) return { ok: false };
+  try {
+    const id = await readSessionId();
+    if (!id) return { ok: false };
+    await writeSessionId(id, 7);
+    await persist.markPaused(id);
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { ok: false };
+  }
+}
+
+export type InProgress = { path: PathId; answers: Record<string, number>; answered: number; resumeHref: string };
+
+/** The unfinished check-in behind this browser's cookie, with the answers saved so far. */
+export async function loadInProgress(): Promise<InProgress | null> {
+  if (!isDbConfigured()) return null;
+  try {
+    const id = await readSessionId();
+    if (!id) return null;
+    const found = await persist.loadInProgress(id);
+    if (!found || !isPathId(found.path) || (found.path as string) === "safety") return null;
+    const ids = stepsFor(found.path).map((st) => st.item.id);
+    const answered = ids.filter((i) => found.answers[i] !== undefined).length;
+    // The full check-in opens with the conversation; until a question is answered, resume there.
+    if (found.path === "full" && answered === 0) return { path: found.path, answers: {}, answered, resumeHref: "/check/full/chat" };
+    const next = ids.findIndex((i) => isAsked(i, found.answers) && found.answers[i] === undefined);
+    const step = next === -1 ? ids.length : next + 1;
+    return { path: found.path, answers: found.answers, answered, resumeHref: `/check/${found.path}/${step}` };
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// How should we contact you · How did that feel?
+// ---------------------------------------------------------------------------
+
+const PHONE = /^\+?[0-9 ()-]{7,20}$/;
+const ContactInput = z
+  .object({
+    method: z.enum(["phone", "sms", "whatsapp", "email"]),
+    address: z.string().trim().max(200),
+    times: z.array(z.enum(["weekday_mornings", "weekday_evenings", "weekends", "any_time"])).max(4),
+    leaveMessage: z.boolean().nullable(),
+  })
+  .refine((d) => (d.method === "email" ? z.email().safeParse(d.address).success : PHONE.test(d.address)));
+
+export async function saveContactPreferences(input: unknown): Promise<{ ok: true } | Fail> {
+  const parsed = ContactInput.safeParse(input);
+  if (!parsed.success) return { ok: false, reason: "invalid" };
+  if (!isDbConfigured()) return { ok: true };
+  try {
+    const id = await readSessionId();
+    if (!id) return { ok: false, reason: "no_session" };
+    await persist.saveContactPrefs(id, parsed.data);
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, reason: "error" };
+  }
+}
+
+export async function recordFeeling(feeling: unknown): Promise<{ ok: boolean }> {
+  const parsed = z.enum(["easy", "ok", "hard"]).safeParse(feeling);
+  if (!parsed.success || !isDbConfigured()) return { ok: false };
+  try {
+    const id = await readSessionId();
+    if (!id) return { ok: false };
+    await persist.saveFeeling(id, parsed.data);
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { ok: false };
   }
 }

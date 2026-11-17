@@ -480,3 +480,61 @@ export async function loadPatientMessages(sessionId: string): Promise<{ body: st
   ) as { body: string; created_at: string }[];
   return rows.map((r) => ({ body: r.body, at: r.created_at }));
 }
+
+// ---------------------------------------------------------------------------
+// Pause and finish later · contact preferences · "How did that feel?"
+// ---------------------------------------------------------------------------
+
+/** An unfinished check-in behind this cookie: its path and the answers saved so far. */
+export async function loadInProgress(
+  sessionId: string,
+): Promise<{ path: Path; answers: Record<string, number> } | null> {
+  const [session, done, rows] = await Promise.all([
+    db().from("sessions").select("path, taken_over").eq("id", sessionId).maybeSingle(),
+    db()
+      .from("audit_events")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId)
+      .eq("action", "check_in_completed"),
+    db().from("item_responses").select("item_id, value").eq("session_id", sessionId),
+  ]);
+  const s = check(session, "read session") as { path: Path; taken_over: boolean } | null;
+  if (!s || s.taken_over || (done.count ?? 0) > 0) return null;
+  const answers = Object.fromEntries((check(rows, "read answers") ?? []).map((r: { item_id: string; value: number }) => [r.item_id, r.value]));
+  return { path: s.path, answers };
+}
+
+export async function markPaused(sessionId: string) {
+  await audit("check_in_paused", sessionId, "session");
+}
+
+export type ContactPrefs = {
+  method: "phone" | "sms" | "whatsapp" | "email";
+  /** Phone number for phone/SMS/WhatsApp, or an email address. */
+  address: string;
+  times: string[];
+  leaveMessage: boolean | null;
+};
+
+export async function saveContactPrefs(sessionId: string, p: ContactPrefs) {
+  const isEmail = p.method === "email";
+  check(
+    await db()
+      .from("sessions")
+      .update({
+        contact_method: p.method,
+        contact_phone: isEmail ? null : p.address,
+        contact_email: isEmail ? p.address : null,
+        contact_times: p.times,
+        contact_leave_message: p.method === "phone" ? p.leaveMessage : null,
+      })
+      .eq("id", sessionId),
+    "save contact preferences",
+  );
+  // The audit line records the choice, never the number or address.
+  await audit("contact_preferences_saved", sessionId, "session", { method: p.method, times: p.times });
+}
+
+export async function saveFeeling(sessionId: string, feeling: "easy" | "ok" | "hard") {
+  await audit(`check_in_felt_${feeling}`, sessionId, "session");
+}

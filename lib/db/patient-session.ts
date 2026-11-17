@@ -4,7 +4,8 @@ import { CLINIC_COOKIE } from "@/lib/clinics";
 
 // Anonymous start: no account. The session id lives in an httpOnly cookie that
 // page scripts cannot read; only server actions and route handlers use it.
-// It ends when the browser closes, and Quick exit deletes it (app/api/exit).
+// It ends when the browser closes (or after 7 days if the person pauses a
+// check-in to finish later), and Quick exit deletes it (app/api/exit).
 export const SESSION_COOKIE = "bl_sid";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -29,8 +30,9 @@ export const patientCookie = {
   path: "/",
 };
 
-export async function writeSessionId(id: string): Promise<void> {
-  (await cookies()).set(SESSION_COOKIE, id, patientCookie);
+export async function writeSessionId(id: string, keepDays?: number): Promise<void> {
+  // Only "Pause and finish later" keeps the cookie past closing the browser (7 days); Quick exit still deletes it.
+  (await cookies()).set(SESSION_COOKIE, id, keepDays ? { ...patientCookie, maxAge: keepDays * 86_400 } : patientCookie);
 }
 
 export async function clearSessionId(): Promise<void> {

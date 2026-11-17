@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { checkAnswers, finishCheckIn, type CheckResult, type FinishResult } from "../../actions";
+import { checkAnswers, finishCheckIn, pauseCheckIn, type CheckResult, type FinishResult } from "../../actions";
 import { markSubmitted, saveAnswer, useStoredAnswer } from "@/lib/check/local-answers";
 import { nextAskedIndex } from "@/lib/check/conditions";
+import { canSkip, SKIPPED } from "@/lib/check/skip";
 
 type Option = { value: number; label: string };
 
@@ -27,7 +28,9 @@ export function AnswerList({
   const [picked, setPicked] = useState<number | undefined>(undefined);
   const [failed, setFailed] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [pausing, startPause] = useTransition();
   const selected = picked ?? stored;
+  const skippable = canSkip(itemId);
 
   function choose(value: number) {
     if (pending) return;
@@ -72,7 +75,8 @@ export function AnswerList({
         return;
       }
       markSubmitted(path, finished);
-      router.push(`/check/${path}/result`);
+      // With clinician review on, ask how to reach the person before the result (design canvas flow).
+      router.push(finished.sentToClinician && path !== "safety" ? `/check/${path}/contact` : `/check/${path}/result`);
     });
   }
 
@@ -111,9 +115,42 @@ export function AnswerList({
           );
         })}
       </div>
+      {skippable && (
+        <button
+          type="button"
+          aria-pressed={selected === SKIPPED}
+          disabled={pending}
+          onClick={() => choose(SKIPPED)}
+          className={`tap min-h-11 cursor-pointer self-start rounded-full px-4 text-caption font-medium disabled:cursor-wait ${
+            selected === SKIPPED ? "border-[1.5px] border-text-2 bg-text-2 text-white" : "border-[1.5px] border-dashed border-[#9aa38c] text-text-2"
+          }`}
+        >
+          Prefer not to say
+        </button>
+      )}
       <p role="status" className="min-h-6 text-caption text-muted">
         {failed ? "That answer didn't go through. Please choose it again." : ""}
       </p>
+      {path !== "safety" && (
+        <button
+          type="button"
+          disabled={pausing}
+          onClick={() =>
+            startPause(async () => {
+              const r = await pauseCheckIn().catch(() => ({ ok: false }));
+              if (r.ok) router.push("/home?paused=1");
+              else setFailed(true);
+            })
+          }
+          className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 self-center text-caption text-primary-dark underline underline-offset-2"
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <rect x="4" y="3" width="3" height="12" rx="1" fill="currentColor" />
+            <rect x="11" y="3" width="3" height="12" rx="1" fill="currentColor" />
+          </svg>
+          {pausing ? "Saving…" : "Pause and finish later · your answers are saved"}
+        </button>
+      )}
     </>
   );
 }

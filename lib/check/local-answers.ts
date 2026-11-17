@@ -48,6 +48,11 @@ export function saveAnswer(path: string, itemId: string, value: number) {
   return answers;
 }
 
+/** Puts answers saved on the server back in this tab, to finish a paused check-in. */
+export function restoreAnswers(path: string, answers: Record<string, number>) {
+  write(key(path), JSON.stringify(answers));
+}
+
 export function clearAnswers(path: string) {
   try {
     sessionStorage.removeItem(key(path));

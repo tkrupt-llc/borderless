@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { SKIPPED } from "@/lib/check/skip";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { canWrite, requireStaff } from "@/lib/staff/auth";
@@ -35,6 +36,14 @@ const RECEIPT_WORDS: Record<string, string> = {
 };
 const time = (iso: string) =>
   new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+
+const CONTACT_METHOD: Record<string, string> = { phone: "Phone call", sms: "SMS", whatsapp: "WhatsApp", email: "Email" };
+const SAFE_TIME: Record<string, string> = {
+  weekday_mornings: "Weekday mornings",
+  weekday_evenings: "Weekday evenings",
+  weekends: "Weekends",
+  any_time: "Any time",
+};
 
 export default function CasePage({ params }: PageProps<"/staff/case/[id]">) {
   return (
@@ -232,7 +241,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 <ul className="flex flex-col gap-1 border-t border-line-warm pt-3 text-caption">
                   {riskAnswers.map((a) => {
                     const item = bankItem(a.item_id);
-                    const label = item?.options.find((o) => o.value === a.value)?.label.en ?? String(a.value);
+                    const label = a.value === SKIPPED ? "Prefer not to say" : (item?.options.find((o) => o.value === a.value)?.label.en ?? String(a.value));
                     return (
                       <li key={a.item_id}>
                         <span className="text-muted">{a.item_id}:</span> {item?.text.en} <strong className="font-semibold">{label}</strong>
@@ -382,11 +391,15 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
 
           {/* --- Contact ---------------------------------------------------- */}
           <Panel id="contact-h" title="Contact">
-            {session.contact_phone ? (
+            {session.contact_phone || session.contact_email ? (
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-caption">
                 {(
                   [
+                    ["Reach by", session.contact_method ? CONTACT_METHOD[session.contact_method] : null],
                     ["Phone", session.contact_phone],
+                    ["Email", session.contact_email],
+                    ["Safe times", session.contact_times?.length ? session.contact_times.map((t) => SAFE_TIME[t] ?? t).join(", ") : null],
+                    ["Voicemail", session.contact_leave_message === null ? null : session.contact_leave_message ? "OK to leave a message" : "Do not leave a message"],
                     ["Best time", session.callback_time],
                     ["Language", session.preferred_language],
                     ["Clinician", session.preferred_clinician_gender],

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { startCheckIn } from "../../actions";
 import { clearAnswers } from "@/lib/check/local-answers";
@@ -41,7 +42,7 @@ export function ConsentForm() {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-2.5 px-5 pt-5">
+    <form onSubmit={submit} className="flex flex-col gap-2.5 px-5 pt-4">
       <fieldset className="flex flex-col gap-2.5">
         <legend className="sr-only">What happens with your answers</legend>
         {START_PURPOSES.map((p) => (
@@ -66,7 +67,7 @@ export function ConsentForm() {
       {/* Research: plain data promise on the consent screen too. */}
       <details className="text-caption">
         <summary className="inline-flex min-h-11 cursor-pointer items-center text-primary-dark underline">
-          {en.trust.readDataPromise}
+          Read the full privacy details
         </summary>
         <ul className="mt-1 flex list-disc flex-col gap-1 rounded-2xl bg-sky py-3 ps-9 pe-4 text-text-2">
           {en.trust.dataPromise.map((line) => (
@@ -86,10 +87,13 @@ export function ConsentForm() {
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 flex min-h-12 cursor-pointer items-center justify-center rounded-full bg-primary px-6 font-medium text-white disabled:cursor-wait disabled:opacity-80"
+        className="tap mt-2 flex min-h-[52px] cursor-pointer items-center justify-center rounded-full bg-primary px-6 font-semibold text-white disabled:cursor-wait disabled:opacity-80"
       >
-        {pending ? "Saving…" : choices.clinician_review ? "Continue" : "Continue without clinician review"}
+        {pending ? "Saving…" : choices.clinician_review ? "I understand, let's start" : "Start without clinician review"}
       </button>
+      <Link href="/start" className="flex min-h-11 items-center justify-center text-caption">
+        Not now
+      </Link>
       <p role="status" className="min-h-6 text-caption text-muted">
         {failed ? "That didn't save. Please try again." : ""}
       </p>
