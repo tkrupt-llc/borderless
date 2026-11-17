@@ -1,39 +1,41 @@
 @import "tailwindcss";
 
 /*
- * Calm & Restorative palette: warm cream, mist blue, sage, soft lavender.
- * Blue leads (actions, progress); sage stays as a nature accent (illustrations,
- * grounding). The `sage-*` token names are kept for history: they are now the
- * soft blue accent family.
+ * Brand: warm cream + olive from the handoff DESIGN.md (logo, headings, text,
+ * main buttons). Supporting colours from the calm palette: mist blue for
+ * information (notes, privacy, the breathing card), and soft pastels that
+ * colour-code the coping cards.
  * Red (`danger`) is ONLY for emergency call buttons and imminent clinician alerts.
  * `clay` is decorative (logo dot, tiny dots): never text.
  * Light fills (`sage`, `sky`, `cat-*`) take dark text only.
  * Dark mode is a P2 item, so only the light theme is defined.
  */
 :root {
-  --bg: #f7f5f0; /* warm cream */
+  --brand: #556b2f; /* the logo is always olive, in the console too */
+  --bg: #f7f4ee;
   --surface: #ffffff;
-  --primary: #2f5d78; /* deep calm blue, white on it about 6.7:1 */
-  --primary-dark: #234a61; /* links, labels on light fills, big numbers */
-  --sage: #dde9ee; /* soft mist-blue fill */
-  --sage-deep: #b8d0d8; /* mist blue: icon blob */
-  --sage-soft: #e9f0f3;
-  --sage-mist: #eff4f6;
-  --ink: #1e2a33;
-  --text-2: #384651;
-  --text-on-sage: #233f4e;
-  --muted: #53616b;
-  --line: #c9d4da;
-  --line-warm: #ddd8ce; /* taupe */
-  --track: #e2e6e8;
-  --step-idle: #97a6af;
+  --primary: #556b2f; /* white on it about 6:1 */
+  --primary-dark: #3f5222; /* links, labels on sage, big numbers */
+  --sage: #dce3cc;
+  --sage-deep: #c8d3b0; /* icon blob on a sage card */
+  --sage-soft: #e9edde;
+  --sage-mist: #eef0e4;
+  --ink: #1f2a1c;
+  --text-2: #36412f;
+  --text-on-sage: #2c3825;
+  --muted: #4e5a48;
+  --line: #c9cfba;
+  --line-warm: #dad6cc;
+  --track: #e2e2d8;
+  --step-idle: #9aa38c;
   --clay: #b5835a;
   --danger: #a3302a;
-  --on-dark: #f1f5f7; /* text on primary / ink */
-  --on-dark-2: #d6e2e8;
+  --on-dark: #f2f4ec; /* text on primary / ink */
+  --on-dark-2: #d9decf;
+  /* Supporting calm blue: information only, never actions or risk. */
   --sky: #e6eef4;
   --sky-deep: #cadbe7;
-  --blue: #2f5d78;
+  --blue: #2f5d78; /* about 6.7:1 on white */
 
   /*
    * Coping-card categories (light fill + deeper icon tone). Each card also
@@ -77,6 +79,7 @@
 }
 
 @theme inline {
+  --color-brand: var(--brand);
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-primary: var(--primary);

@@ -105,7 +105,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             {openTasks.some((t) => t.escalated_at) && (
               <span className="rounded-md border border-danger px-2 py-0.5 text-[0.8125rem] font-semibold text-danger">Escalated</span>
             )}
-            <span className={`rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-primary text-white" : "border border-line text-text-2"}`}>
+            <span className={`rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-brand text-white" : "border border-line text-text-2"}`}>
               {signed ? "Signed" : "Not yet signed"}
             </span>
           </div>
@@ -128,11 +128,11 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
           <ol aria-label="Case progress" className="flex flex-wrap items-center gap-x-2 gap-y-2 text-[0.8125rem]">
             {progress.map((p, i) => (
               <li key={p.label} className="flex items-center gap-2">
-                {i > 0 && <span aria-hidden="true" className={`h-px w-5 ${p.done ? "bg-primary" : "bg-line"}`} />}
+                {i > 0 && <span aria-hidden="true" className={`h-px w-5 ${p.done ? "bg-brand" : "bg-line"}`} />}
                 <span
                   aria-hidden="true"
                   className={`grid size-5 place-items-center rounded-full text-[0.6875rem] font-semibold ${
-                    p.done ? "bg-primary text-white" : p === nextStep ? "border-2 border-primary text-primary-dark" : "border border-line text-muted"
+                    p.done ? "bg-brand text-white" : p === nextStep ? "border-2 border-primary text-primary-dark" : "border border-line text-muted"
                   }`}
                 >
                   {p.done ? "✓" : i + 1}
@@ -151,7 +151,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 <strong className="font-semibold">{nextStep.next}</strong>
               </>
             ) : (
-              <strong className="font-semibold text-primary-dark">All steps done</strong>
+              <strong className="font-semibold text-brand">All steps done</strong>
             )}
           </p>
         </div>
@@ -168,7 +168,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             id="summary-h"
             title="Summary"
             aside={
-              <span className={`rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-primary text-white" : "border border-[#e3c27a] bg-[#fbefd2] text-[#5c3a00]"}`}>
+              <span className={`rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-brand text-white" : "border border-[#e3c27a] bg-[#fbefd2] text-[#5c3a00]"}`}>
                 {signed ? "AI-drafted, clinician-verified" : "AI-drafted, not yet verified"}
               </span>
             }

@@ -2,9 +2,9 @@
 
 export function HillsBanner() {
   return (
-    <div className="mx-5 mt-5 h-[110px] overflow-hidden rounded-[22px] bg-sage-mist">
+    <div className="mx-5 mt-5 h-[110px] overflow-hidden rounded-[22px] bg-sky">
       <svg viewBox="0 0 350 110" width="100%" height="110" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-        <circle cx="270" cy="36" r="18" fill="#F7F5F0" />
+        <circle cx="270" cy="36" r="18" fill="#F7F4EE" />
         <path d="M0 70 C60 44 120 56 170 64 C230 74 280 46 350 54 L350 110 L0 110Z" fill="#D7DEC4" />
         <path d="M0 88 C70 72 130 78 200 88 C260 96 310 80 350 84 L350 110 L0 110Z" fill="#BCC9A3" />
         <ellipse cx="60" cy="80" rx="8" ry="26" fill="#8FA175" />
@@ -20,7 +20,7 @@ export function HillsHero() {
     <div className="mt-12 h-[200px] overflow-hidden rounded-[28px] bg-sage-soft sm:h-[320px]">
       <svg viewBox="0 0 1120 320" width="100%" height="100%" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
         <rect width="1120" height="320" fill="#E6EFF3" />
-        <circle cx="820" cy="96" r="44" fill="#F7F5F0" />
+        <circle cx="820" cy="96" r="44" fill="#F7F4EE" />
         <path d="M0 190 C160 120 300 150 430 170 C560 190 660 110 820 120 C960 130 1040 170 1120 150 L1120 320 L0 320Z" fill="#D7DEC4" />
         <path d="M0 230 C140 190 260 200 380 222 C520 248 640 190 780 196 C920 202 1020 236 1120 220 L1120 320 L0 320Z" fill="#BCC9A3" />
         <g fill="#8FA175">

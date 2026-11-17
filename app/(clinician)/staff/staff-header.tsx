@@ -54,7 +54,7 @@ export function StaffShell({
       <aside className="flex shrink-0 flex-col gap-5 border-b border-line-warm bg-surface px-3 py-4 lg:sticky lg:top-0 lg:h-dvh lg:w-60 lg:border-e lg:border-b-0">
         <div className="flex h-8 items-center gap-2 px-2">
           <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true">
-            <path d="M32.3 9.7 A16 16 0 1 0 32.3 30.3" fill="none" stroke="var(--primary)" strokeWidth="5" strokeLinecap="round" />
+            <path d="M32.3 9.7 A16 16 0 1 0 32.3 30.3" fill="none" stroke="var(--brand)" strokeWidth="5" strokeLinecap="round" />
             <circle cx="27" cy="20" r="3.6" fill="var(--clay)" />
           </svg>
           <span className="text-[1rem] font-semibold tracking-[-0.01em] text-ink">borderless</span>
@@ -82,7 +82,7 @@ export function StaffShell({
         </nav>
         <form action={signOut} className="mt-auto flex flex-col gap-3 border-t border-line-warm px-2 pt-4">
           <span className="flex items-center gap-3">
-            <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-[0.75rem] font-semibold text-white">
+            <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-brand text-[0.75rem] font-semibold text-white">
               {initials}
             </span>
             <span className="flex min-w-0 flex-col">

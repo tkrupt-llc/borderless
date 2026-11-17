@@ -25,7 +25,7 @@ export function AutoRefresh({ seconds = 5 }: { seconds?: number }) {
   // Freshness is always visible (research: show how current the data is).
   return (
     <span className="inline-flex items-center gap-1.5 text-[0.8125rem] text-muted">
-      <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
+      <span className="size-2 rounded-full bg-brand" aria-hidden="true" />
       Live · updated {at ? at.toLocaleTimeString("en-GB") : "…"}
     </span>
   );

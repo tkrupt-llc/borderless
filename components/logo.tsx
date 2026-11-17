@@ -9,14 +9,14 @@ export function Logo({ size = "sm", compact = false }: { size?: "sm" | "lg"; com
         <path
           d="M32.3 9.7 A16 16 0 1 0 32.3 30.3"
           fill="none"
-          stroke="var(--primary)"
+          stroke="var(--brand)"
           strokeWidth="5"
           strokeLinecap="round"
         />
         <circle cx="27" cy="20" r="3.6" fill="var(--clay)" />
       </svg>
       <span
-        className={`font-semibold tracking-[-0.01em] text-primary ${lg ? "text-[1.625rem]" : "text-[1.1875rem]"} ${compact ? "max-[399px]:hidden" : ""}`}
+        className={`font-semibold tracking-[-0.01em] text-brand ${lg ? "text-[1.625rem]" : "text-[1.1875rem]"} ${compact ? "max-[399px]:hidden" : ""}`}
       >
         borderless
       </span>
