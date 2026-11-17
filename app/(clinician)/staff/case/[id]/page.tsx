@@ -190,7 +190,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             id="summary-h"
             title="Summary"
             aside={
-              <span className={`rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-brand text-white" : "border border-[#e3c27a] bg-[#fbefd2] text-[#5c3a00]"}`}>
+              <span className={`rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-brand text-white" : "bg-ai-soft text-ai-ink"}`}>
                 {signed ? "AI-drafted, clinician-verified" : "AI-drafted, not yet verified"}
               </span>
             }

@@ -77,10 +77,10 @@ async function Question({ params }: { params: PageProps<"/check/[path]/[step]">[
         />
 
         <details className="text-caption">
-          <summary className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-primary-dark underline">
+          <summary className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-blue underline">
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-              <circle cx="9" cy="9" r="7.5" fill="none" stroke="var(--primary-dark)" strokeWidth="1.6" />
-              <path d="M9 8v4.5M9 5.5v.5" stroke="var(--primary-dark)" strokeWidth="1.8" strokeLinecap="round" />
+              <circle cx="9" cy="9" r="7.5" fill="none" stroke="var(--blue)" strokeWidth="1.6" />
+              <path d="M9 8v4.5M9 5.5v.5" stroke="var(--blue)" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
             Why am I asked this?
           </summary>

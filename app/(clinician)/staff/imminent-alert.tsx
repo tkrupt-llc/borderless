@@ -157,7 +157,7 @@ export function ImminentAlert() {
         <button
           type="button"
           onClick={turnOff}
-          className="min-h-9 cursor-pointer rounded-lg px-2 text-[0.8125rem] text-muted underline underline-offset-2 hover:text-ink"
+          className="min-h-9 cursor-pointer rounded-full px-2 text-[0.8125rem] text-muted underline underline-offset-2 hover:text-ink"
         >
           Alerts on · turn off
         </button>
@@ -165,7 +165,7 @@ export function ImminentAlert() {
         <button
           type="button"
           onClick={turnOn}
-          className="min-h-9 cursor-pointer rounded-lg border border-line bg-surface px-3 text-[0.8125rem] font-medium text-ink hover:bg-sage-soft"
+          className="min-h-9 cursor-pointer rounded-full border border-line bg-surface px-3 text-[0.8125rem] font-medium text-ink hover:bg-sage-soft"
         >
           Turn on alerts
         </button>

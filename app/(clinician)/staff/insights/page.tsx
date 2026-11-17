@@ -41,7 +41,9 @@ async function InsightsView() {
   return (
     <StaffShell staff={staff} active="insights" counts={{ open: queue.length, escalated: queue.filter((t) => t.escalatedAt).length }}>
       <div>
-        <h1 className="text-[1.5rem] leading-tight font-semibold tracking-[-0.01em]">Service insights</h1>
+        <h1 className="font-serif text-[2rem] leading-tight font-normal">
+          Service <em className="text-blue">insights</em>
+        </h1>
         <p className="text-[0.8125rem] text-muted">Last {data.days} days · computed from the app&apos;s own records · times in UAE time</p>
       </div>
 

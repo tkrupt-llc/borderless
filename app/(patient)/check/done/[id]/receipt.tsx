@@ -94,26 +94,26 @@ function Step({ step, last }: { step: ReceiptStep; last: boolean }) {
     <li className="flex gap-3.5">
       <div className="flex flex-col items-center" aria-hidden="true">
         {state === "done" && (
-          <div className="flex size-7 items-center justify-center rounded-full bg-primary">
+          <div className="flex size-7 items-center justify-center rounded-full bg-blue">
             <svg width="16" height="16" viewBox="0 0 16 16">
               <path d="M3.5 8.5l3 3 6-7" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
         )}
         {state === "now" && (
-          <div className="flex size-7 items-center justify-center rounded-full border-[3px] border-primary bg-surface">
-            <div className="size-2.5 rounded-full bg-primary" />
+          <div className="anim-pulse flex size-7 items-center justify-center rounded-full border-[3px] border-blue bg-surface">
+            <div className="size-2.5 rounded-full bg-blue" />
           </div>
         )}
-        {state === "next" && <div className="size-7 rounded-full border-2 border-step-idle bg-surface" />}
-        {!last && <div className={`min-h-6 w-0.5 flex-1 ${state === "done" ? "bg-primary" : "bg-line"}`} />}
+        {state === "next" && <div className="size-7 rounded-full border-2 border-[#8fa7b0] bg-surface" />}
+        {!last && <div className={`min-h-6 w-0.5 flex-1 ${state === "done" ? "bg-blue" : "bg-line"}`} />}
       </div>
       {state === "now" ? (
         <div className="flex-1 pb-[18px]">
-          <div className="rounded-2xl bg-sage px-4 py-3.5">
-            <span className="text-caption font-semibold text-primary-dark">Now</span>
+          <div className="anim-pop rounded-2xl bg-sky px-4 py-3.5">
+            <span className="text-[0.8125rem] font-semibold tracking-[0.06em] text-blue uppercase">Now</span>
             <p className="mt-0.5 font-semibold">{step.title}</p>
-            <p className="mt-1 text-caption text-text-on-sage">{step.body}</p>
+            <p className="mt-1 text-caption text-blue-ink">{step.body}</p>
           </div>
         </div>
       ) : (

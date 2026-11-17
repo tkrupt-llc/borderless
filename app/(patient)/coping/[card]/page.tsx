@@ -34,7 +34,9 @@ async function CopingCard({ params }: { params: PageProps<"/coping/[card]">["par
     return (
       <div className="flex flex-1 flex-col gap-4 px-5 pt-5">
         <div className="flex flex-col gap-1.5 rounded-[22px] p-5" style={{ background: cat.bg }}>
-          <span className="text-small font-semibold text-text-2">{cat.label}</span>
+          <span className="text-[0.75rem] font-semibold tracking-[0.04em] uppercase" style={{ color: cat.ink }}>
+            {cat.label}
+          </span>
           <h1 className="font-serif text-[1.875rem] leading-tight font-normal">
             My reasons and <em className="text-primary">next steps</em>
           </h1>
@@ -56,7 +58,7 @@ async function CopingCard({ params }: { params: PageProps<"/coping/[card]">["par
       <div className="flex flex-col gap-3 rounded-[22px] p-5" style={{ background: cat.bg }}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
-            <span className="text-small font-semibold text-text-2">
+            <span className="text-[0.75rem] font-semibold tracking-[0.04em] uppercase" style={{ color: cat.ink }}>
               {cat.label} · {card.duration}
             </span>
             <h1 className="font-serif text-[1.875rem] leading-tight font-normal">{card.title}</h1>

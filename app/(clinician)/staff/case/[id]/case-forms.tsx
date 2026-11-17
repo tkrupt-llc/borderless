@@ -38,7 +38,7 @@ export function DecisionForm({ sessionId, proposalId, urgent }: { sessionId: str
           type="button"
           aria-expanded={overriding}
           onClick={() => setOverriding((o) => !o)}
-          className="min-h-9 cursor-pointer rounded-lg border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft"
+          className="min-h-9 cursor-pointer rounded-full border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft"
         >
           Override
         </button>
@@ -104,7 +104,7 @@ export function SummaryEditor({ sessionId, initialText }: { sessionId: string; i
               if (r.ok) setSaved(true);
             })
           }
-          className="min-h-9 cursor-pointer rounded-lg border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft disabled:cursor-default disabled:opacity-50"
+          className="min-h-9 cursor-pointer rounded-full border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft disabled:cursor-default disabled:opacity-50"
         >
           {pending ? "Saving…" : saved ? "Saved" : "Save edits"}
         </button>
@@ -158,11 +158,11 @@ export function DeleteCaseButton({ sessionId }: { sessionId: string }) {
                 else setError(r.error);
               })
             }
-            className="min-h-9 cursor-pointer rounded-lg bg-danger px-3 text-[0.875rem] font-medium text-white disabled:opacity-60"
+            className="min-h-9 cursor-pointer rounded-full bg-danger px-3 text-[0.875rem] font-medium text-white disabled:opacity-60"
           >
             {pending ? "Deleting…" : "Yes, delete"}
           </button>
-          <button type="button" onClick={() => setConfirming(false)} className="min-h-9 cursor-pointer rounded-lg border border-line bg-surface px-3 text-[0.875rem] font-medium">
+          <button type="button" onClick={() => setConfirming(false)} className="min-h-9 cursor-pointer rounded-full border border-line bg-surface px-3 text-[0.875rem] font-medium">
             Cancel
           </button>
         </div>
@@ -170,7 +170,7 @@ export function DeleteCaseButton({ sessionId }: { sessionId: string }) {
         <button
           type="button"
           onClick={() => setConfirming(true)}
-          className="min-h-9 cursor-pointer self-start rounded-lg border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft"
+          className="min-h-9 cursor-pointer self-start rounded-full border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft"
         >
           Delete the patient&apos;s data
         </button>

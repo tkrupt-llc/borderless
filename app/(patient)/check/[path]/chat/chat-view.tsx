@@ -106,8 +106,19 @@ export function ChatView() {
   return (
     <div className="flex flex-1 flex-col px-5 pt-3">
       {/* AI label, always visible above the conversation. */}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-sky px-4 py-2.5">
-        <strong className="text-caption font-semibold">AI assistant, not a therapist</strong>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-ai-soft px-4 py-2.5">
+        <span className="flex items-center gap-2.5">
+          <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-ai">
+            <svg width="18" height="18" viewBox="0 0 40 40">
+              <path d="M32.3 9.7 A16 16 0 1 0 32.3 30.3" fill="none" stroke="var(--brand)" strokeWidth="5" strokeLinecap="round" />
+              <circle cx="27" cy="20" r="3.6" fill="var(--clay)" />
+            </svg>
+          </span>
+          <span className="flex flex-col leading-tight">
+            <strong className="text-caption font-semibold">AI assistant, not a therapist</strong>
+            <span className="text-[0.8125rem] text-ai-ink">A clinician reads everything</span>
+          </span>
+        </span>
         <details className="text-caption">
           <summary className="inline-flex min-h-11 cursor-pointer items-center text-primary-dark underline">
             Why am I asked this?
@@ -125,8 +136,11 @@ export function ChatView() {
           <Bubble key={m.id} role={m.role} text={m.text} />
         ))}
         {pending && (
-          <li className="text-caption text-muted" role="status">
-            Writing a reply…
+          <li role="status" className="anim-pop flex gap-1.5 self-start rounded-2xl rounded-bl-md bg-ai-soft px-4 py-3.5">
+            <span className="sr-only">The assistant is writing a reply</span>
+            <span className="typing-dot" aria-hidden="true" />
+            <span className="typing-dot" aria-hidden="true" />
+            <span className="typing-dot" aria-hidden="true" />
           </li>
         )}
       </ol>
@@ -145,7 +159,7 @@ export function ChatView() {
               key={q}
               type="button"
               onClick={() => send(q)}
-              className="min-h-11 cursor-pointer rounded-full border-[1.5px] border-primary bg-surface px-4 text-caption font-medium text-primary-dark hover:bg-sage-soft"
+              className="tap anim-pop min-h-11 cursor-pointer rounded-full border-[1.5px] border-line bg-surface px-4 text-caption font-medium text-ink hover:border-primary"
             >
               {q}
             </button>
@@ -206,7 +220,7 @@ export function ChatView() {
 function Bubble({ role, text }: { role: ChatMessageView["role"]; text: string }) {
   if (role === "patient") {
     return (
-      <li className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-white">
+      <li className="anim-pop max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-4 py-2.5 font-medium text-white">
         <span className="sr-only">You: </span>
         {text}
       </li>
@@ -214,8 +228,8 @@ function Bubble({ role, text }: { role: ChatMessageView["role"]; text: string })
   }
   return (
     <li
-      className={`max-w-[85%] self-start rounded-2xl rounded-bl-md px-4 py-2.5 ${
-        role === "system" ? "bg-sage text-ink" : "bg-surface text-ink"
+      className={`anim-pop max-w-[85%] self-start rounded-2xl rounded-bl-md px-4 py-2.5 ${
+        role === "system" ? "bg-sky text-ink" : "bg-ai-soft text-ink"
       }`}
     >
       <span className="sr-only">{role === "system" ? "Borderless: " : "AI assistant: "}</span>

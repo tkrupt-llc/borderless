@@ -55,6 +55,9 @@ export default function StartPage() {
             <span className="text-caption text-on-dark">About 10 minutes · fullest picture</span>
           </span>
         </Link>
+        <Link href="/home" className="inline-flex min-h-11 items-center self-start text-caption text-primary-dark underline underline-offset-2">
+          Coming back? See your next step
+        </Link>
       </div>
 
       {/* Trust signals (spec): reviewing psychiatrist, licensed partner, "not a therapist", data promise. */}

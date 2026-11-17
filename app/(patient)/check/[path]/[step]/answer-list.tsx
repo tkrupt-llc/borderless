@@ -89,7 +89,7 @@ export function AnswerList({
               aria-checked={isSelected}
               disabled={pending}
               onClick={() => choose(option.value)}
-              className={`flex min-h-[52px] w-full cursor-pointer items-center justify-between rounded-2xl border-[1.5px] px-[18px] py-3 text-left sm:min-h-14 sm:py-3.5 text-body font-medium disabled:cursor-wait ${
+              className={`tap flex min-h-[52px] w-full cursor-pointer items-center justify-between rounded-2xl border-[1.5px] px-[18px] py-3 text-left sm:min-h-14 sm:py-3.5 text-body font-medium disabled:cursor-wait ${
                 isSelected ? "border-primary bg-primary text-white" : "border-line bg-surface text-ink hover:border-primary"
               }`}
             >

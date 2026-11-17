@@ -49,6 +49,9 @@ function byCase(tasks: QueueTask[]): CaseRow[] {
   return [...rows.values()];
 }
 
+/** Arrived in the last minute: the row highlights once so the eye finds it. */
+const justNow = (iso: string) => Date.now() - new Date(iso).getTime() < 60_000;
+
 const pathLabel = (p: string) =>
   p === "contact" ? "Call-back only" : p === "followup" ? "Follow-up" : p === "crisis" ? "From the crisis page" : `${p[0].toUpperCase()}${p.slice(1)} check`;
 
@@ -87,7 +90,9 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
     >
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[1.5rem] leading-tight font-semibold tracking-[-0.01em]">Queue</h1>
+          <h1 className="font-serif text-[2rem] leading-tight font-normal">
+            Review <em className="text-blue">queue</em>
+          </h1>
           <p className="text-[0.8125rem] text-muted">One row per case · most urgent first, then by time left</p>
         </div>
         <AutoRefresh />
@@ -191,7 +196,12 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                     const edge =
                       t.priority === "imminent" || overdue ? "border-s-danger" : t.priority === "urgent" ? "border-s-[#d9a441]" : "border-s-transparent";
                     return (
-                      <tr key={c.sessionId} className={`border-t border-line-warm align-top hover:bg-sage-mist ${c.unacked > 0 ? "bg-surface" : "bg-bg/60"}`}>
+                      <tr
+                        key={c.sessionId}
+                        className={`border-t border-line-warm align-top hover:bg-sage-mist ${c.unacked > 0 ? "bg-surface" : "bg-bg/60"} ${
+                          justNow(c.receivedAt) ? "anim-highlight" : ""
+                        }`}
+                      >
                         <td className={`border-s-4 px-4 py-3 ${edge}`}>
                           <Link href={`/staff/case/${c.sessionId}`} className="font-semibold whitespace-nowrap text-ink tabular-nums">
                             {caseRef(c.sessionId)}
@@ -225,7 +235,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                             {c.unacked > 0 && write && <ActionButton action={acknowledgeCase.bind(null, c.sessionId)}>Acknowledge</ActionButton>}
                             <Link
                               href={`/staff/case/${c.sessionId}`}
-                              className="inline-flex min-h-9 items-center rounded-lg bg-primary px-3 text-[0.875rem] font-medium text-white no-underline hover:bg-primary-dark hover:text-white"
+                              className="inline-flex min-h-9 items-center rounded-full bg-primary px-3 text-[0.875rem] font-medium text-white no-underline hover:bg-primary-dark hover:text-white"
                             >
                               Open
                             </Link>

@@ -94,7 +94,7 @@ export function StaffShell({
               </span>
             </span>
           </span>
-          <button type="submit" className="min-h-9 cursor-pointer rounded-lg border border-line bg-surface px-3 text-[0.8125rem] font-medium text-ink hover:bg-sage-soft">
+          <button type="submit" className="min-h-9 cursor-pointer rounded-full border border-line bg-surface px-3 text-[0.8125rem] font-medium text-ink hover:bg-sage-soft">
             Sign out
           </button>
         </form>
@@ -138,16 +138,16 @@ export const TASK_LABELS: Record<string, string> = {
 
 const TIER_STYLE: Record<string, string> = {
   imminent: "bg-danger text-white",
-  urgent: "border border-[#e3c27a] bg-[#fbefd2] text-[#5c3a00]",
-  elevated: "bg-sage text-ink",
-  normal: "border border-line bg-surface text-text-2",
+  urgent: "bg-[#f4e3d3] text-[#6b3e1c]",
+  elevated: "bg-[#e9e4f5] text-[#463c6e]",
+  normal: "bg-[#edf0f1] text-[#34505b]",
 };
 const TIER_WORD: Record<string, string> = { imminent: "Imminent", urgent: "Urgent", elevated: "Elevated", normal: "Routine" };
 
 /** Tier in words plus a distinct shape, so it never relies on colour alone. Red only for imminent. */
 export function PriorityBadge({ priority }: { priority: string }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${TIER_STYLE[priority] ?? TIER_STYLE.normal}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.8125rem] font-semibold whitespace-nowrap ${TIER_STYLE[priority] ?? TIER_STYLE.normal}`}>
       <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="currentColor">
         {priority === "imminent" ? (
           <path d="M5 0.5 9.8 9.5H0.2z" />

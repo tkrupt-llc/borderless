@@ -61,7 +61,7 @@
       "id": "urge-surfing",
       "title": "Urge surfing",
       "duration": "5 min",
-      "category": "distress",
+      "category": "soothe",
       "intro": "Urges rise, peak and fall, like a wave. You don't have to act on one to make it pass.",
       "steps": [
         "Notice the urge. Name it to yourself: \"I'm having an urge to…\"",
@@ -85,5 +85,5 @@
       "message": "I'm having a hard time right now. Could you call me or come and be with me for a bit?"
     }
   ],
-  "myReasonsCategory": "soothe"
+  "myReasonsCategory": "lift2"
 }
