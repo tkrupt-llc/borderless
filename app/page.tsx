@@ -78,7 +78,7 @@ export default function Landing() {
               <p className="text-text-on-sage">A real person reads your answers and chooses the right next step for you.</p>
             </div>
             <div className="flex flex-col gap-3 rounded-3xl bg-primary p-7 text-white">
-              <span className="text-caption font-semibold text-on-dark-2">[03]</span>
+              <span className="text-caption font-semibold text-on-dark">[03]</span>
               <h3 className="font-serif text-[1.625rem] font-medium">We follow up</h3>
               <p className="text-on-dark">
                 Short check-ins every few weeks, so you and your clinician can see how things change.

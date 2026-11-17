@@ -160,7 +160,7 @@ async function InsightsView() {
   );
 }
 
-/** One series, so no legend: the panel title names it. Hover or focus a bar for its value; a table follows for screen readers. */
+/** One series, so no legend: the panel title names it. Hover a bar for its value; screen readers get the table below. */
 function DailyChart({ daily }: { daily: Insights["daily"] }) {
   const max = Math.max(1, ...daily.map((d) => d.value));
   const top = Math.max(4, Math.ceil(max / 4) * 4);
@@ -177,12 +177,12 @@ function DailyChart({ daily }: { daily: Insights["daily"] }) {
           <div className="absolute inset-x-0 top-1/2 border-t border-line-warm" />
           <div className="relative flex h-full items-end gap-0.5">
             {daily.map((d) => (
-              <div key={d.label} tabIndex={0} className="group relative flex h-full flex-1 items-end justify-center outline-none">
+              <div key={d.label} className="group relative flex h-full flex-1 items-end justify-center">
                 <div
-                  className="w-full max-w-7 rounded-t-[4px] bg-primary group-hover:bg-primary-dark group-focus:bg-primary-dark"
+                  className="w-full max-w-7 rounded-t-[4px] bg-primary group-hover:bg-primary-dark"
                   style={{ height: d.value === 0 ? 0 : `${(d.value / top) * 100}%` }}
                 />
-                <span className="pointer-events-none absolute top-1 z-10 hidden rounded-md bg-ink px-2 py-1 text-[0.75rem] whitespace-nowrap text-white group-hover:block group-focus:block">
+                <span className="pointer-events-none absolute top-1 z-10 hidden rounded-md bg-ink px-2 py-1 text-[0.75rem] whitespace-nowrap text-white group-hover:block">
                   {d.label}: {d.value}
                 </span>
               </div>

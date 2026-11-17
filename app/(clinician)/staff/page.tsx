@@ -173,7 +173,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                             <span className="font-medium text-ink">{TASK_LABELS[t.type] ?? t.type}</span>
                             {t.ruleId && <span className="block text-[0.75rem] whitespace-nowrap text-muted">{t.ruleId}</span>}
                           </td>
-                          <td className="px-4 py-2.5 text-text-2">{nextAction(t)}</td>
+                          <td className="min-w-44 px-4 py-2.5 text-text-2">{nextAction(t)}</td>
                           <td className="px-4 py-2.5 whitespace-nowrap text-text-2">{received.format(new Date(t.createdAt))}</td>
                           <td className="px-4 py-2.5 whitespace-nowrap">
                             <Countdown dueAt={t.dueAt} />

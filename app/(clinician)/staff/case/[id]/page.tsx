@@ -101,7 +101,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
 
       {/* Header: which case, how urgent, and the facts needed before reading on. */}
       <nav aria-label="Breadcrumb" className="-mb-2 text-[0.8125rem] text-muted">
-        <Link href="/staff">Queue</Link> <span aria-hidden="true">/</span> <span aria-current="page">{caseRef(id)}</span>
+        <Link href="/staff" className="underline underline-offset-2">Queue</Link> <span aria-hidden="true">/</span> <span aria-current="page">{caseRef(id)}</span>
       </nav>
 
       {/* Case banner: stays in view while scrolling, like the patient banner in clinical records. */}

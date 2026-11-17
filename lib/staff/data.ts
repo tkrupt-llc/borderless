@@ -172,3 +172,17 @@ export async function loadCaseTrend(sessionId: string) {
   ).map((r) => ({ sessionId: r.session_id, at: r.created_at, instrument: r.instrument, total: r.total, band: r.band }));
   return { rootId, sessions, points };
 }
+
+/** Open, not yet acknowledged imminent tasks: what the console alert watches. */
+export async function loadImminentAlerts(): Promise<{ id: string; sessionId: string; createdAt: string }[]> {
+  return rows<{ id: string; session_id: string; created_at: string }>(
+    await db()
+      .from("tasks")
+      .select("id, session_id, created_at")
+      .eq("priority", "imminent")
+      .is("closed_at", null)
+      .is("acknowledged_at", null)
+      .order("created_at"),
+    "imminent alerts",
+  ).map((t) => ({ id: t.id, sessionId: t.session_id, createdAt: t.created_at }));
+}

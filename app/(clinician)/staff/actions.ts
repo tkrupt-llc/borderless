@@ -4,7 +4,7 @@ import { z } from "zod";
 import { refresh } from "next/cache";
 import { db } from "@/lib/db/server";
 import { canWrite, requireStaff, type Staff } from "@/lib/staff/auth";
-import { loadCase } from "@/lib/staff/data";
+import { loadCase, loadImminentAlerts } from "@/lib/staff/data";
 import { summaryToText } from "@/lib/summary/build";
 import { serviceById } from "@/lib/directory";
 
@@ -216,4 +216,10 @@ export async function referToService(sessionId: string, serviceId: string): Prom
     );
     await audit(staff, "referred", "session", id, id, { service: service.id });
   });
+}
+
+/** Read-only, for the console alert: open imminent tasks nobody has acknowledged yet. */
+export async function imminentAlerts(): Promise<{ id: string; sessionId: string; createdAt: string }[]> {
+  await requireStaff();
+  return loadImminentAlerts();
 }

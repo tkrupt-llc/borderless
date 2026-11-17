@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Staff } from "@/lib/staff/auth";
 import { signOut } from "./login/actions";
+import { ImminentAlert } from "./imminent-alert";
 
 const icon = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true } as const;
 const InboxIcon = () => (
@@ -103,6 +104,8 @@ export function StaffShell({
           <span className="inline-flex items-center gap-2 rounded-md border border-[#e3c27a] bg-[#fbefd2] px-2 py-0.5 text-[0.75rem] font-semibold text-[#5c3a00]">
             Demo environment · synthetic data only
           </span>
+          <div className="flex flex-wrap items-center gap-3">
+          <ImminentAlert />
           <form action="/staff/find" role="search" className="flex items-center gap-2">
             <label className="flex h-9 items-center gap-2 rounded-md border border-line bg-bg px-3 text-muted focus-within:border-primary focus-within:bg-surface">
               <SearchIcon />
@@ -116,6 +119,7 @@ export function StaffShell({
               />
             </label>
           </form>
+          </div>
         </header>
         <main className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-6 lg:px-8">{children}</main>
       </div>
