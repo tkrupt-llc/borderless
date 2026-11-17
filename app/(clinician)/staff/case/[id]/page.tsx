@@ -15,8 +15,8 @@ import { ContactForm, DecisionForm, StartReview, SummaryEditor } from "./case-fo
 /** A section with a header bar, as in clinical work tools: title left, status right. */
 function Panel({ id, title, aside, children }: { id: string; title: string; aside?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section aria-labelledby={id} className="overflow-hidden rounded-lg border border-line-warm bg-surface">
-      <header className="flex min-h-12 flex-wrap items-center justify-between gap-2 border-b border-line-warm bg-sage-mist px-5 py-2.5">
+    <section aria-labelledby={id} className="overflow-hidden rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)]">
+      <header className="flex min-h-12 flex-wrap items-center justify-between gap-2 border-b border-line-warm bg-surface px-5 py-3">
         <h2 id={id} className="text-[0.9375rem] font-semibold">{title}</h2>
         {aside}
       </header>
@@ -97,7 +97,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
       </nav>
 
       {/* Case banner: stays in view while scrolling, like the patient banner in clinical records. */}
-      <div className="z-10 overflow-hidden lg:sticky lg:top-0 rounded-lg border border-line-warm bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+      <div className="z-10 overflow-hidden lg:sticky lg:top-0 rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3 px-5 py-3">
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] tabular-nums">{caseRef(id)}</h1>
@@ -105,7 +105,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             {openTasks.some((t) => t.escalated_at) && (
               <span className="rounded-md border border-danger px-2 py-0.5 text-[0.8125rem] font-semibold text-danger">Escalated</span>
             )}
-            <span className={`rounded-md px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-primary text-white" : "border border-line text-text-2"}`}>
+            <span className={`rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-primary text-white" : "border border-line text-text-2"}`}>
               {signed ? "Signed" : "Not yet signed"}
             </span>
           </div>
@@ -168,7 +168,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             id="summary-h"
             title="Summary"
             aside={
-              <span className={`rounded-md px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-primary text-white" : "border border-[#e3c27a] bg-[#fbefd2] text-[#5c3a00]"}`}>
+              <span className={`rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${signed ? "bg-primary text-white" : "border border-[#e3c27a] bg-[#fbefd2] text-[#5c3a00]"}`}>
                 {signed ? "AI-drafted, clinician-verified" : "AI-drafted, not yet verified"}
               </span>
             }

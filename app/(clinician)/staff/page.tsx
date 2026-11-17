@@ -94,7 +94,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
         </div>
       )}
 
-      <dl className="grid grid-cols-2 overflow-hidden rounded-lg border border-line-warm bg-surface sm:grid-cols-3 xl:grid-cols-5">
+      <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)] sm:grid-cols-3 xl:grid-cols-5">
         {stats.map((s) => (
           <div key={s.label} className="flex flex-col-reverse gap-0.5 border-line-warm px-5 py-3 not-first:border-s max-xl:border-t">
             <dt className="text-[0.75rem] font-medium text-muted">{s.label}</dt>
@@ -127,7 +127,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
       </nav>
 
       {tasks.length === 0 ? (
-        <p className="rounded-lg border border-line-warm bg-surface px-5 py-8 text-center text-text-2">
+        <p className="rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)] px-5 py-8 text-center text-text-2">
           {filter.id === "all" ? "No open cases." : `No open cases under "${filter.label}".`}
         </p>
       ) : (
@@ -142,7 +142,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                   {rows.length} · {group.note}
                 </span>
               </h2>
-              <div className="overflow-x-auto rounded-lg border border-line-warm bg-surface">
+              <div className="overflow-x-auto rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)]">
                 <table className="w-full min-w-[860px] border-collapse text-left text-[0.875rem]">
                   <thead className="bg-sage-mist text-[0.6875rem] tracking-[0.06em] text-muted uppercase">
                     <tr>
@@ -190,7 +190,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                               )}
                               <Link
                                 href={`/staff/case/${t.sessionId}`}
-                                className="inline-flex min-h-9 items-center rounded-md bg-primary px-3 text-[0.875rem] font-medium text-white no-underline hover:bg-primary-dark hover:text-white"
+                                className="inline-flex min-h-9 items-center rounded-lg bg-primary px-3 text-[0.875rem] font-medium text-white no-underline hover:bg-primary-dark hover:text-white"
                               >
                                 Open
                               </Link>

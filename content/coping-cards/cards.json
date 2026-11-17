@@ -6,6 +6,7 @@
       "id": "breathing",
       "title": "Paced breathing",
       "duration": "2 min",
+      "category": "calm",
       "intro": "Breathing out for longer than you breathe in helps your body slow down. Follow the circle.",
       "steps": [
         "Sit or stand however is comfortable. You can keep your eyes open.",
@@ -19,6 +20,7 @@
       "title": "5-4-3-2-1 grounding",
       "shortTitle": "5-4-3-2-1",
       "duration": "3 min",
+      "category": "ground",
       "intro": "This brings your attention back to the room around you, one sense at a time. Take your time with each step.",
       "steps": [
         "Name 5 things you can see.",
@@ -32,6 +34,7 @@
       "id": "stop",
       "title": "STOP",
       "duration": "1 min",
+      "category": "clarity",
       "intro": "A short pause before you act on a strong feeling.",
       "steps": [
         "S: Stop. Don't act yet. Stay still for a moment.",
@@ -44,6 +47,7 @@
       "id": "tip",
       "title": "TIP",
       "duration": "5 min",
+      "category": "distress",
       "intro": "For when feelings are very intense. These change your body quickly, which can make the feeling easier to ride out.",
       "steps": [
         "T: Temperature. Splash cold water on your face, or hold something cold against your face for 30 seconds.",
@@ -57,6 +61,7 @@
       "id": "urge-surfing",
       "title": "Urge surfing",
       "duration": "5 min",
+      "category": "distress",
       "intro": "Urges rise, peak and fall, like a wave. You don't have to act on one to make it pass.",
       "steps": [
         "Notice the urge. Name it to yourself: \"I'm having an urge to…\"",
@@ -70,6 +75,7 @@
       "id": "reach-out",
       "title": "Reach out",
       "duration": "Message someone",
+      "category": "lift",
       "intro": "You don't have to explain everything. A short message to someone you trust is enough.",
       "steps": [
         "Think of one person who is safe to contact: a friend, family member or colleague.",
@@ -78,5 +84,6 @@
       ],
       "message": "I'm having a hard time right now. Could you call me or come and be with me for a bit?"
     }
-  ]
+  ],
+  "myReasonsCategory": "soothe"
 }

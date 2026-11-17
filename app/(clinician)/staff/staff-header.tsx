@@ -44,8 +44,8 @@ export function StaffShell({
   children: React.ReactNode;
 }) {
   const item = (on: boolean) =>
-    `flex min-h-10 items-center gap-3 rounded-md px-3 text-[0.875rem] no-underline ${
-      on ? "bg-sage font-semibold text-ink hover:text-ink" : "font-medium text-text-2 hover:bg-sage-soft hover:text-ink"
+    `flex min-h-10 items-center gap-3 rounded-lg px-3 text-[0.875rem] no-underline ${
+      on ? "bg-sage font-semibold text-text-on-sage hover:text-text-on-sage" : "font-medium text-text-2 hover:bg-sage-soft hover:text-ink"
     }`;
   const count = "ms-auto rounded-full bg-surface px-2 py-0.5 text-[0.75rem] font-semibold text-text-2 tabular-nums ring-1 ring-line";
   const initials = staff.email.slice(0, 2).toUpperCase();
@@ -93,7 +93,7 @@ export function StaffShell({
               </span>
             </span>
           </span>
-          <button type="submit" className="min-h-9 cursor-pointer rounded-md border border-line bg-surface px-3 text-[0.8125rem] font-medium text-ink hover:bg-sage-soft">
+          <button type="submit" className="min-h-9 cursor-pointer rounded-lg border border-line bg-surface px-3 text-[0.8125rem] font-medium text-ink hover:bg-sage-soft">
             Sign out
           </button>
         </form>
@@ -143,7 +143,7 @@ const TIER_WORD: Record<string, string> = { imminent: "Imminent", urgent: "Urgen
 /** Tier in words plus a distinct shape, so it never relies on colour alone. Red only for imminent. */
 export function PriorityBadge({ priority }: { priority: string }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[0.8125rem] font-semibold ${TIER_STYLE[priority] ?? TIER_STYLE.normal}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[0.8125rem] font-semibold ${TIER_STYLE[priority] ?? TIER_STYLE.normal}`}>
       <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="currentColor">
         {priority === "imminent" ? (
           <path d="M5 0.5 9.8 9.5H0.2z" />

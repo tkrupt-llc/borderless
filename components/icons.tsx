@@ -77,14 +77,14 @@ export function ChatIcon({ size = 64, stroke = 2, blob = "var(--sage)" }: IconPr
   );
 }
 
-export function HeartIcon({ size = 64, stroke = 2.6 }: IconProps) {
+export function HeartIcon({ size = 64, stroke = 2.6, blob = "var(--primary-dark)", color = "#FFFFFF" }: IconProps & { color?: string }) {
   return (
     <Svg size={size}>
-      <circle cx="32" cy="32" r="26" fill="#6F8545" />
+      <circle cx="32" cy="32" r="26" fill={blob} />
       <path
         d="M32 46s-14-8-14-18a7 7 0 0 1 14-4 7 7 0 0 1 14 4c0 10-14 18-14 18z"
         fill="none"
-        stroke="#FFFFFF"
+        stroke={color}
         strokeWidth={stroke}
         strokeLinejoin="round"
       />

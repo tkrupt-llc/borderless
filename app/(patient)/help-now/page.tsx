@@ -79,7 +79,7 @@ export default function HelpNowPage() {
             <Link
               key={c.href}
               href={c.href}
-              className="flex min-h-11 flex-col rounded-2xl bg-surface px-4 py-3 text-ink no-underline hover:text-ink hover:outline-[1.5px] hover:outline-line"
+              className="flex min-h-11 flex-col rounded-2xl bg-cat-distress px-4 py-3 text-ink no-underline hover:text-ink hover:outline-[1.5px] hover:outline-line"
             >
               <strong className="text-base font-semibold">{c.title}</strong>
               <span className="text-small text-muted">{c.note}</span>

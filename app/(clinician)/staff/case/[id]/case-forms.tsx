@@ -6,7 +6,7 @@ import { decide, logContact, saveSummary, signSummary, startReview } from "../..
 import { ActionButton } from "../../ui";
 import { STEP_NAMES } from "@/lib/rules/routing";
 
-const field = "rounded-md border border-line bg-surface px-3 py-2 text-caption focus:border-primary";
+const field = "rounded-lg border border-line bg-surface px-3 py-2 text-caption focus:border-primary";
 
 /** Opening the case starts the review timer and writes the audit entry. */
 export function StartReview({ sessionId }: { sessionId: string }) {
@@ -38,7 +38,7 @@ export function DecisionForm({ sessionId, proposalId, urgent }: { sessionId: str
           type="button"
           aria-expanded={overriding}
           onClick={() => setOverriding((o) => !o)}
-          className="min-h-9 cursor-pointer rounded-md border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft"
+          className="min-h-9 cursor-pointer rounded-lg border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft"
         >
           Override
         </button>
@@ -104,7 +104,7 @@ export function SummaryEditor({ sessionId, initialText }: { sessionId: string; i
               if (r.ok) setSaved(true);
             })
           }
-          className="min-h-9 cursor-pointer rounded-md border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft disabled:cursor-default disabled:opacity-50"
+          className="min-h-9 cursor-pointer rounded-lg border border-line bg-surface px-3 text-[0.875rem] font-medium hover:bg-sage-soft disabled:cursor-default disabled:opacity-50"
         >
           {pending ? "Saving…" : saved ? "Saved" : "Save edits"}
         </button>

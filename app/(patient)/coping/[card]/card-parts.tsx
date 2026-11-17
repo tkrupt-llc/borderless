@@ -15,7 +15,7 @@ const secondary =
 const IN_SECONDS = 4;
 const CYCLE_SECONDS = 10; // 4 in, 6 out
 
-export function BreathingPacer() {
+export function BreathingPacer({ fill = "var(--sage-deep)", ring = "var(--sage-soft)" }: { fill?: string; ring?: string }) {
   const [running, setRunning] = useState(true);
   // One counter drives everything: the phase and the count are worked out from it.
   const [tick, setTick] = useState(0);
@@ -34,10 +34,11 @@ export function BreathingPacer() {
   const left = breathingIn ? IN_SECONDS - at : CYCLE_SECONDS - at;
   return (
     <div className="flex flex-col items-center gap-4 py-2">
-      <div className="flex size-52 items-center justify-center rounded-full bg-sage-soft" aria-hidden="true">
+      <div className="flex size-52 items-center justify-center rounded-full" style={{ background: ring }} aria-hidden="true">
         <div
-          className="flex size-44 items-center justify-center rounded-full bg-sage ease-in-out"
+          className="flex size-44 items-center justify-center rounded-full ease-in-out"
           style={{
+            background: fill,
             transform: `scale(${running ? current.scale : 0.8})`,
             transitionProperty: "transform",
             transitionDuration: `${current.seconds}s`,
@@ -58,7 +59,7 @@ export function BreathingPacer() {
           setRunning((r) => !r);
           setTick(0);
         }}
-        className="min-h-11 cursor-pointer rounded-full border-[1.5px] border-ink px-5 text-caption font-medium"
+        className="min-h-11 cursor-pointer rounded-full border-[1.5px] border-ink bg-surface px-5 text-caption font-medium"
       >
         {running ? "Pause" : "Start again"}
       </button>

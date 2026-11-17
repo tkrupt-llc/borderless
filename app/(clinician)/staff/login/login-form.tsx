@@ -20,7 +20,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="flex min-h-12 cursor-pointer items-center justify-center rounded-md bg-primary px-6 font-medium text-white disabled:cursor-wait"
+        className="flex min-h-12 cursor-pointer items-center justify-center rounded-lg bg-primary px-6 font-medium text-white disabled:cursor-wait"
       >
         {pending ? "Signing in…" : "Sign in"}
       </button>

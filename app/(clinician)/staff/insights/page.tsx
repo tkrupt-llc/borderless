@@ -24,8 +24,8 @@ function duration(minutes: number | null): string {
 
 function Panel({ id, title, note, children }: { id: string; title: string; note?: string; children: React.ReactNode }) {
   return (
-    <section aria-labelledby={id} className="overflow-hidden rounded-lg border border-line-warm bg-surface">
-      <header className="flex min-h-12 flex-wrap items-baseline justify-between gap-2 border-b border-line-warm bg-sage-mist px-5 py-2.5">
+    <section aria-labelledby={id} className="overflow-hidden rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)]">
+      <header className="flex min-h-12 flex-wrap items-baseline justify-between gap-2 border-b border-line-warm bg-surface px-5 py-3">
         <h2 id={id} className="text-[0.9375rem] font-semibold">{title}</h2>
         {note && <span className="text-[0.75rem] text-muted">{note}</span>}
       </header>
@@ -45,7 +45,7 @@ async function InsightsView() {
       </div>
 
       {/* Headline numbers. */}
-      <dl className="grid grid-cols-2 overflow-hidden rounded-lg border border-line-warm bg-surface sm:grid-cols-3 xl:grid-cols-5">
+      <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)] sm:grid-cols-3 xl:grid-cols-5">
         {[
           { label: "Check-ins started", value: String(data.started), sub: `${data.quick} quick · ${data.full} full` },
           { label: "Completed", value: pct(data.completed, data.started), sub: `${data.completed} of ${data.started}` },
