@@ -106,23 +106,124 @@ export function ReachOut({ message }: { message: string }) {
   );
 }
 
+/** Approved card text marks its lead words with **bold**; everything else is shown as written. */
+export function Rich({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith("**") ? (
+          <strong key={i} className="font-semibold">
+            {part.slice(2, -2)}
+          </strong>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 /**
- * "Did this help?" at the end of every card. "This isn't helping" never leaves
- * the person stuck: another card, a person, or emergency help, and (if they
- * agreed to clinician review) a quiet note to the care team.
+ * One step per screen (approved card format), then the two endings. The
+ * breathing pacer stays visible on every step of the breathing card; the
+ * reach-out message appears on the step that says to send it.
+ */
+export function CardStepper({
+  cardId,
+  steps,
+  pacer,
+  message,
+}: {
+  cardId: string;
+  steps: string[];
+  pacer?: { fill: string; ring: string };
+  message?: string;
+}) {
+  const [index, setIndex] = useState(0);
+  const done = index >= steps.length;
+  const messageStep = message ? steps.findIndex((s) => s.includes("message them")) : -1;
+
+  return (
+    <div className="flex flex-col gap-4">
+      {pacer && <BreathingPacer fill={pacer.fill} ring={pacer.ring} />}
+
+      {!done ? (
+        <section aria-live="polite" className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-caption text-muted">
+              Step {index + 1} of {steps.length}
+            </span>
+            <span className="flex gap-1.5" aria-hidden="true">
+              {steps.map((_, i) => (
+                <span key={i} className={`h-1.5 w-6 rounded-full ${i <= index ? "bg-primary" : "bg-track"}`} />
+              ))}
+            </span>
+          </div>
+          <p key={index} className="anim-pop min-h-24 rounded-2xl bg-surface px-5 py-5 font-serif text-[1.375rem] leading-snug">
+            <Rich text={steps[index]} />
+          </p>
+          {index === messageStep && message && <ReachOut message={message} />}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              disabled={index === 0}
+              onClick={() => setIndex((i) => Math.max(0, i - 1))}
+              className={`${secondary} tap cursor-pointer disabled:cursor-default disabled:opacity-40`}
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={() => setIndex((i) => i + 1)}
+              className="tap flex min-h-12 cursor-pointer items-center justify-center rounded-full bg-primary px-4 text-caption font-semibold text-white"
+            >
+              {index === steps.length - 1 ? "Finish" : "Next"}
+            </button>
+          </div>
+        </section>
+      ) : (
+        <>
+          <CardFeedback cardId={cardId} />
+          <button
+            type="button"
+            onClick={() => setIndex(0)}
+            className="min-h-11 cursor-pointer self-start text-caption text-primary-dark underline underline-offset-2"
+          >
+            Go through the steps again
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The two approved endings: "That helped" and "This isn't helping".
+ * "This isn't helping" offers "Talk to someone now" and alerts a clinician
+ * (when the person has a check-in and agreed to clinician review).
  */
 export function CardFeedback({ cardId }: { cardId: string }) {
   const [answer, setAnswer] = useState<"yes" | "no" | null>(null);
-  const [canTell, setCanTell] = useState(false);
-  const [told, setTold] = useState<"idle" | "sending" | "sent" | "failed">("idle");
+  const [told, setTold] = useState<"idle" | "sent" | "none">("idle");
 
   useEffect(() => {
-    if (answer === "no") canTellCareTeam().then(setCanTell, () => setCanTell(false));
-  }, [answer]);
+    if (answer !== "no") return;
+    let cancelled = false;
+    (async () => {
+      const can = await canTellCareTeam().catch(() => false);
+      if (!can) return !cancelled && setTold("none");
+      const r = await tellCareTeam(cardId).catch(() => ({ ok: false }));
+      if (!cancelled) setTold(r.ok ? "sent" : "none");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [answer, cardId]);
 
   if (answer === "yes") {
     return (
-      <p role="status" className="rounded-2xl bg-sage-soft px-4 py-3.5 text-text-on-sage">
+      <p role="status" className="anim-pop rounded-2xl bg-sage-soft px-4 py-3.5 text-text-on-sage">
         Good. You can come back to this card any time.
       </p>
     );
@@ -130,49 +231,29 @@ export function CardFeedback({ cardId }: { cardId: string }) {
 
   if (answer === "no") {
     return (
-      <div role="status" className="flex flex-col gap-2.5 rounded-2xl bg-surface p-4">
+      <div role="status" className="anim-pop flex flex-col gap-2.5 rounded-2xl bg-surface p-4">
         <p className="font-semibold">That&apos;s okay. Not every card works every time.</p>
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          <Link href="/coping" className={secondary}>
-            Try another card
-          </Link>
-          <Link href="/talk" className={secondary}>
-            Talk to a person
-          </Link>
-        </div>
-        {canTell && told !== "sent" && (
-          <button
-            type="button"
-            disabled={told === "sending"}
-            onClick={async () => {
-              setTold("sending");
-              const r = await tellCareTeam(cardId).catch(() => ({ ok: false }));
-              setTold(r.ok ? "sent" : "failed");
-            }}
-            className="flex min-h-12 cursor-pointer items-center justify-center rounded-full bg-primary px-4 text-caption font-medium text-white disabled:cursor-wait disabled:opacity-70"
-          >
-            {told === "sending" ? "Sending…" : "Let my care team know"}
-          </button>
-        )}
-        {told === "sent" && (
-          <p className="text-caption text-text-2">Your care team has been told. Someone will be in touch within one working day.</p>
-        )}
-        {told === "failed" && <p className="text-caption text-danger">That didn&apos;t send. Please try again, or use Talk to a person.</p>}
-        <p className="text-caption text-text-2">
-          If you might act on thoughts of harming yourself, use <Link href="/help-now">I need help now</Link>.
-        </p>
+        <Link
+          href="/help-now"
+          className="tap flex min-h-12 items-center justify-center rounded-full bg-ink px-4 font-semibold text-white no-underline hover:text-white"
+        >
+          Talk to someone now
+        </Link>
+        <Link href="/coping" className={`${secondary} tap`}>
+          Try another card
+        </Link>
+        {told === "sent" && <p className="text-caption text-text-2">Your care team has been told. Someone will be in touch.</p>}
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-2.5">
-      <p className="font-semibold">Did this help?</p>
       <div className="grid grid-cols-2 gap-2.5">
-        <button type="button" onClick={() => setAnswer("yes")} className={`${secondary} cursor-pointer`}>
-          Yes, a bit
+        <button type="button" onClick={() => setAnswer("yes")} className={`${secondary} tap cursor-pointer`}>
+          That helped
         </button>
-        <button type="button" onClick={() => setAnswer("no")} className={`${secondary} cursor-pointer`}>
+        <button type="button" onClick={() => setAnswer("no")} className={`${secondary} tap cursor-pointer`}>
           This isn&apos;t helping
         </button>
       </div>

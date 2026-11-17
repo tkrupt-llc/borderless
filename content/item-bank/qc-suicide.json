@@ -1,8 +1,8 @@
 {
   "instrument": "QC_SUICIDE",
   "version": "1.0",
-  "wordingStatus": "draft",
-  "source": "DRAFT wording based on the ASQ direct question. Not approved: the psychiatrist supplies the final wording and lead-in.",
+  "wordingStatus": "approved",
+  "source": "Wording for Approval: Quick-Check Question, Coping Cards and Self-Help Guides (11 Nov 2026), approved by the project psychiatrist. Copied word for word; do not reword. Option B chosen: ASQ question 2. \"Yes\" opens the crisis screen and alerts a clinician.",
   "arabicEnabled": false,
   "items": [
     {
@@ -10,7 +10,7 @@
       "instrument": "QC_SUICIDE",
       "number": 1,
       "text": {
-        "en": "In the past few weeks, have you had thoughts about killing yourself?",
+        "en": "In the past few weeks, have you felt that you or your family would be better off if you were dead?",
         "ar": ""
       },
       "options": [

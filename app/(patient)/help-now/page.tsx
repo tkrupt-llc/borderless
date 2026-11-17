@@ -73,7 +73,7 @@ export default function HelpNowPage() {
 
       <div className="flex flex-col gap-2.5 px-5 pt-5">
         <Link
-          href="/coping/breathing"
+          href="/coping/breathing?from=crisis"
           className="flex min-h-11 items-center gap-3 rounded-2xl bg-sage px-4 py-3.5 text-ink no-underline hover:text-ink"
         >
           <BreathingIcon size={36} stroke={2.6} blob="var(--sage-deep)" />
@@ -84,8 +84,8 @@ export default function HelpNowPage() {
         </Link>
         <div className="grid grid-cols-2 gap-2.5">
           {[
-            { href: "/coping/tip", title: "TIP", note: "For very strong feelings" },
-            { href: "/coping/urge-surfing", title: "Urge surfing", note: "Let an urge pass" },
+            { href: "/coping/tip?from=crisis", title: "TIP Skill (adapted)", note: "For very strong feelings" },
+            { href: "/coping/urge-surfing?from=crisis", title: "Urge surfing", note: "Let an urge pass" },
           ].map((c) => (
             <Link
               key={c.href}

@@ -185,8 +185,8 @@ const STEPS: { title: string; body: string; screen: React.ReactNode; label: stri
 const PREVIEW = [
   { id: "breathing", Icon: BreathingIcon, title: "Paced breathing", time: "2 minutes", cat: CATEGORIES.calm },
   { id: "urge-surfing", Icon: WavesIcon, title: "Urge surfing", time: "5 minutes", cat: CATEGORIES.soothe },
-  { id: "grounding", Icon: GroundingIcon, title: "5-4-3-2-1 grounding", time: "3 minutes", cat: CATEGORIES.ground },
-  { id: "stop", Icon: StopIcon, title: "STOP", time: "1 minute", cat: CATEGORIES.clarity },
+  { id: "grounding", Icon: GroundingIcon, title: "Mindfulness", time: "3 minutes", cat: CATEGORIES.ground },
+  { id: "stop", Icon: StopIcon, title: "STOP Skill", time: "1 minute", cat: CATEGORIES.clarity },
 ];
 
 export default function Landing() {
@@ -274,6 +274,7 @@ export default function Landing() {
               ["15 min", "If you may be in immediate danger"],
               ["4 hours", "If things are urgent"],
               ["1 day", "For everyone else (one working day)"],
+              ["7", "Coping cards approved by a psychiatrist"],
             ].map(([value, label]) => (
               <div key={value} className="flex flex-col-reverse border-b border-line py-6 pr-6">
                 <dt className="mt-2.5 text-base text-text-2">{label}</dt>
@@ -340,7 +341,7 @@ export default function Landing() {
               While you <em className="text-primary">wait</em>
             </h2>
             <p className="max-w-[420px] text-body text-text-2">
-              Short exercises you can use any time. Each colour shows what a card helps with: calming, grounding,
+              Short exercises you can use any time, approved by a psychiatrist. Each colour shows what a card helps with: calming, grounding,
               self-soothing, clarity or mood lifting.
             </p>
           </div>

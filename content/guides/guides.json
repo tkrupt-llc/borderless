@@ -1,0 +1,40 @@
+{
+  "wordingStatus": "approved",
+  "source": "Wording for Approval: Quick-Check Question, Coping Cards and Self-Help Guides (11 Nov 2026), approved by the project psychiatrist. Copied word for word; do not reword. 'Low mood' is marked 'Needs to be discussed' and is not shown until it is approved.",
+  "ending": "If this isn't enough, you can talk to a person at any time.",
+  "guides": [
+    {
+      "id": "sleep",
+      "title": "Sleep",
+      "status": "Approved",
+      "text": "Keep the same wake-up time every day, even after a bad night. Put screens away 30–60 minutes before bed. If you can't sleep after about 20 minutes, get up, do something calm in dim light, and go back when sleepy. Limit caffeine after midday."
+    },
+    {
+      "id": "worry-time",
+      "title": "Worry Time",
+      "status": "Changed name",
+      "text": "Write your worries down to get them out of your head. Ask: can I do something about this today? If yes, choose one small step. If no, set it aside for a short \"worry time\" later in the day. Slow breathing can help when worry feels physical."
+    },
+    {
+      "id": "breathing",
+      "title": "Breathing",
+      "status": "Approved",
+      "text": "When your body feels tense or panicky, breathe in through your nose for 4 and out slowly for 6. Repeat for one to two minutes. A longer outbreath tells your body it is safe to slow down."
+    },
+    {
+      "id": "faith",
+      "title": "Faith and meaning",
+      "status": "Approved",
+      "optIn": true,
+      "text": "For many people, faith or personal values are a source of strength. If that is true for you, practices such as prayer, remembrance or reflection can sit alongside the support offered here. Faith and professional help work well together; seeking help is not a sign of weak faith."
+    }
+  ],
+  "pending": [
+    {
+      "id": "low-mood",
+      "title": "Low mood",
+      "status": "Needs to be discussed",
+      "text": "Low mood often makes us do less, which can make us feel worse. Pick one small, doable activity today: a short walk, a call with someone, a shower, a meal. Notice how you feel afterwards. Small steps count."
+    }
+  ]
+}

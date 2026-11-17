@@ -4,10 +4,10 @@ import { HeartIcon, copingIcons } from "@/components/icons";
 import cards from "@/content/coping-cards/cards.json";
 import { category } from "@/lib/coping/categories";
 
-// Cards are colour-coded by the kind of help they give; the category is also
-// written on each card, and a key below explains the colours.
+// The seven approved core coping cards, colour-coded by the kind of help they
+// give; each card also names its mechanism in words.
 export default function CopingPage() {
-  const reasons = category(cards.myReasonsCategory);
+  const reasons = category(cards.myReasons.category);
   return (
     <>
       <PatientHeader />
@@ -34,7 +34,7 @@ export default function CopingPage() {
                 <span className="text-[0.75rem] font-semibold tracking-[0.04em] uppercase" style={{ color: cat.ink }}>
                   {cat.label}
                 </span>
-                <strong className="text-base font-semibold">{card.shortTitle ?? card.title}</strong>
+                <strong className="text-base font-semibold">{card.title}</strong>
                 <span className="text-small text-muted">{card.duration}</span>
               </Link>
             </li>
@@ -57,6 +57,11 @@ export default function CopingPage() {
           </Link>
         </li>
       </ul>
+      <div className="px-5 pb-4">
+        <Link href="/guides" className="inline-flex min-h-11 items-center text-caption text-primary-dark underline underline-offset-2">
+          Self-help guides: sleep, worry, breathing
+        </Link>
+      </div>
 
     </>
   );

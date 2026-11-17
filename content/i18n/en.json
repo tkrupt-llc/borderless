@@ -10,8 +10,8 @@
     "notATherapist": "Not a therapist, a way to one."
   },
   "check": {
-    "leadIn": "We ask everyone this question.",
-    "leadInStatus": "DRAFT: the psychiatrist supplies the approved lead-in wording.",
+    "leadIn": "The next question is one we ask everyone. Your answer helps us make sure you get the right support.",
+    "leadInStatus": "Approved wording (Wording for Approval doc, 11 Nov 2026).",
     "leadInItems": ["QC_SUICIDE-1", "PHQ9-9", "ASQ-1"]
   },
   "trust": {
