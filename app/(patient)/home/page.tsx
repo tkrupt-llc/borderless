@@ -1,3 +1,4 @@
+import { Backdrop } from "@/components/backdrop";
 import { PatientHeader } from "@/components/patient-header";
 import { ReturningHome } from "./returning-home";
 
@@ -7,6 +8,7 @@ export default function HomePage() {
   return (
     <>
       <PatientHeader />
+      <Backdrop side="right" />
       <ReturningHome />
     </>
   );

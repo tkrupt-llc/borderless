@@ -1,3 +1,4 @@
+import { Backdrop } from "@/components/backdrop";
 import Link from "next/link";
 import { PatientHeader } from "@/components/patient-header";
 import { HeartIcon, copingIcons } from "@/components/icons";
@@ -11,6 +12,7 @@ export default function CopingPage() {
   return (
     <>
       <PatientHeader />
+      <Backdrop side="right" />
 
       <div className="flex flex-col gap-1.5 px-5 pt-5">
         <h1 className="font-serif text-[1.875rem] leading-tight font-normal">

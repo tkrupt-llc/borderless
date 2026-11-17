@@ -1,3 +1,4 @@
+import { Backdrop } from "@/components/backdrop";
 import { Suspense } from "react";
 import { ClinicNote } from "@/components/clinic-note";
 import Link from "next/link";
@@ -12,6 +13,7 @@ export default function StartPage() {
   return (
     <>
       <PatientHeader />
+      <Backdrop side="left" />
       <Suspense>
         <ClinicNote />
       </Suspense>

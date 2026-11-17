@@ -17,7 +17,7 @@ export function HillsBanner() {
 
 export function HillsHero() {
   return (
-    <div className="mt-12 h-[200px] overflow-hidden rounded-[28px] bg-sage-soft sm:h-[320px]">
+    <div className="h-[240px] overflow-hidden rounded-[28px] bg-sky sm:h-[380px]">
       <svg viewBox="0 0 1120 320" width="100%" height="100%" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
         <rect width="1120" height="320" fill="#E2EDF1" />
         <circle cx="820" cy="96" r="44" fill="#F7F5F0" />

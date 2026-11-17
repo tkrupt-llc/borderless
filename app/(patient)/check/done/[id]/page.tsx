@@ -1,3 +1,4 @@
+import { Backdrop } from "@/components/backdrop";
 import Link from "next/link";
 import { PatientHeader } from "@/components/patient-header";
 import { ChevronRight } from "@/components/icons";
@@ -9,6 +10,7 @@ export default function ReceiptPage() {
   return (
     <>
       <PatientHeader />
+      <Backdrop side="left" />
       <Receipt />
 
       <div className="flex flex-col gap-2.5 px-5 pt-2">
