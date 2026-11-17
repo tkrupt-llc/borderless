@@ -106,7 +106,7 @@ export function ChatView() {
   return (
     <div className="flex flex-1 flex-col px-5 pt-3">
       {/* AI label, always visible above the conversation. */}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-sage-soft px-4 py-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-sky px-4 py-2.5">
         <strong className="text-caption font-semibold">AI assistant, not a therapist</strong>
         <details className="text-caption">
           <summary className="inline-flex min-h-11 cursor-pointer items-center text-primary-dark underline">

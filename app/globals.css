@@ -28,6 +28,11 @@
   --danger: #a3302a;
   --on-dark: #f2f4ec; /* text on primary / ink */
   --on-dark-2: #d9decf;
+  /* Calm blue, paired with the greens and warm neutrals: information only
+     (notes, privacy, links in the console), never actions or risk. */
+  --sky: #e6eef4;
+  --sky-deep: #cadbe7;
+  --blue: #2f5d78; /* about 6.7:1 on white */
 }
 
 /*
@@ -69,6 +74,9 @@
   --color-danger: var(--danger);
   --color-on-dark: var(--on-dark);
   --color-on-dark-2: var(--on-dark-2);
+  --color-sky: var(--sky);
+  --color-sky-deep: var(--sky-deep);
+  --color-blue: var(--blue);
 
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-serif: var(--font-fraunces), Georgia, serif;
@@ -95,6 +103,10 @@ body {
   }
   a:hover {
     color: var(--ink);
+  }
+  /* Console links in blue, as in clinical tools; olive stays for actions. */
+  .console a {
+    color: var(--blue);
   }
 
   :focus-visible {

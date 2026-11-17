@@ -58,7 +58,7 @@ async function Question({ params }: { params: PageProps<"/check/[path]/[step]">[
       <div className="flex flex-1 flex-col gap-2.5 px-5 pt-5 sm:gap-3 sm:pt-8">
         {/* A gentle note before the suicide questions, so they never come as a surprise. */}
         {en.check.leadInItems.includes(current.item.id) && (
-          <p className="rounded-2xl bg-sage-soft px-4 py-2.5 text-caption text-text-2">{en.check.leadIn}</p>
+          <p className="rounded-2xl bg-sky px-4 py-2.5 text-caption text-text-2">{en.check.leadIn}</p>
         )}
         {current.stem && <p className="text-caption text-muted">{current.stem}</p>}
         <h1
@@ -84,7 +84,7 @@ async function Question({ params }: { params: PageProps<"/check/[path]/[step]">[
             </svg>
             Why am I asked this?
           </summary>
-          <p className="mt-1 rounded-2xl bg-sage-soft px-4 py-3 text-text-2">
+          <p className="mt-1 rounded-2xl bg-sky px-4 py-3 text-text-2">
             This is a standard question clinicians use. Your answers help a clinician choose the right next step for
             you. They are not a diagnosis.
           </p>

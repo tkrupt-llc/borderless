@@ -68,7 +68,7 @@ export function ConsentForm() {
         <summary className="inline-flex min-h-11 cursor-pointer items-center text-primary-dark underline">
           {en.trust.readDataPromise}
         </summary>
-        <ul className="mt-1 flex list-disc flex-col gap-1 rounded-2xl bg-sage-soft py-3 ps-9 pe-4 text-text-2">
+        <ul className="mt-1 flex list-disc flex-col gap-1 rounded-2xl bg-sky py-3 ps-9 pe-4 text-text-2">
           {en.trust.dataPromise.map((line) => (
             <li key={line}>{line}</li>
           ))}
@@ -76,7 +76,7 @@ export function ConsentForm() {
       </details>
 
       {!choices.clinician_review && (
-        <p className="rounded-2xl bg-sage-soft px-4 py-3 text-caption text-text-2">
+        <p className="rounded-2xl bg-sky px-4 py-3 text-caption text-text-2">
           Without clinician review, your answers stay with you and no one will contact you. If you are in danger,
           &ldquo;I need help now&rdquo; still works.
         </p>

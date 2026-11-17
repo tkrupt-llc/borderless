@@ -71,6 +71,24 @@ export default function HelpNowPage() {
             <span className="text-small text-text-on-sage">While you wait for help</span>
           </span>
         </Link>
+        <div className="grid grid-cols-2 gap-2.5">
+          {[
+            { href: "/coping/tip", title: "TIP", note: "For very strong feelings" },
+            { href: "/coping/urge-surfing", title: "Urge surfing", note: "Let an urge pass" },
+          ].map((c) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              className="flex min-h-11 flex-col rounded-2xl bg-surface px-4 py-3 text-ink no-underline hover:text-ink hover:outline-[1.5px] hover:outline-line"
+            >
+              <strong className="text-base font-semibold">{c.title}</strong>
+              <span className="text-small text-muted">{c.note}</span>
+            </Link>
+          ))}
+        </div>
+        <Link href="/coping" className="inline-flex min-h-11 items-center self-start text-caption text-primary-dark underline underline-offset-2">
+          All coping cards
+        </Link>
         {/* TODO: optional ASQ route (/check/asq) once its wording is approved. */}
       </div>
     </>

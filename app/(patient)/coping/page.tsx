@@ -16,7 +16,7 @@ export default function CopingPage() {
       </div>
 
       <ul className="grid auto-rows-fr grid-cols-2 gap-2.5 px-5 py-4">
-        {cards.cards.map((card) => {
+        {cards.cards.map((card, i) => {
           const Icon = copingIcons[card.id as keyof typeof copingIcons];
           return (
             <li key={card.id}>
@@ -24,7 +24,7 @@ export default function CopingPage() {
                 href={`/coping/${card.id}`}
                 className="flex h-full flex-col gap-1.5 rounded-[18px] bg-surface p-3.5 text-ink no-underline hover:text-ink hover:outline-[1.5px] hover:outline-line"
               >
-                <Icon size={40} stroke={2.6} />
+                <Icon size={40} stroke={2.6} blob={i % 2 ? "var(--sky-deep)" : "var(--sage)"} />
                 <strong className="text-base font-semibold">{card.shortTitle ?? card.title}</strong>
                 <span className="text-small text-muted">{card.duration}</span>
               </Link>

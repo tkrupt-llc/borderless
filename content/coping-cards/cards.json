@@ -1,12 +1,82 @@
 {
   "wordingStatus": "draft",
-  "source": "Titles and durations from the UI mockup. Card text comes from the psychiatrist's wording doc.",
+  "source": "Titles and durations from the UI mockup. Card text is a DRAFT based on widely used self-help skills (paced breathing, 5-4-3-2-1 grounding, STOP, DBT TIP, urge surfing). It must be reviewed and approved by the project psychiatrist before any real use.",
   "cards": [
-    { "id": "breathing", "title": "Paced breathing", "duration": "2 min" },
-    { "id": "grounding", "title": "5-4-3-2-1 grounding", "shortTitle": "5-4-3-2-1", "duration": "3 min" },
-    { "id": "stop", "title": "STOP", "duration": "1 min" },
-    { "id": "tip", "title": "TIP", "duration": "5 min" },
-    { "id": "urge-surfing", "title": "Urge surfing", "duration": "5 min" },
-    { "id": "reach-out", "title": "Reach out", "duration": "Message someone" }
+    {
+      "id": "breathing",
+      "title": "Paced breathing",
+      "duration": "2 min",
+      "intro": "Breathing out for longer than you breathe in helps your body slow down. Follow the circle.",
+      "steps": [
+        "Sit or stand however is comfortable. You can keep your eyes open.",
+        "Breathe in gently through your nose while the circle grows, for 4 seconds.",
+        "Breathe out slowly through your mouth while the circle shrinks, for 6 seconds.",
+        "Keep going for about 2 minutes. If counting feels hard, just follow the circle."
+      ]
+    },
+    {
+      "id": "grounding",
+      "title": "5-4-3-2-1 grounding",
+      "shortTitle": "5-4-3-2-1",
+      "duration": "3 min",
+      "intro": "This brings your attention back to the room around you, one sense at a time. Take your time with each step.",
+      "steps": [
+        "Name 5 things you can see.",
+        "Name 4 things you can feel, like your feet on the floor or the chair behind you.",
+        "Name 3 things you can hear.",
+        "Name 2 things you can smell, or two smells you like.",
+        "Name 1 thing you can taste, or one thing you like about yourself."
+      ]
+    },
+    {
+      "id": "stop",
+      "title": "STOP",
+      "duration": "1 min",
+      "intro": "A short pause before you act on a strong feeling.",
+      "steps": [
+        "S: Stop. Don't act yet. Stay still for a moment.",
+        "T: Take a breath. One slow breath in, and a longer breath out.",
+        "O: Observe. What are you feeling, and where in your body? What is happening around you?",
+        "P: Proceed with something that helps. Ask: what would make the next ten minutes a little easier?"
+      ]
+    },
+    {
+      "id": "tip",
+      "title": "TIP",
+      "duration": "5 min",
+      "intro": "For when feelings are very intense. These change your body quickly, which can make the feeling easier to ride out.",
+      "steps": [
+        "T: Temperature. Splash cold water on your face, or hold something cold against your face for 30 seconds.",
+        "I: Intense movement. Move quickly for a minute: walk fast, march on the spot or climb stairs.",
+        "P: Paced breathing. Breathe out for longer than you breathe in, for a few minutes.",
+        "P: Paired muscle relaxation. Tense your hands and shoulders as you breathe in, then let them go as you breathe out."
+      ],
+      "caution": "Skip the cold water and fast movement if you have a heart condition, an eating disorder or a medical reason to avoid them. Use paced breathing instead."
+    },
+    {
+      "id": "urge-surfing",
+      "title": "Urge surfing",
+      "duration": "5 min",
+      "intro": "Urges rise, peak and fall, like a wave. You don't have to act on one to make it pass.",
+      "steps": [
+        "Notice the urge. Name it to yourself: \"I'm having an urge to…\"",
+        "Find where you feel it in your body. Is it tight, hot, restless?",
+        "Rate how strong it is, from 0 to 10.",
+        "Breathe slowly and watch it, like a wave, without pushing it away.",
+        "After a few minutes, rate it again. Most urges get weaker within minutes."
+      ]
+    },
+    {
+      "id": "reach-out",
+      "title": "Reach out",
+      "duration": "Message someone",
+      "intro": "You don't have to explain everything. A short message to someone you trust is enough.",
+      "steps": [
+        "Think of one person who is safe to contact: a friend, family member or colleague.",
+        "Send the message below, or write your own.",
+        "If no one answers, you can still talk to our care team or call a support line."
+      ],
+      "message": "I'm having a hard time right now. Could you call me or come and be with me for a bit?"
+    }
   ]
 }

@@ -314,3 +314,20 @@ export async function requestCallback(sessionId: string): Promise<Date> {
   await audit("callback_requested", sessionId, "session");
   return due;
 }
+
+/**
+ * "This isn't helping" on a coping card: one open not_helping task per session,
+ * due within one working day (elevated). Only for people who agreed to clinician review.
+ */
+export async function flagNotHelping(sessionId: string, cardId: string): Promise<void> {
+  const open = check(
+    await db().from("tasks").select("id").eq("session_id", sessionId).eq("type", "not_helping").is("closed_at", null).limit(1),
+    "read not-helping task",
+  ) as { id: string }[];
+  if (open[0]) return;
+  check(
+    await db().from("tasks").insert({ session_id: sessionId, type: "not_helping", priority: "elevated", due_at: dueAt("elevated", new Date()).toISOString() }),
+    "not-helping task",
+  );
+  await audit("coping_not_helping", sessionId, "session", { card: cardId });
+}

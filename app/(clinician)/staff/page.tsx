@@ -20,7 +20,7 @@ const FILTERS = [
   { id: "all", label: "All", match: () => true },
   { id: "flags", label: "Red flags", match: (t: QueueTask) => t.type === "red_flag" },
   { id: "reviews", label: "Check-ins", match: (t: QueueTask) => t.type === "care_request" },
-  { id: "calls", label: "Call-backs", match: (t: QueueTask) => t.type === "talk_to_person" || t.type === "callback" },
+  { id: "calls", label: "Call-backs", match: (t: QueueTask) => t.type === "talk_to_person" || t.type === "callback" || t.type === "not_helping" },
   { id: "escalated", label: "Escalated", match: (t: QueueTask) => Boolean(t.escalatedAt) },
 ];
 
@@ -28,6 +28,7 @@ function nextAction(t: QueueTask): string {
   if (t.type === "red_flag") return t.hasPhone ? "Call the patient" : "Review now (no phone shared)";
   if (t.type === "talk_to_person" || t.type === "callback") return "Call back";
   if (t.type === "care_request") return "Review and choose the next step";
+  if (t.type === "not_helping") return t.hasPhone ? "Call to check in" : "Review the case";
   return "Review";
 }
 

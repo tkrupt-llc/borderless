@@ -65,7 +65,7 @@ export default function StartPage() {
         <p className="text-caption text-text-2">
           {en.trust.reviewedBy}. {en.trust.partner}.
         </p>
-        <section aria-labelledby="data-promise" className="rounded-2xl bg-sage-soft px-4 py-3.5">
+        <section aria-labelledby="data-promise" className="rounded-2xl bg-sky px-4 py-3.5">
           <h2 id="data-promise" className="font-semibold">
             {en.trust.dataPromiseTitle}
           </h2>
