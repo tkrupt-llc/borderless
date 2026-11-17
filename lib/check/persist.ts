@@ -7,6 +7,8 @@ import type { Proposal } from "@/lib/rules/routing";
 import { dueAt, nextWorkingDay } from "@/lib/rules/tiers";
 import consent from "@/content/consent.json";
 import { newFollowUpToken } from "@/lib/followup/trend";
+import { readClinicId } from "@/lib/db/patient-session";
+import { clinicById } from "@/lib/clinics";
 
 /**
  * Database writes for the patient flow. Server only, service-role client.
@@ -37,8 +39,9 @@ async function audit(action: string, sessionId: string, objectType: string, meta
 }
 
 export async function createSession(path: Path, discreetMode: boolean, choices: ConsentChoices): Promise<string> {
+  const clinic = clinicById(await readClinicId());
   const session = check(
-    await db().from("sessions").insert({ path, discreet_mode: discreetMode }).select("id").single(),
+    await db().from("sessions").insert({ path, discreet_mode: discreetMode, clinic_id: clinic?.id ?? null }).select("id").single(),
     "create session",
   ) as { id: string };
 
@@ -411,7 +414,7 @@ export async function createFollowUpSession(rootId: string): Promise<string> {
   const root = check(
     await db()
       .from("sessions")
-      .select("discreet_mode, contact_phone, preferred_language, preferred_clinician_gender, callback_time, history_bpd, history_adhd, history_source")
+      .select("discreet_mode, contact_phone, preferred_language, preferred_clinician_gender, callback_time, history_bpd, history_adhd, history_source, clinic_id")
       .eq("id", rootId)
       .single(),
     "read first check-in",

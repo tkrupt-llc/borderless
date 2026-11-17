@@ -11,6 +11,7 @@ import { acknowledgeTask, addHistory, closeTask, referToService, setReceiptStatu
 import { DIRECTORY_IS_EXAMPLE, serviceById, servicesForStep } from "@/lib/directory";
 import { PriorityBadge, StaffShell, TASK_LABELS } from "../../staff-header";
 import { caseRef } from "@/lib/case-ref";
+import { clinicById } from "@/lib/clinics";
 import { ActionButton, Countdown } from "../../ui";
 import { ContactForm, DecisionForm, DeleteCaseButton, StartReview, SummaryEditor } from "./case-forms";
 
@@ -124,6 +125,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
           <dl className="flex flex-wrap gap-x-6 gap-y-1 text-[0.8125rem]">
             {[
               ["Path", pathLabel(session.path)],
+              ...(session.clinic_id ? [["Via", clinicById(session.clinic_id)?.name ?? "A clinic's website"]] : []),
               ["Received", time(session.created_at)],
               ["Phone", session.contact_phone ?? "Not shared"],
               ["Language", session.preferred_language ?? "Not given"],

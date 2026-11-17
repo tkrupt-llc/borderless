@@ -23,6 +23,7 @@ export type QueueTask = {
   ruleId: string | null;
   path: string;
   hasPhone: boolean;
+  clinicId: string | null;
 };
 
 /** Open tasks, most urgent first, then by time left. */
@@ -31,13 +32,13 @@ export async function loadQueue(): Promise<QueueTask[]> {
     id: string; session_id: string; type: string; priority: string; due_at: string; created_at: string;
     acknowledged_at: string | null; escalated_at: string | null;
     red_flag_events: { rule_id: string } | null;
-    sessions: { path: string; contact_phone: string | null } | null;
+    sessions: { path: string; contact_phone: string | null; clinic_id: string | null } | null;
   };
   const data = rows<Row>(
     await db()
       .from("tasks")
       .select(
-        "id, session_id, type, priority, due_at, created_at, acknowledged_at, escalated_at, red_flag_events(rule_id), sessions(path, contact_phone)",
+        "id, session_id, type, priority, due_at, created_at, acknowledged_at, escalated_at, red_flag_events(rule_id), sessions(path, contact_phone, clinic_id)",
       )
       .is("closed_at", null),
     "load queue",
@@ -55,6 +56,7 @@ export async function loadQueue(): Promise<QueueTask[]> {
       ruleId: t.red_flag_events?.rule_id ?? null,
       path: t.sessions?.path ?? "",
       hasPhone: Boolean(t.sessions?.contact_phone),
+      clinicId: t.sessions?.clinic_id ?? null,
     }))
     .sort(
       (a, b) =>
@@ -76,6 +78,7 @@ export async function loadCase(sessionId: string) {
           id: string; path: string; created_at: string; taken_over: boolean; discreet_mode: boolean;
           contact_phone: string | null; preferred_language: string | null; preferred_clinician_gender: string | null;
           callback_time: string | null; history_bpd: boolean; history_adhd: boolean; history_source: string | null;
+          clinic_id: string | null;
         }>(r, "session"),
       ),
       one<{ purpose: string; granted: boolean }>("consent_records", "purpose, granted, created_at"),

@@ -1,0 +1,7 @@
+{
+  "status": "example",
+  "source": "FICTIONAL example clinic for the embedded check-in demo. A pilot site adds its real clinics here.",
+  "clinics": [
+    { "id": "demo-clinic", "name": "Demo Wellbeing Clinic", "contact": "Front desk: [clinic phone]" }
+  ]
+}

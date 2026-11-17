@@ -3,6 +3,7 @@ import Link from "next/link";
 import { canWrite, requireStaff } from "@/lib/staff/auth";
 import { loadQueue, type QueueTask } from "@/lib/staff/data";
 import { caseRef } from "@/lib/case-ref";
+import { clinicById } from "@/lib/clinics";
 import { acknowledgeCase } from "./actions";
 import { PriorityBadge, StaffShell, TASK_LABELS } from "./staff-header";
 import { ActionButton, AutoRefresh, Countdown } from "./ui";
@@ -207,6 +208,9 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                             {caseRef(c.sessionId)}
                           </Link>
                           <span className="block text-[0.75rem] whitespace-nowrap text-muted">{pathLabel(c.path)}</span>
+                          {c.top.clinicId && (
+                            <span className="block text-[0.75rem] whitespace-nowrap text-blue">via {clinicById(c.top.clinicId)?.name ?? c.top.clinicId}</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <PriorityBadge priority={t.priority} />

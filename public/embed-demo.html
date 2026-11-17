@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo Wellbeing Clinic (example site)</title>
+<style>
+  :root { --ink: #3a4a5a; --muted: #5d6874; --line: #e3e6ea; --bg: #fbfbfa; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+  header { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding: 20px 32px; background: #fff; border-bottom: 1px solid var(--line); }
+  header strong { font-size: 19px; }
+  nav { display: flex; gap: 20px; font-size: 15px; color: var(--muted); }
+  main { max-width: 760px; padding: 48px 32px; }
+  h1 { font: 400 40px/1.15 Georgia, serif; margin: 0 0 12px; }
+  .note { margin-top: 40px; padding: 16px 18px; border-radius: 12px; background: #fff; border: 1px dashed #c9cfd6; font-size: 14px; color: var(--muted); }
+  code { font: 13px/1.6 ui-monospace, Consolas, monospace; background: #1f2a1c; color: #e7eedd; display: block; padding: 14px 16px; border-radius: 10px; white-space: pre-wrap; margin-top: 8px; }
+  @media (max-width: 640px) { header, main { padding-inline: 16px; } h1 { font-size: 32px; } }
+</style>
+</head>
+<body>
+  <header>
+    <strong>Demo Wellbeing Clinic</strong>
+    <nav aria-label="Clinic"><span>Services</span><span>Our team</span><span>Contact</span></nav>
+  </header>
+  <main>
+    <h1>Refer yourself for support</h1>
+    <p>You don't need a GP letter. Start a short check-in below; our care team reads every one and will contact you
+      with the right next step.</p>
+
+    <borderless-checkin clinic="demo-clinic" name="Demo Wellbeing Clinic"></borderless-checkin>
+
+    <div class="note">
+      <strong>This is an example clinic website</strong>, made up for the Borderless prototype. It shows how a clinic adds
+      the check-in to its own site with two lines:
+      <code>&lt;script src="https://[host]/embed.js"&gt;&lt;/script&gt;
+&lt;borderless-checkin clinic="demo-clinic" name="Demo Wellbeing Clinic"&gt;&lt;/borderless-checkin&gt;</code>
+    </div>
+  </main>
+  <script src="/embed.js"></script>
+</body>
+</html>

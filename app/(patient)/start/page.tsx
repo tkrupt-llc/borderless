@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { ClinicNote } from "@/components/clinic-note";
 import Link from "next/link";
 import { HillsBanner } from "@/components/hills";
 import { PatientHeader } from "@/components/patient-header";
@@ -10,6 +12,9 @@ export default function StartPage() {
   return (
     <>
       <PatientHeader />
+      <Suspense>
+        <ClinicNote />
+      </Suspense>
       <HillsBanner />
 
       <div className="flex flex-col gap-3.5 px-5 pt-6">
