@@ -88,7 +88,8 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
   ];
   const nextStep = progress.find((p) => !p.done);
   // Repeated lines (the same person opening the case several times) are shown once with a count.
-  const activity = data.activity.reduce<{ a: (typeof data.activity)[number]; n: number }[]>((rows, a) => {
+  const views = data.activity.filter((a) => a.action === "case_viewed").length;
+  const activity = data.activity.filter((a) => a.action !== "case_viewed").reduce<{ a: (typeof data.activity)[number]; n: number }[]>((rows, a) => {
     const last = rows.at(-1);
     if (last && last.a.action === a.action && last.a.actor === a.actor) last.n += 1;
     else rows.push({ a, n: 1 });
@@ -252,6 +253,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
           )}
 
           {/* --- Scores ---------------------------------------------------- */}
+          {data.scores.length > 0 && (
           <Panel id="scores-h" title="Scores">
             {data.scores.length === 0 ? (
               <p className="text-caption text-muted">No questionnaire was completed.</p>
@@ -267,6 +269,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
               </ul>
             )}
           </Panel>
+          )}
 
           {/* --- Follow-up trend: the person's check-ins over time ------ */}
           {chain && chain.sessions.length > 1 && (
@@ -323,7 +326,10 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 </li>
               ))}
             </ol>
-          </Panel>
+              {views > 0 && (
+                <p className="text-[0.75rem] text-muted">Opened {views} {views === 1 ? "time" : "times"} by the care team.</p>
+              )}
+            </Panel>
         </div>
 
         <div className="flex flex-col gap-5">
@@ -384,16 +390,27 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
 
           {/* --- Contact ---------------------------------------------------- */}
           <Panel id="contact-h" title="Contact">
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-caption">
-              <dt className="text-muted">Phone</dt>
-              <dd>{session.contact_phone ?? "Not shared"}</dd>
-              <dt className="text-muted">Best time</dt>
-              <dd>{session.callback_time ?? "Not given"}</dd>
-              <dt className="text-muted">Language</dt>
-              <dd>{session.preferred_language ?? "Not given"}</dd>
-              <dt className="text-muted">Clinician</dt>
-              <dd>{session.preferred_clinician_gender ?? "No preference given"}</dd>
-            </dl>
+            {session.contact_phone ? (
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-caption">
+                {(
+                  [
+                    ["Phone", session.contact_phone],
+                    ["Best time", session.callback_time],
+                    ["Language", session.preferred_language],
+                    ["Clinician", session.preferred_clinician_gender],
+                  ] as const
+                )
+                  .filter(([, v]) => v)
+                  .map(([k, v]) => (
+                    <div key={k} className="contents">
+                      <dt className="text-muted">{k}</dt>
+                      <dd>{v}</dd>
+                    </div>
+                  ))}
+              </dl>
+            ) : (
+              <p className="text-[0.875rem] text-text-2">No phone number shared. Review the case; the person can share a number through &ldquo;Talk to a person&rdquo; or &ldquo;Alert my care team&rdquo;.</p>
+            )}
             {data.contacts.length > 0 && (
               <ul className="flex flex-col gap-1 border-t border-line-warm pt-2 text-caption">
                 {data.contacts.map((c) => (
@@ -404,7 +421,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 ))}
               </ul>
             )}
-            {write && <ContactForm sessionId={id} />}
+            {write && session.contact_phone && <ContactForm sessionId={id} />}
           </Panel>
 
           {/* --- Referral: services for the decided step ------------------ */}
@@ -467,6 +484,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
           )}
 
           {/* --- What the patient sees -------------------------------------- */}
+          {data.receipt.length > 0 && (
           <Panel id="receipt-h" title="Patient's receipt">
             {data.receipt.length === 0 ? (
               <p className="text-caption text-muted">No receipt (crisis path, or no clinician review).</p>
@@ -489,6 +507,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
               </span>
             )}
           </Panel>
+          )}
 
           {/* --- Consent and history ---------------------------------------- */}
           <Panel id="consent-h" title="Consent and history">

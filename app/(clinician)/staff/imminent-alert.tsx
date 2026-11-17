@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { imminentAlerts } from "./actions";
 import { caseRef } from "@/lib/case-ref";
@@ -35,6 +35,7 @@ function chime(ctx: AudioContext) {
  */
 export function ImminentAlert() {
   const router = useRouter();
+  const pathname = usePathname();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [enabled, setEnabled] = useState(false);
   const seen = useRef<Set<string> | null>(null);
@@ -140,7 +141,7 @@ export function ImminentAlert() {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {alerts.length > 0 && (
+      {alerts.length > 0 && pathname !== "/staff" && (
         <Link
           href={`/staff/case/${alerts[0].sessionId}`}
           role="status"

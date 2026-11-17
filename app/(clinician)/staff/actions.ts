@@ -58,6 +58,22 @@ export async function acknowledgeTask(taskId: string): Promise<Result> {
   });
 }
 
+/** Acknowledges every open, not yet acknowledged task on a case (one click from the queue). */
+export async function acknowledgeCase(sessionId: string): Promise<Result> {
+  return run(async (staff) => {
+    const id = uuid.parse(sessionId);
+    const { data, error } = await db()
+      .from("tasks")
+      .update({ acknowledged_at: new Date().toISOString(), acknowledged_by: staff.id })
+      .eq("session_id", id)
+      .is("acknowledged_at", null)
+      .is("closed_at", null)
+      .select("id");
+    must({ error }, "acknowledge case");
+    for (const t of data ?? []) await audit(staff, "task_acknowledged", "task", t.id, id);
+  });
+}
+
 export async function closeTask(taskId: string): Promise<Result> {
   return run(async (staff) => {
     const id = uuid.parse(taskId);
