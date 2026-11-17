@@ -211,9 +211,9 @@ export async function finishCheckIn(
 /** Everything the patient's receipt timeline needs, for their own session. */
 export async function loadReceiptData(sessionId: string) {
   const events = check(
-    await db().from("receipt_events").select("status, reason, created_at").eq("session_id", sessionId).order("created_at"),
+    await db().from("receipt_events").select("status, reason, service_id, created_at").eq("session_id", sessionId).order("created_at"),
     "receipt events",
-  ) as { status: string; reason: string | null; created_at: string }[];
+  ) as { status: string; reason: string | null; service_id: string | null; created_at: string }[];
   const proposals = check(
     await db().from("triage_proposals").select("id, step, urgent, created_at").eq("session_id", sessionId).order("created_at"),
     "proposals",
@@ -227,7 +227,7 @@ export async function loadReceiptData(sessionId: string) {
     : [];
   const decision = decisions.at(-1);
   return {
-    events: events.map((e) => ({ status: e.status, reason: e.reason, createdAt: e.created_at })),
+    events: events.map((e) => ({ status: e.status, reason: e.reason, createdAt: e.created_at, serviceId: e.service_id })),
     proposal: proposal ? { step: proposal.step, urgent: proposal.urgent } : null,
     decision: decision ? { action: decision.action, newStep: decision.new_step } : null,
     followUp: (await getConsents(sessionId)).follow_up === true,

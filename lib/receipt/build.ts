@@ -1,5 +1,6 @@
 import { STEP_NAMES } from "@/lib/rules/routing";
 import { nextWorkingDay } from "@/lib/rules/tiers";
+import { serviceById } from "@/lib/directory";
 
 /**
  * The patient's receipt timeline, built from the receipt events the care team
@@ -9,7 +10,7 @@ import { nextWorkingDay } from "@/lib/rules/tiers";
  */
 
 export type ReceiptInput = {
-  events: { status: string; reason: string | null; createdAt: string }[];
+  events: { status: string; reason: string | null; createdAt: string; serviceId?: string | null }[];
   proposal: { step: number | null; urgent: boolean } | null;
   decision: { action: string; newStep: number | null } | null;
   followUp: boolean;
@@ -67,10 +68,15 @@ export function buildReceipt(input: ReceiptInput): ReceiptView | null {
         : `Your clinician agreed the next step${level ? `: ${level}` : ""}.`,
     Boolean(outcome),
   );
+  const service = serviceById(booked?.serviceId);
   add(
     "booked",
-    booked ? "Booked" : "Booking",
-    booked ? `Your appointment was booked ${formatWhen(booked.createdAt)}.` : "We'll confirm here when your appointment is booked.",
+    service ? `Referred to ${service.name}` : booked ? "Booked" : "Booking",
+    service
+      ? `${service.kind}, ${service.mode.toLowerCase()}. They usually get in touch within ${service.typicalWaitDays} working days. We only share your details with them if you agree.`
+      : booked
+        ? `Your appointment was booked ${formatWhen(booked.createdAt)}.`
+        : "We'll confirm here when your appointment is booked.",
     Boolean(booked),
   );
   add(

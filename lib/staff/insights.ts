@@ -32,7 +32,7 @@ const TIER_GROUPS = [
 
 export async function loadInsights(now = new Date()) {
   const since = new Date(now.getTime() - INSIGHT_DAYS * 86_400_000).toISOString();
-  const [sessions, events, flags, tasks, decisions] = await Promise.all([
+  const [sessions, events, flags, tasks, decisions, referrals] = await Promise.all([
     db().from("sessions").select("id, path, created_at, taken_over").gte("created_at", since).limit(5000)
       .then((r) => rows<{ id: string; path: string; created_at: string; taken_over: boolean }>(r, "sessions")),
     db().from("audit_events").select("action, session_id, metadata")
@@ -45,6 +45,8 @@ export async function loadInsights(now = new Date()) {
       .then((r) => rows<{ type: string; priority: string; created_at: string; due_at: string; acknowledged_at: string | null }>(r, "tasks")),
     db().from("clinician_decisions").select("action").gte("created_at", since).limit(5000)
       .then((r) => rows<{ action: string }>(r, "decisions")),
+    db().from("receipt_events").select("service_id").eq("status", "booked").not("service_id", "is", null).gte("created_at", since).limit(5000)
+      .then((r) => rows<{ service_id: string }>(r, "referrals")),
   ]);
 
   const checkIns = sessions.filter((s) => s.path !== "contact");
@@ -100,6 +102,9 @@ export async function loadInsights(now = new Date()) {
     reviewsSigned: reviewSeconds.length,
     accepted: decisions.filter((d) => d.action === "accept").length,
     overridden: decisions.filter((d) => d.action === "override").length,
+    referrals: Object.entries(
+      referrals.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.service_id]: (acc[r.service_id] ?? 0) + 1 }), {}),
+    ).sort((a, b) => b[1] - a[1]),
     aiBlocked: count("ai_reply_blocked"),
     aiFallback: count("ai_unavailable_fallback"),
     safetyChecks: count("safety_check_asked"),

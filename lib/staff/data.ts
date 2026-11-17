@@ -92,7 +92,7 @@ export async function loadCase(sessionId: string) {
       }>("triage_proposals", "id, step, urgent, rule_ids, reasons, created_at, clinician_decisions(action, new_step, reason, created_at)"),
       one<{ id: string; type: string; priority: string; due_at: string; acknowledged_at: string | null; escalated_at: string | null; closed_at: string | null }>(
         "tasks", "id, type, priority, due_at, acknowledged_at, escalated_at, closed_at, created_at"),
-      one<{ status: string; reason: string | null; created_at: string }>("receipt_events", "status, reason, created_at"),
+      one<{ status: string; reason: string | null; service_id: string | null; created_at: string }>("receipt_events", "status, reason, service_id, created_at"),
       one<{ outcome: string; note: string | null; created_at: string }>("contact_attempts", "outcome, note, created_at"),
       one<{ draft: { lines: SummaryLine[] }; edited: { text: string } | null; review_started_at: string | null; signed_at: string | null }>(
         "summaries", "draft, edited, review_started_at, signed_at", "updated_at"),

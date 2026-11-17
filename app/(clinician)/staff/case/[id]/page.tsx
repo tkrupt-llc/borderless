@@ -7,7 +7,8 @@ import { seriesFrom, TrendChart } from "@/components/trend-chart";
 import { STEP_NAMES } from "@/lib/rules/routing";
 import { summaryToText } from "@/lib/summary/build";
 import { bankItem } from "@/lib/item-bank";
-import { acknowledgeTask, addHistory, closeTask, setReceiptStatus } from "../../actions";
+import { acknowledgeTask, addHistory, closeTask, referToService, setReceiptStatus } from "../../actions";
+import { DIRECTORY_IS_EXAMPLE, serviceById, servicesForStep } from "@/lib/directory";
 import { PriorityBadge, StaffShell, TASK_LABELS } from "../../staff-header";
 import { caseRef } from "@/lib/case-ref";
 import { ActionButton, Countdown } from "../../ui";
@@ -32,7 +33,7 @@ const ACTIVITY_WORDS: Record<string, string> = {
   task_acknowledged: "Task acknowledged", task_closed: "Task closed", task_escalated: "Escalated to supervisor",
   proposal_accept: "Proposal accepted", proposal_override: "Proposal overridden", summary_edited: "Summary edited",
   summary_signed: "Summary signed", receipt_booked: "Marked booked", receipt_first_contact_confirmed: "First contact confirmed",
-  contact_logged: "Contact logged", follow_up_started: "Follow-up started", follow_up_link_created: "Follow-up link given", not_on_track: "Not on track", deletion_requested: "Patient asked to delete their data", coping_not_helping: "Coping card not helping", history_added: "History added", history_self_reported: "History self-reported",
+  contact_logged: "Contact logged", referred: "Referred to a service", follow_up_started: "Follow-up started", follow_up_link_created: "Follow-up link given", not_on_track: "Not on track", deletion_requested: "Patient asked to delete their data", coping_not_helping: "Coping card not helping", history_added: "History added", history_self_reported: "History self-reported",
   safety_check_asked: "Safety check asked", safety_check_answered_no: "Safety check answered no",
   ai_reply_blocked: "AI reply blocked by guardrail", ai_unavailable_fallback: "AI unavailable, questionnaire used",
 };
@@ -66,6 +67,9 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
   const signed = Boolean(summary?.signed_at);
   const summaryText = summary?.edited?.text ?? summaryToText(data.draftLines);
   const openTasks = data.tasks.filter((t) => !t.closed_at);
+  // The level the clinician settled on: their override, else the accepted proposal (null = urgent pathway).
+  const decidedStep = decision?.action === "override" ? decision.new_step : proposal?.urgent ? null : (proposal?.step ?? null);
+  const referral = data.receipt.findLast((r) => r.status === "booked" && r.service_id);
   const topTier = ["imminent", "urgent", "elevated", "normal"].find((tier) => openTasks.some((t) => t.priority === tier));
   // The answers a clinician most needs to see verbatim: any item above zero on the risk instruments.
   const riskAnswers = data.answers.filter(
@@ -403,6 +407,65 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             {write && <ContactForm sessionId={id} />}
           </Panel>
 
+          {/* --- Referral: services for the decided step ------------------ */}
+          {data.receipt.length > 0 && (
+            <Panel
+              id="refer-h"
+              title="Refer to a service"
+              aside={
+                DIRECTORY_IS_EXAMPLE ? (
+                  <span className="rounded-md border border-[#e3c27a] bg-[#fbefd2] px-2 py-0.5 text-[0.75rem] font-semibold text-[#5c3a00]">Example services</span>
+                ) : undefined
+              }
+            >
+              {referral ? (
+                <p className="rounded-lg bg-sage-soft px-4 py-3 text-[0.875rem]">
+                  <strong className="font-semibold">Referred to {serviceById(referral.service_id)?.name}</strong> {time(referral.created_at)}. The
+                  patient&apos;s receipt shows this.
+                </p>
+              ) : !decision && !proposal?.urgent ? (
+                <p className="text-[0.875rem] text-muted">Accept or override the proposed level first; services are matched to it.</p>
+              ) : decidedStep === 0 ? (
+                <p className="text-[0.875rem] text-text-2">Step 0 is self-help: point the person to the coping cards. No referral needed.</p>
+              ) : (
+                <>
+                  <p className="text-[0.8125rem] text-muted">
+                    {decidedStep === null ? "Urgent pathway: all services shown." : `Matched to step ${decidedStep}: ${STEP_NAMES[decidedStep]}.`} Share
+                    details with a service only with the person&apos;s agreement.
+                  </p>
+                  <ul className="flex flex-col gap-3">
+                    {servicesForStep(decidedStep).map((svc) => (
+                      <li key={svc.id} className="flex flex-col gap-2 rounded-lg border border-line-warm px-4 py-3">
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <strong className="font-semibold">{svc.name}</strong>
+                          <span className="text-[0.75rem] text-muted">{svc.kind}</span>
+                        </div>
+                        <p className="text-[0.8125rem] text-text-2">{svc.about}</p>
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[0.8125rem]">
+                          <dt className="text-muted">How</dt>
+                          <dd>{svc.mode} · {svc.area}</dd>
+                          <dt className="text-muted">Languages</dt>
+                          <dd>{svc.languages.join(", ")}</dd>
+                          <dt className="text-muted">Usual wait</dt>
+                          <dd>{svc.typicalWaitDays} working days</dd>
+                          <dt className="text-muted">Cost</dt>
+                          <dd>{svc.cost}</dd>
+                        </dl>
+                        {write && (
+                          <span>
+                            <ActionButton variant="primary" action={referToService.bind(null, id, svc.id)}>
+                              Refer to this service
+                            </ActionButton>
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </Panel>
+          )}
+
           {/* --- What the patient sees -------------------------------------- */}
           <Panel id="receipt-h" title="Patient's receipt">
             {data.receipt.length === 0 ? (
@@ -411,7 +474,10 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
               <ol className="flex flex-col gap-1 text-caption">
                 {data.receipt.map((r) => (
                   <li key={r.created_at + r.status}>
-                    {time(r.created_at)}: <strong className="font-semibold">{RECEIPT_WORDS[r.status] ?? r.status}</strong>
+                    {time(r.created_at)}:{" "}
+                    <strong className="font-semibold">
+                      {r.service_id ? `Referred to ${serviceById(r.service_id)?.name ?? r.service_id}` : (RECEIPT_WORDS[r.status] ?? r.status)}
+                    </strong>
                     {r.reason && <span className="text-text-2"> ({r.reason})</span>}
                   </li>
                 ))}
@@ -419,7 +485,6 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             )}
             {write && data.receipt.length > 0 && (
               <span className="flex flex-wrap gap-2">
-                <ActionButton action={setReceiptStatus.bind(null, id, "booked")}>Mark booked</ActionButton>
                 <ActionButton action={setReceiptStatus.bind(null, id, "first_contact_confirmed")}>First contact confirmed</ActionButton>
               </span>
             )}

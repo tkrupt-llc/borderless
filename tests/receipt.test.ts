@@ -55,3 +55,22 @@ describe("patient receipt timeline", () => {
     expect(v.steps[2].body).toBe("Your clinician agreed the next step: urgent support.");
   });
 });
+
+describe("referral on the receipt", () => {
+  it("names the service and its usual wait when the clinician referred", () => {
+    const view = buildReceipt({
+      events: [
+        { status: "received", reason: null, createdAt: "2026-11-17T08:00:00Z" },
+        { status: "accepted", reason: null, createdAt: "2026-11-17T09:00:00Z" },
+        { status: "booked", reason: null, createdAt: "2026-11-17T09:05:00Z", serviceId: "palm-grove-counselling" },
+      ],
+      proposal: { step: 1, urgent: false },
+      decision: { action: "accept", newStep: null },
+      followUp: false,
+    })!;
+    const booked = view.steps.find((s) => s.key === "booked")!;
+    expect(booked.title).toBe("Referred to Palm Grove Community Counselling");
+    expect(booked.body).toContain("within 5 working days");
+    expect(booked.state).toBe("done");
+  });
+});

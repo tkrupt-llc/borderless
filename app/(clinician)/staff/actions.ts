@@ -6,6 +6,7 @@ import { db } from "@/lib/db/server";
 import { canWrite, requireStaff, type Staff } from "@/lib/staff/auth";
 import { loadCase } from "@/lib/staff/data";
 import { summaryToText } from "@/lib/summary/build";
+import { serviceById } from "@/lib/directory";
 
 // Every action checks the signed-in role, writes with the service client and
 // leaves an audit entry. Judges can view but not change anything.
@@ -201,4 +202,18 @@ export async function deleteCaseData(sessionId: string): Promise<Result> {
     console.error(e);
     return { ok: false, error: "That didn't work. Please try again." };
   }
+}
+
+/** Refers the person to a service from the directory; their receipt shows where and what happens next. */
+export async function referToService(sessionId: string, serviceId: string): Promise<Result> {
+  return run(async (staff) => {
+    const id = uuid.parse(sessionId);
+    const service = serviceById(serviceId);
+    if (!service) throw new Error("unknown service");
+    must(
+      await db().from("receipt_events").insert({ session_id: id, status: "booked", service_id: service.id, typical_wait_days: service.typicalWaitDays }),
+      "referral",
+    );
+    await audit(staff, "referred", "session", id, id, { service: service.id });
+  });
 }

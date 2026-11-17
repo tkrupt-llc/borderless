@@ -1,0 +1,42 @@
+{
+  "status": "example",
+  "source": "FICTIONAL example services for the prototype. Names, areas and wait times are made up and do not refer to real providers. A pilot site replaces this file with its real referral directory.",
+  "services": [
+    {
+      "id": "palm-grove-counselling",
+      "name": "Palm Grove Community Counselling",
+      "kind": "Counselling",
+      "steps": [1],
+      "mode": "In person or by video",
+      "area": "Dubai",
+      "languages": ["English", "Arabic", "Hindi", "Urdu"],
+      "typicalWaitDays": 5,
+      "cost": "Low cost, sliding scale",
+      "about": "Short-term counselling, usually 6 to 8 sessions."
+    },
+    {
+      "id": "creekside-family-health",
+      "name": "Creekside Family Health Centre",
+      "kind": "Primary care (GP)",
+      "steps": [2],
+      "mode": "In person",
+      "area": "Sharjah",
+      "languages": ["English", "Arabic", "Tagalog"],
+      "typicalWaitDays": 3,
+      "cost": "Covered by most insurance plans",
+      "about": "A GP review, including physical health checks and medication if needed."
+    },
+    {
+      "id": "harbour-psychology",
+      "name": "Harbour Psychology and Tele-Mental Health",
+      "kind": "Psychology and psychiatry",
+      "steps": [3, 4],
+      "mode": "By video or in person",
+      "area": "Abu Dhabi and online",
+      "languages": ["English", "Arabic"],
+      "typicalWaitDays": 7,
+      "cost": "Insurance or self-pay",
+      "about": "Psychologists for talking therapy, and a psychiatrist for specialist assessment."
+    }
+  ]
+}

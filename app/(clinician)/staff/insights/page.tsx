@@ -3,6 +3,7 @@ import { requireStaff } from "@/lib/staff/auth";
 import { loadInsights, type Insights } from "@/lib/staff/insights";
 import { loadQueue } from "@/lib/staff/data";
 import { PriorityBadge, StaffShell } from "../staff-header";
+import { serviceById } from "@/lib/directory";
 
 export default function InsightsPage() {
   return (
@@ -119,6 +120,21 @@ async function InsightsView() {
             ))}
           </dl>
           <p className="text-[0.8125rem] text-muted">Every override needs a reason, which is logged on the case.</p>
+          <div className="border-t border-line-warm pt-3">
+            <p className="text-[0.75rem] font-medium text-muted">Referrals by service</p>
+            {data.referrals.length === 0 ? (
+              <p className="text-[0.875rem] text-muted">None yet.</p>
+            ) : (
+              <ul className="mt-1 flex flex-col gap-1 text-[0.875rem]">
+                {data.referrals.map(([id, n]) => (
+                  <li key={id} className="flex justify-between gap-3">
+                    <span>{serviceById(id)?.name ?? id}</span>
+                    <span className="font-semibold tabular-nums">{n}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </Panel>
 
         <Panel id="ai-h" title="AI safety" note="Full check-in chat">
