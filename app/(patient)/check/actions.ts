@@ -17,6 +17,7 @@ import { caseRef } from "@/lib/case-ref";
 import { factsFromScores, scoreAll, type Score } from "@/lib/rules/scoring";
 import { CHANNELS, channelPurpose, may, purposesFor } from "@/lib/consent";
 import { CONDITION_IDS } from "@/lib/physical-health";
+import aboutYou from "@/content/about-you.json";
 import { applyFollowUps, latestReferral, patientAnswer, toReferral } from "@/lib/referral/persist";
 import { patientCard } from "@/lib/referral/followup";
 import { serviceById } from "@/lib/directory";
@@ -436,6 +437,32 @@ export async function answerReferral(input: unknown): Promise<{ ok: true } | Fai
     if (!row || row.status === "closed") return { ok: false, reason: "invalid" };
     const d = parsed.data;
     await patientAnswer(row, d.answer, d.answer === "booked" ? d.bookedFor : undefined);
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, reason: "error" };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// "About you" (optional): only with the anonymous-statistics consent
+// ---------------------------------------------------------------------------
+
+export async function saveAboutYou(input: unknown): Promise<{ ok: true } | Fail> {
+  const parsed = z.record(z.string(), z.string().nullable()).safeParse(input);
+  if (!parsed.success) return { ok: false, reason: "invalid" };
+  // Only known questions, and only their listed answers; anything else is dropped.
+  const answers: Record<string, string | null> = {};
+  for (const q of aboutYou.questions) {
+    const v = parsed.data[q.id];
+    answers[q.column] = typeof v === "string" && q.options.includes(v) ? v : null;
+  }
+  if (!isDbConfigured()) return { ok: true };
+  try {
+    const id = await readSessionId();
+    if (!id) return { ok: false, reason: "no_session" };
+    if (!may.countInStats(await persist.getConsents(id))) return { ok: false, reason: "invalid" };
+    await persist.saveAboutYou(id, answers);
     return { ok: true };
   } catch (e) {
     console.error(e);

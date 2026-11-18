@@ -74,6 +74,8 @@ export async function changeMyChoice(purpose: unknown, granted: unknown): Promis
     await persist.changeConsent(id, parsed.data.purpose, parsed.data.granted);
     // Withdrawing physical-health consent also removes what was shared.
     if (parsed.data.purpose === "physical_health" && !parsed.data.granted) await persist.savePhysicalHealth(id, false, [], null);
+    // Withdrawing anonymous statistics also deletes the optional "About you" answers.
+    if (parsed.data.purpose === "service_improvement" && !parsed.data.granted) await persist.clearAboutYou(id);
     return { ok: true };
   } catch (e) {
     console.error(e);

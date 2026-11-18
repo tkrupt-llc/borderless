@@ -608,3 +608,21 @@ export async function loadGpSummaryData(sessionId: string) {
     consents,
   };
 }
+
+// ---------------------------------------------------------------------------
+// "About you" (optional, with the anonymous-statistics consent): fairness only
+// ---------------------------------------------------------------------------
+
+const ABOUT_COLUMNS = ["demo_age_band", "demo_gender", "demo_nationality", "demo_language_variety", "demo_emirate"] as const;
+
+/** Saves the optional answers; a skipped question stays empty. */
+export async function saveAboutYou(sessionId: string, answers: Partial<Record<(typeof ABOUT_COLUMNS)[number], string | null>>) {
+  check(await db().from("sessions").update(answers).eq("id", sessionId), "save about you");
+  // The audit line records which questions were answered, never the answers.
+  await audit("about_you_saved", sessionId, "session", { answered: Object.entries(answers).filter(([, v]) => v).map(([k]) => k) });
+}
+
+/** Turning anonymous statistics off deletes the "About you" answers. */
+export async function clearAboutYou(sessionId: string) {
+  check(await db().from("sessions").update(Object.fromEntries(ABOUT_COLUMNS.map((c) => [c, null]))).eq("id", sessionId), "clear about you");
+}

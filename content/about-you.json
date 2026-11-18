@@ -1,0 +1,11 @@
+{
+  "status": "draft",
+  "source": "Optional 'About you' questions for the fairness checks on the service overview (challenge brief: fairness by age, gender, nationality, language and emirate). Asked only with the anonymous-statistics consent, every question skippable, never shown to an employer or used for care decisions. Turning the consent off later deletes the answers.",
+  "questions": [
+    { "id": "age", "column": "demo_age_band", "label": "Age", "options": ["18-24", "25-34", "35-44", "45-54", "55+"] },
+    { "id": "gender", "column": "demo_gender", "label": "Gender", "options": ["Female", "Male", "Another way"] },
+    { "id": "nationality", "column": "demo_nationality", "label": "Nationality", "options": ["Emirati", "Arab expatriate", "South Asian", "Western", "Other"] },
+    { "id": "language", "column": "demo_language_variety", "label": "Language you're most comfortable in", "options": ["Arabic", "English", "Hindi/Urdu", "Other"] },
+    { "id": "emirate", "column": "demo_emirate", "label": "Where you live", "options": ["Abu Dhabi", "Al Ain", "Al Dhafra", "Dubai", "Sharjah", "Another emirate", "Outside the UAE"] }
+  ]
+}

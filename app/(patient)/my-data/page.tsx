@@ -24,6 +24,7 @@ export default function MyDataPage() {
             <li>What you wrote in the chat, if you used it</li>
             <li>Your phone number or email and contact preferences, only if you shared them</li>
             <li>Physical health conditions, only if you chose to share them</li>
+            <li>Age band, gender, nationality, language and emirate, only if you answered &ldquo;About you&rdquo;. Used only to check the service is fair</li>
             <li>The choices you made about sharing</li>
             <li>Notes your care team adds</li>
           </ul>

@@ -5,6 +5,7 @@ import { recordLaterConsents } from "../../actions";
 import { updateStoredResult } from "@/lib/check/local-answers";
 import consent from "@/content/consent.json";
 import { FollowUpLink } from "@/components/follow-up-link";
+import { AboutYou } from "./about-you";
 
 // Asked here rather than before the questions (research: ask only what is
 // needed, when it matters). Nothing is pre-ticked; each choice is logged.
@@ -34,6 +35,7 @@ export function LaterChoices({ path }: { path: string }) {
   }
 
   return (
+    <>
     <form onSubmit={save} className="flex flex-col gap-2.5 rounded-2xl border-[1.5px] border-line bg-surface px-4 py-3.5">
       <fieldset className="flex flex-col gap-3" disabled={status === "saved"}>
         <legend className="mb-1 font-semibold">Two more choices (optional)</legend>
@@ -66,5 +68,8 @@ export function LaterChoices({ path }: { path: string }) {
       </p>
       {token && <FollowUpLink token={token} />}
     </form>
+    {/* Fairness questions, only for people who chose anonymous statistics. */}
+    {status === "saved" && choices.service_improvement && <AboutYou />}
+    </>
   );
 }
