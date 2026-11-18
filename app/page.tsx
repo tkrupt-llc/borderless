@@ -11,36 +11,89 @@ import en from "@/content/i18n/en.json";
 const wrap = "mx-auto w-full max-w-[1120px] px-5 sm:px-8";
 const h2 = "font-serif text-[2.25rem] leading-[1.15] font-normal sm:text-[2.75rem]";
 const primaryBtn =
-  "tap inline-flex min-h-12 items-center rounded-full bg-primary px-[26px] py-3.5 font-medium text-white no-underline hover:text-white";
+  "tap inline-flex min-h-12 items-center rounded-full bg-primary px-[26px] py-3.5 font-semibold text-white no-underline hover:text-white";
 const outlineBtn =
   "tap inline-flex min-h-12 items-center rounded-full border-[1.5px] border-ink px-[26px] py-3.5 font-medium text-ink no-underline";
+const START = "/check/quick/consent";
 
 const PREVIEW = [
-  { id: "breathing", Icon: BreathingIcon, title: "Paced breathing", time: "2 minutes", cat: CATEGORIES.calm },
-  { id: "urge-surfing", Icon: WavesIcon, title: "Urge surfing", time: "5 minutes", cat: CATEGORIES.soothe },
-  { id: "grounding", Icon: GroundingIcon, title: "Mindfulness", time: "3 minutes", cat: CATEGORIES.ground },
-  { id: "stop", Icon: StopIcon, title: "STOP Skill", time: "1 minute", cat: CATEGORIES.clarity },
+  { id: "breathing", Icon: BreathingIcon, title: "Paced breathing", time: "2 min", helps: "Slows your breathing when you feel tense or panicky.", cat: CATEGORIES.calm },
+  { id: "urge-surfing", Icon: WavesIcon, title: "Urge surfing", time: "5 min", helps: "Helps you ride out a strong urge until it passes.", cat: CATEGORIES.soothe },
+  { id: "grounding", Icon: GroundingIcon, title: "Mindfulness", time: "3 min", helps: "Brings you back to the present when thoughts race.", cat: CATEGORIES.ground },
+  { id: "stop", Icon: StopIcon, title: "STOP Skill", time: "1 min", helps: "A pause before you react when feelings run high.", cat: CATEGORIES.clarity },
+];
+
+const SAFE = [
+  {
+    title: "What a clinician reviews, and when",
+    icon: (
+      <>
+        <path d="M10 38c0-18 14-30 30-28s24 16 20 30-18 24-32 20S10 52 10 38z" fill="var(--sky-deep)" />
+        <circle cx="32" cy="28" r="9" fill="none" stroke="var(--ink)" strokeWidth="2" />
+        <path d="M16 56c2-10 9-15 16-15s14 5 16 15" fill="none" stroke="var(--ink)" strokeWidth="2" strokeLinecap="round" />
+        <path d="M46 22l4 4 8-9" fill="none" stroke="var(--ink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    points: [
+      "A licensed clinician reads every check-in you send: your answers, scores and anything you wrote.",
+      "Targets: urgent check-ins within 4 hours, everyone else within one working day. Late cases go to the duty supervisor.",
+      "Scores and safety flags come from fixed rules, never from AI. The clinician decides your next step.",
+    ],
+  },
+  {
+    title: "What we store, and who can see it",
+    icon: (
+      <>
+        <path d="M14 30c4-16 22-22 36-14s14 28 2 38-34 8-38-6-2-12 0-18z" fill="var(--ai)" />
+        <rect x="22" y="32" width="28" height="22" rx="4" fill="none" stroke="var(--ink)" strokeWidth="2" />
+        <path d="M28 32v-6a8 8 0 0 1 16 0v6" fill="none" stroke="var(--ink)" strokeWidth="2" />
+        <circle cx="36" cy="43" r="2.5" fill="var(--ink)" />
+      </>
+    ),
+    points: [
+      "Stored: your answers and scores, and only if you choose them: your chat, contact details and physical health. No name or account.",
+      "Only your signed-in care team can see them. Never your employer or university.",
+      "With AI help switched on, your chat messages go to an outside AI service (Groq) to help ask questions. It never scores or decides.",
+    ],
+    link: { href: "/privacy", text: "How to see or delete your data" },
+  },
+  {
+    title: "What “I need help now” does",
+    icon: (
+      <>
+        <path d="M12 36c0-16 16-26 30-22s20 18 14 30-22 18-32 12-12-12-12-20z" fill="var(--cat-ground-deep)" />
+        <path
+          d="M24 22h24a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H36l-8 7v-7h-4a4 4 0 0 1-4-4V26a4 4 0 0 1 4-4z"
+          fill="none"
+          stroke="var(--ink)"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path d="M36 28v6M36 38v.5" stroke="var(--ink)" strokeWidth="2.4" strokeLinecap="round" />
+      </>
+    ),
+    points: [
+      "Shows 998, 999 and the 24/7 line 800-SAKINA first, before anything else. No waiting, no AI.",
+      "During a check-in, it alerts the on-call clinician straight away. You can also leave a number to be called.",
+      "It stays on every screen, at every step, next to “Talk to someone”.",
+    ],
+  },
 ];
 
 export default function Landing() {
+  // Landing only: muted text one step darker (well above 4.5:1 on every background here).
   return (
-    <div className="relative z-0 overflow-x-clip text-[1.125rem] leading-[1.55]">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="drift absolute -top-[260px] -left-[200px] size-[620px] rounded-full bg-sky" />
-        <div className="drift2 absolute top-[260px] -right-[220px] size-[520px] rounded-full bg-cat-distress" />
-        <div className="drift2 absolute top-[2300px] -left-[240px] size-[480px] rounded-full bg-sky" />
-        <div className="drift2 absolute top-[3600px] -right-[200px] size-[420px] rounded-full bg-cat-distress" />
-      </div>
+    <div className="relative z-0 overflow-x-clip text-[1.125rem] leading-[1.55] [--muted:#434e3d]">
       <header className={`${wrap} flex flex-wrap items-center justify-between gap-4 py-5`}>
         <Link href="/" aria-label="borderless home" className="no-underline">
           <Logo size="lg" />
         </Link>
-        <nav aria-label="Main" className="flex flex-wrap items-center gap-x-7 gap-y-2 text-base">
+        <nav aria-label="Main" className="flex flex-wrap items-center gap-x-7 gap-y-2 text-body">
           <a href="#how" className="text-ink no-underline">How it works</a>
           <a href="#safe" className="text-ink no-underline">Why it&apos;s safe</a>
           <a href="#clinicians" className="text-ink no-underline">For clinicians</a>
           <Link
-            href="/start"
+            href={START}
             className="tap inline-flex min-h-11 items-center rounded-full bg-primary px-[22px] py-3 font-medium text-white no-underline hover:text-white"
           >
             Start check-in
@@ -60,21 +113,22 @@ export default function Landing() {
                 Talk to someone <em className="text-primary">sooner.</em>
               </h1>
             </div>
-            <div className="flex min-w-0 flex-[1_1_360px] flex-col gap-6">
+            <div className="flex min-w-0 flex-[1_1_360px] flex-col gap-5">
               <p className="text-lead text-text-2">
-                A five-minute check-in, read by a real clinician who decides your next step. The assistant helps you
-                answer; it never diagnoses you.
+                Answer a few short questions. A clinician reads every answer and tells you your next step.
               </p>
-              <div className="flex flex-wrap gap-3">
-                <Link href="/start" className={primaryBtn}>Start check-in</Link>
-                <Link href="/help-now" className={outlineBtn}>I need help now</Link>
-                <Link href="/demo" className="tap inline-flex min-h-12 items-center rounded-full px-3 py-3.5 font-medium text-primary-dark underline underline-offset-2">
-                  See how it works
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+                <Link href={START} className={primaryBtn}>
+                  Start a 2-minute check-in
                 </Link>
+                <a href="#how" className="inline-flex min-h-12 items-center font-medium text-primary-dark underline underline-offset-2">
+                  See how it works
+                </a>
               </div>
-              <p className="text-base text-text-2">
-                Not ready for a check-in? <Link href="/talk" className="font-medium">Talk to a person</Link>: leave your
-                number and the care team will call you.
+              <p className="text-body text-text-2">
+                No account needed · Not for emergencies: call{" "}
+                <a href="tel:999" className="font-semibold text-ink">999</a> or{" "}
+                <a href="tel:998" className="font-semibold text-ink">998</a>
               </p>
             </div>
           </div>
@@ -104,7 +158,7 @@ export default function Landing() {
 
         <section className={`reveal ${wrap} pt-[72px]`}>
           <p className="text-caption font-semibold tracking-[0.08em] text-muted uppercase">Reply-time targets</p>
-          <p className="mt-1.5 mb-5 text-caption text-text-2">
+          <p className="mt-1.5 mb-5 text-body text-text-2">
             Each clinic sets its own times. The system flags any case that runs late to the duty supervisor.
           </p>
           <dl className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] border-t border-line">
@@ -123,7 +177,7 @@ export default function Landing() {
               ] as const
             ).map(([value, label]) => (
               <div key={value} className="flex flex-col-reverse border-b border-line py-6 pr-6">
-                <dt className="mt-2.5 text-base text-text-2">{label}</dt>
+                <dt className="mt-2.5 text-body text-text-2">{label}</dt>
                 <dd className="font-serif text-[3rem] leading-none text-primary-dark">{value}</dd>
               </div>
             ))}
@@ -134,50 +188,28 @@ export default function Landing() {
           <h2 className={`${h2} mb-10`}>
             Why it&apos;s <em className="text-primary">safe</em>
           </h2>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-10">
-            <div className="flex flex-col gap-3.5">
-              <svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
-                <path d="M10 38c0-18 14-30 30-28s24 16 20 30-18 24-32 20S10 52 10 38z" fill="var(--sky-deep)" />
-                <circle cx="32" cy="28" r="9" fill="none" stroke="var(--ink)" strokeWidth="2" />
-                <path d="M16 56c2-10 9-15 16-15s14 5 16 15" fill="none" stroke="var(--ink)" strokeWidth="2" strokeLinecap="round" />
-                <path d="M46 22l4 4 8-9" fill="none" stroke="var(--ink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <h3 className="text-[1.3125rem] font-semibold">A clinician decides</h3>
-              <p className="text-text-2">
-                Your answers are scored with standard questionnaires. A clinician reviews every result. The assistant is
-                labelled and never gives a diagnosis.
-              </p>
-            </div>
-            <div className="flex flex-col gap-3.5">
-              <svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
-                <path d="M14 30c4-16 22-22 36-14s14 28 2 38-34 8-38-6-2-12 0-18z" fill="var(--ai)" />
-                <rect x="22" y="32" width="28" height="22" rx="4" fill="none" stroke="var(--ink)" strokeWidth="2" />
-                <path d="M28 32v-6a8 8 0 0 1 16 0v6" fill="none" stroke="var(--ink)" strokeWidth="2" />
-                <circle cx="36" cy="43" r="2.5" fill="var(--ink)" />
-              </svg>
-              <h3 className="text-[1.3125rem] font-semibold">Private</h3>
-              <p className="text-text-2">
-                Only your care team sees your answers. Discreet mode shows a plain browser tab title, and Quick exit
-                leaves the site in one tap.
-              </p>
-            </div>
-            <div className="flex flex-col gap-3.5">
-              <svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
-                <path d="M12 36c0-16 16-26 30-22s20 18 14 30-22 18-32 12-12-12-12-20z" fill="var(--cat-ground-deep)" />
-                <path
-                  d="M24 22h24a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H36l-8 7v-7h-4a4 4 0 0 1-4-4V26a4 4 0 0 1 4-4z"
-                  fill="none"
-                  stroke="var(--ink)"
-                  strokeWidth="2"
-                  strokeLinejoin="round"
-                />
-                <path d="M36 28v6M36 38v.5" stroke="var(--ink)" strokeWidth="2.4" strokeLinecap="round" />
-              </svg>
-              <h3 className="text-[1.3125rem] font-semibold">Help is one tap away</h3>
-              <p className="text-text-2">
-                &ldquo;I need help now&rdquo; and &ldquo;Talk to a person&rdquo; stay on every screen, at every step.
-              </p>
-            </div>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-10">
+            {SAFE.map((col) => (
+              <div key={col.title} className="flex flex-col gap-3.5">
+                <svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
+                  {col.icon}
+                </svg>
+                <h3 className="text-[1.3125rem] font-semibold">{col.title}</h3>
+                <ul className="flex flex-col gap-2.5">
+                  {col.points.map((pt) => (
+                    <li key={pt} className="flex gap-2.5 text-text-2">
+                      <span aria-hidden="true" className="mt-[11px] size-1.5 shrink-0 rounded-full bg-primary" />
+                      {pt}
+                    </li>
+                  ))}
+                </ul>
+                {col.link && (
+                  <Link href={col.link.href} className="inline-flex min-h-11 items-center font-semibold">
+                    {col.link.text} →
+                  </Link>
+                )}
+              </div>
+            ))}
           </div>
         </section>
 
@@ -186,79 +218,98 @@ export default function Landing() {
             <h2 className={h2}>
               While you <em className="text-primary">wait</em>
             </h2>
-            <p className="max-w-[420px] text-body text-text-2">
-              Short exercises you can use any time, approved by a psychiatrist.
-            </p>
+            <p className="max-w-[420px] text-body text-text-2">Short exercises you can use any time, approved by a psychiatrist.</p>
           </div>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-5">
-            {PREVIEW.map(({ id, Icon, title, time, cat }) => (
+            {PREVIEW.map(({ id, Icon, title, time, helps, cat }) => (
               <Link
                 key={id}
                 href={`/coping/${id}`}
                 style={{ background: cat.bg }}
-                className="tap flex flex-col gap-2.5 rounded-3xl p-6 text-ink no-underline hover:text-ink"
+                className="tap group flex flex-col gap-2.5 rounded-3xl p-6 text-ink no-underline transition-shadow hover:text-ink hover:shadow-[0_10px_30px_rgba(31,42,28,0.12)] focus-visible:shadow-[0_10px_30px_rgba(31,42,28,0.12)]"
               >
                 <Icon blob={cat.deep} />
-                <span className="text-[0.75rem] font-semibold tracking-[0.04em] uppercase" style={{ color: cat.ink }}>
+                <span className="text-[0.8125rem] font-semibold tracking-[0.04em] uppercase" style={{ color: cat.ink }}>
                   {cat.label}
                 </span>
                 <h3 className="text-[1.1875rem] font-semibold">{title}</h3>
-                <p className="text-base text-muted">{time}</p>
+                <p className="text-body text-text-2">{helps}</p>
+                <span className="mt-auto flex items-center justify-between pt-2">
+                  <span className="text-body text-muted">{time}</span>
+                  <span className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-surface px-4 font-semibold group-hover:bg-ink group-hover:text-white group-focus-visible:bg-ink group-focus-visible:text-white">
+                    Start <span aria-hidden="true">→</span>
+                  </span>
+                </span>
               </Link>
             ))}
           </div>
         </section>
 
         <section id="clinicians" className={`reveal ${wrap} pt-20 sm:pt-24`}>
-          <div className="flex flex-wrap items-center gap-10 rounded-[28px] bg-sky p-7 sm:p-12">
-            <div className="flex min-w-0 flex-[1_1_380px] flex-col gap-4">
-              <p className="text-caption font-semibold tracking-[0.08em] text-[#34505b] uppercase">For clinicians</p>
-              <h2 className="font-serif text-[2.25rem] leading-[1.15] font-normal sm:text-[2.5rem]">
-                Everything you need, <em className="text-blue">on one card</em>
-              </h2>
-              {[
-                ["A queue sorted by reply-by time.", "Imminent cases in red at the top; the rest as badges."],
-                ["Scores and the rule that fired.", "No predicted diagnoses: you decide."],
-                ["Missed a reply-by time?", "It goes to the duty supervisor automatically."],
-              ].map(([title, body]) => (
-                <div key={title} className="flex gap-3">
-                  <span aria-hidden="true" className="mt-[9px] size-2.5 shrink-0 rounded-full bg-blue" />
-                  <p className="text-text-2">
-                    <strong className="text-ink">{title}</strong> {body}
-                  </p>
-                </div>
-              ))}
+          <div className="flex flex-col gap-10 rounded-[28px] bg-sky p-7 sm:p-12">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-3">
+                <p className="text-caption font-semibold tracking-[0.08em] text-[#34505b] uppercase">For clinicians</p>
+                <h2 className="font-serif text-[2.25rem] leading-[1.15] font-normal sm:text-[2.5rem]">
+                  Everything you need, <em className="text-blue">on one card</em>
+                </h2>
+              </div>
               <div className="flex flex-wrap gap-x-6">
                 <Link href="/demo" className="inline-flex min-h-11 items-center font-semibold text-blue">
-                  See the queue in the live demo →
+                  Try the console in the live demo →
                 </Link>
                 <Link href="/staff" className="inline-flex min-h-11 items-center font-semibold text-blue">
                   Care team sign-in →
                 </Link>
               </div>
             </div>
-            <div
-              role="img"
-              aria-label="Example clinician summary card"
-              className="flex min-w-0 flex-[1_1_460px] flex-col rounded-[20px] bg-surface p-6 text-[0.9375rem] leading-snug"
-            >
-              <div className="mb-1.5 flex flex-wrap items-center justify-between gap-3">
-                <strong className="text-[1.0625rem]">BL-7C2E40 · Full check-in</strong>
-                <span className="rounded-full bg-[#f4e3d3] px-2.5 py-1 text-[0.75rem] font-semibold text-[#6b3e1c]">Urgent · reply in 3 h 12 m</span>
+
+            <div className="grid items-start gap-8 lg:grid-cols-[1fr_2fr]">
+              <div className="flex flex-col gap-4">
+                {[
+                  ["A queue sorted by reply-by time.", "Imminent cases in red at the top; the rest as badges."],
+                  ["Scores and the rule that fired.", "No predicted diagnoses: you decide."],
+                  ["Missed a reply-by time?", "It goes to the duty supervisor automatically."],
+                ].map(([title, body]) => (
+                  <div key={title} className="flex gap-3">
+                    <span aria-hidden="true" className="mt-[11px] size-2.5 shrink-0 rounded-full bg-blue" />
+                    <p className="text-[#24343b]">
+                      <strong className="text-ink">{title}</strong> {body}
+                    </p>
+                  </div>
+                ))}
               </div>
-              {[
-                ["In their words", "“I can't switch off at night and I've stopped seeing friends.”"],
-                ["Scores", "PHQ-9 19 (moderately severe) · GAD-7 12 (moderate)"],
-                ["Rule that fired", "PHQ-9 item 9 answered “several days” → urgent review"],
-              ].map(([k, v]) => (
-                <div key={k} className="flex flex-col gap-0.5 border-b border-track py-2.5">
-                  <span className="text-[0.8125rem] text-muted">{k}</span>
-                  <span>{v}</span>
+
+              <div
+                role="img"
+                aria-label="Example clinician summary card, with its reply-by countdown highlighted"
+                className="flex min-w-0 flex-col rounded-[20px] bg-surface p-6 text-[1.0625rem] leading-snug sm:p-8"
+              >
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+                  <strong className="text-[1.25rem]">BL-7C2E40 · Full check-in</strong>
+                  <span className="relative">
+                    <span className="rounded-full bg-[#f4e3d3] px-3.5 py-1.5 text-[0.9375rem] font-semibold text-[#6b3e1c] shadow-[0_0_0_3px_var(--surface),0_0_0_5px_#c9895c]">
+                      Urgent · reply in 3 h 12 m
+                    </span>
+                  </span>
                 </div>
-              ))}
-              <div className="mt-2 flex flex-col gap-0.5 rounded-xl bg-ai-soft px-3 py-2.5">
-                <span className="text-[0.8125rem] text-ai-ink">AI-drafted note (check against answers)</span>
-                <span>Sleep and low mood for about 6 weeks; work stress; lives with family.</span>
+                <p className="mb-2 self-end rounded-lg bg-[#fbf3ec] px-3 py-1.5 text-[0.875rem] text-[#6b3e1c]">
+                  ↑ Reply-by countdown: every case shows the time left. If it runs out, the duty supervisor is told.
+                </p>
+                {[
+                  ["In their words", "“I can't switch off at night and I've stopped seeing friends.”"],
+                  ["Scores", "PHQ-9 19 (moderately severe) · GAD-7 12 (moderate)"],
+                  ["Rule that fired", "PHQ-9 item 9 answered “several days” → urgent review"],
+                ].map(([k, v]) => (
+                  <div key={k} className="flex flex-col gap-1 border-b border-track py-3">
+                    <span className="text-[0.875rem] text-muted">{k}</span>
+                    <span>{v}</span>
+                  </div>
+                ))}
+                <div className="mt-3 flex flex-col gap-1 rounded-xl bg-ai-soft px-4 py-3">
+                  <span className="text-[0.875rem] text-ai-ink">AI-drafted note (check against answers)</span>
+                  <span>Sleep and low mood for about 6 weeks; work stress; lives with family.</span>
+                </div>
               </div>
             </div>
           </div>
@@ -267,11 +318,18 @@ export default function Landing() {
         <section className={`reveal ${wrap} pt-[72px]`}>
           <div className="flex flex-col items-center gap-6 border-t border-line pt-16 text-center">
             <TypedLine />
-            <p className="max-w-[520px] text-text-2">Check in today and see when to expect a reply from a real person.</p>
             <div className="flex flex-wrap justify-center gap-3">
-              <Link href="/start" className={primaryBtn}>Start check-in</Link>
-              <Link href="/demo" className={outlineBtn}>See the live demo</Link>
+              <Link href={START} className={primaryBtn}>
+                Start a 2-minute check-in
+              </Link>
+              <Link href="/demo" className={outlineBtn}>
+                See the live demo
+              </Link>
             </div>
+            <p className="max-w-[560px] text-body text-text-2">
+              Next you&apos;ll see what happens to your answers, then five short questions. A clinician reads them and you
+              get a reply-by time.
+            </p>
           </div>
         </section>
       </main>
@@ -295,26 +353,26 @@ export default function Landing() {
               <Logo size="lg" />
               <p className="max-w-[340px] text-text-2">Earlier, safer mental wellbeing support. Every check-in is read by a clinician.</p>
             </div>
-            <nav aria-label="Footer" className="flex flex-wrap gap-12 text-[0.9375rem]">
+            <nav aria-label="Footer" className="flex flex-wrap gap-12 text-body">
               <div className="flex flex-col gap-2">
                 <strong>Get support</strong>
-                <Link href="/start" className="text-ink no-underline hover:underline">Start check-in</Link>
-                <Link href="/talk" className="text-ink no-underline hover:underline">Talk to a person</Link>
+                <Link href={START} className="text-ink no-underline hover:underline">Start a check-in</Link>
+                <Link href="/talk" className="text-ink no-underline hover:underline">Talk to someone</Link>
                 <Link href="/coping" className="text-ink no-underline hover:underline">Coping cards</Link>
-                <Link href="/home" className="text-ink no-underline hover:underline">Coming back?</Link>
-                <Link href="/help-now" className="text-ink no-underline hover:underline">Help now</Link>
+                <Link href="/help-now" className="text-ink no-underline hover:underline">Crisis support</Link>
               </div>
               <div className="flex flex-col gap-2">
-                <strong>For clinics</strong>
+                <strong>For clinicians</strong>
                 <Link href="/staff" className="text-ink no-underline hover:underline">Clinician console</Link>
                 <Link href="/demo" className="text-ink no-underline hover:underline">Live demo</Link>
                 <a href="/embed-demo.html" className="text-ink no-underline hover:underline">Add to your website</a>
               </div>
               <div className="flex flex-col gap-2">
-                <strong>Trust</strong>
-                <a href="#safe" className="text-ink no-underline hover:underline">Safety and privacy</a>
-                <Link href="/my-data" className="text-ink no-underline hover:underline">Your data</Link>
-                <Link href="/guides" className="text-ink no-underline hover:underline">Self-help guides</Link>
+                <strong>About</strong>
+                <Link href="/privacy" className="text-ink no-underline hover:underline">Privacy</Link>
+                <Link href="/terms" className="text-ink no-underline hover:underline">Terms</Link>
+                <Link href="/accessibility" className="text-ink no-underline hover:underline">Accessibility</Link>
+                <Link href="/contact" className="text-ink no-underline hover:underline">Contact</Link>
               </div>
             </nav>
           </div>

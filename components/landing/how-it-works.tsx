@@ -1,18 +1,14 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 /** A small browser-window frame around each "How it works" illustration. */
 function MiniScreen({ label, tint, children }: { label: string; tint: string; children: React.ReactNode }) {
   return (
-    <div role="img" aria-label={label} className="min-w-0 flex-[1_1_440px] rounded-3xl p-5 sm:p-7" style={{ background: tint }}>
-      <div className="overflow-hidden rounded-2xl bg-surface shadow-[0_1px_0_var(--line-warm)]">
+    <div role="img" aria-label={label} className="flex h-full min-w-0 flex-col rounded-3xl p-5 sm:p-7" style={{ background: tint }}>
+      <div className="flex min-h-[360px] flex-1 flex-col overflow-hidden rounded-2xl bg-surface shadow-[0_1px_0_var(--line-warm)]">
         <div className="flex h-7 items-center gap-1.5 bg-[#f2efe8] px-3" aria-hidden="true">
           <span className="size-2 rounded-full bg-line" />
           <span className="size-2 rounded-full bg-line" />
           <span className="size-2 rounded-full bg-line" />
         </div>
-        <div className="flex flex-col gap-2.5 p-5 text-[0.875rem] leading-snug" aria-hidden="true">
+        <div className="flex flex-1 flex-col gap-2.5 p-5 text-[0.9375rem] leading-snug" aria-hidden="true">
           {children}
         </div>
       </div>
@@ -89,7 +85,7 @@ export const STEPS: { title: string; body: string; screen: React.ReactNode; labe
               <strong className="font-semibold">{ref}</strong>
               <span className="text-[0.8125rem] text-muted">{what}</span>
             </span>
-            <span className={`rounded-full px-2.5 py-1 text-[0.75rem] font-semibold whitespace-nowrap ${tone}`}>{badge}</span>
+            <span className={`rounded-full px-2.5 py-1 text-[0.8125rem] font-semibold whitespace-nowrap ${tone}`}>{badge}</span>
           </div>
         ))}
       </>
@@ -143,8 +139,8 @@ export const STEPS: { title: string; body: string; screen: React.ReactNode; labe
             <line x1="30" y1="70" x2="390" y2="70" />
             <line x1="30" y1="120" x2="390" y2="120" />
           </g>
-          <g fill="var(--muted)" fontSize="11">
-            <text x="0" y="24">27</text>
+          <g fill="var(--muted)" fontSize="14">
+            <text x="0" y="25">27</text>
             <text x="0" y="74">18</text>
             <text x="0" y="124">9</text>
             <text x="44" y="164">Wk 0</text>
@@ -161,7 +157,7 @@ export const STEPS: { title: string; body: string; screen: React.ReactNode; labe
             <circle cx="240" cy="103" r="5" />
             <circle cx="330" cy="103" r="5" />
           </g>
-          <text x="168" y="98" fill="var(--muted)" fontSize="11">
+          <text x="160" y="98" fill="var(--muted)" fontSize="14">
             missed, that&apos;s OK
           </text>
         </svg>
@@ -173,74 +169,32 @@ export const STEPS: { title: string; body: string; screen: React.ReactNode; labe
 
 
 /**
- * "How it works" (design canvas): the five steps scroll by on the left; the
- * matching screen stays in view on the right, with progress dots. On narrow
- * screens each step shows its screen inline instead.
+ * "How it works": one layout for every step. Text and a same-size product
+ * preview side by side, alternating sides on desktop; stacked on mobile, text
+ * first. Every step has a preview, so there are no empty slots.
  */
 export function HowItWorks() {
-  const [active, setActive] = useState(0);
-  const refs = useRef<(HTMLDivElement | null)[]>([]);
-
-  useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) if (e.isIntersecting) setActive(Number((e.target as HTMLElement).dataset.step));
-      },
-      { rootMargin: "-45% 0px -45% 0px" },
-    );
-    refs.current.forEach((el) => el && io.observe(el));
-    return () => io.disconnect();
-  }, []);
-
-  const step = STEPS[active];
   return (
-    <div className="flex flex-wrap items-start gap-12">
-      <div className="min-w-0 flex-[1_1_380px]">
-        {STEPS.map((st, i) => (
-          <div
-            key={st.title}
-            ref={(el) => {
-              refs.current[i] = el;
-            }}
-            data-step={i}
-            className="flex flex-col justify-center gap-3 border-t border-line py-6 min-[861px]:min-h-[62vh]"
-          >
-            <div className="transition-opacity duration-[400ms] max-[860px]:!opacity-100" style={{ opacity: active === i ? 1 : 0.4 }}>
-              <span className="font-serif text-[3.5rem] leading-none text-primary" aria-hidden="true">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <h3 className="mt-3 font-serif text-[1.875rem] leading-tight font-medium">
-                <span className="sr-only">Step {i + 1}: </span>
-                {st.title}
-              </h3>
-              <p className="mt-3 max-w-[440px] text-text-2">{st.body}</p>
-            </div>
-            <div className="mt-4 min-[861px]:hidden">
-              <MiniScreen label={st.label} tint={st.tint}>
-                {st.screen}
-              </MiniScreen>
-            </div>
+    <ol className="flex flex-col">
+      {STEPS.map((st, i) => (
+        <li key={st.title} className="reveal grid items-center gap-8 border-t border-line py-10 md:grid-cols-2 md:gap-14">
+          <div className={i % 2 ? "md:order-2" : ""}>
+            <span className="font-serif text-[3rem] leading-none text-primary" aria-hidden="true">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <h3 className="mt-3 font-serif text-[1.875rem] leading-tight font-medium">
+              <span className="sr-only">Step {i + 1}: </span>
+              {st.title}
+            </h3>
+            <p className="mt-3 max-w-[460px] text-text-2">{st.body}</p>
           </div>
-        ))}
-      </div>
-      <div className="min-w-0 flex-[1_1_460px] self-stretch max-[860px]:hidden">
-        <div className="sticky top-24">
-          <div className="mb-3 flex gap-1.5" aria-hidden="true">
-            {STEPS.map((st, i) => (
-              <span
-                key={st.title}
-                className={`h-1.5 rounded-full transition-[width,background-color] duration-300 ${active === i ? "w-7 bg-primary" : "w-1.5 bg-line"}`}
-              />
-            ))}
-          </div>
-          <div key={active} className="how-fade">
-            <MiniScreen label={step.label} tint={step.tint}>
-              {step.screen}
+          <div className={i % 2 ? "md:order-1" : ""}>
+            <MiniScreen label={st.label} tint={st.tint}>
+              {st.screen}
             </MiniScreen>
           </div>
-        </div>
-      </div>
-    </div>
+        </li>
+      ))}
+    </ol>
   );
 }

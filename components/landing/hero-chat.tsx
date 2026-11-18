@@ -19,7 +19,7 @@ export function HeroChat() {
         </span>
         <span className="flex flex-col leading-tight">
           <strong className="font-semibold">borderless assistant</strong>
-          <span className="text-[0.75rem] text-muted">AI assistant, not a therapist</span>
+          <span className="text-[0.8125rem] text-muted">AI assistant, not a therapist</span>
         </span>
       </div>
       <div className="grid" aria-hidden="true">
@@ -36,7 +36,7 @@ export function HeroChat() {
         Quick check, please
       </div>
       <div className="h-b3 max-w-[92%] self-start rounded-[16px_16px_16px_5px] bg-ai-soft px-3 py-2.5" aria-hidden="true">
-        <span className="block text-[0.75rem] text-ai-ink">Mood · 1 of 2</span>
+        <span className="block text-[0.8125rem] text-ai-ink">Mood · 1 of 2</span>
         Over the last 2 weeks, how often have you had little interest or pleasure in doing things?
       </div>
       <div className="h-chips flex flex-wrap gap-1.5 pt-0.5" aria-hidden="true">
