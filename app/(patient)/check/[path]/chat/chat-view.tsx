@@ -20,6 +20,8 @@ export function ChatView() {
   const [loaded, setLoaded] = useState(false);
   const [pending, startTransition] = useTransition();
   const endRef = useRef<HTMLDivElement>(null);
+  // A local id for each message the person sends, so their bubble isn't redrawn when the reply arrives.
+  const sentCount = useRef(0);
 
   const questionsHref = `/check/${path}/1`;
 
@@ -62,7 +64,8 @@ export function ChatView() {
     setFailed(false);
     // Shown at once; only one message is ever in flight, so a fixed id is safe.
     const before = messages;
-    setMessages([...before, { id: "pending", role: "patient", text: clean, quickReplies: [] }]);
+    const localId = `sent-${++sentCount.current}`;
+    setMessages([...before, { id: localId, role: "patient", text: clean, quickReplies: [] }]);
     setDraft("");
     startTransition(async () => {
       let result: SendResult;
@@ -92,7 +95,7 @@ export function ChatView() {
       }
       setMessages([
         ...before,
-        { id: result.patientId, role: "patient", text: clean, quickReplies: [] },
+        { id: localId, role: "patient", text: clean, quickReplies: [] },
         ...result.messages,
       ]);
       if (result.outcome === "handoff") setHandedOff(true);
@@ -100,7 +103,10 @@ export function ChatView() {
   }
 
   const last = messages.at(-1);
-  const quickReplies = !pending && !handedOff && last && last.role !== "patient" ? last.quickReplies : [];
+  // The suggestions stay where they are while the assistant replies (disabled), so nothing jumps.
+  const lastBot = [...messages].reverse().find((m) => m.role !== "patient");
+  const quickReplies = handedOff ? [] : (lastBot?.quickReplies ?? []);
+  const repliesActive = !pending && Boolean(last) && last!.role !== "patient";
   const hasPatientMessage = messages.some((m) => m.role === "patient");
 
   return (
@@ -144,7 +150,6 @@ export function ChatView() {
           </li>
         )}
       </ol>
-      <div ref={endRef} />
 
       {failed && (
         <p role="alert" className="pb-2 text-caption text-text-2">
@@ -159,7 +164,8 @@ export function ChatView() {
               key={q}
               type="button"
               onClick={() => send(q)}
-              className="tap anim-pop min-h-11 cursor-pointer rounded-full border-[1.5px] border-line bg-surface px-4 text-caption font-medium text-ink hover:border-primary"
+              disabled={!repliesActive}
+              className="tap min-h-11 cursor-pointer rounded-full border-[1.5px] border-line bg-surface px-4 text-caption font-medium text-ink hover:border-primary disabled:cursor-default disabled:opacity-50"
             >
               {q}
             </button>
@@ -202,17 +208,20 @@ export function ChatView() {
         </form>
       )}
 
-      {(hasPatientMessage || handedOff) && (
-        <button
-          type="button"
-          onClick={() => router.push(questionsHref)}
-          className={`mb-2 flex min-h-12 cursor-pointer items-center justify-center rounded-full px-6 font-medium ${
-            handedOff ? "bg-primary text-white" : "border-[1.5px] border-ink text-ink"
-          }`}
-        >
-          Continue to the questions
-        </button>
-      )}
+      {/* Always takes its space, so the box above doesn't move when it appears after the first answer. */}
+      <button
+        type="button"
+        onClick={() => router.push(questionsHref)}
+        aria-hidden={!(hasPatientMessage || handedOff)}
+        tabIndex={hasPatientMessage || handedOff ? 0 : -1}
+        className={`mb-2 flex min-h-12 cursor-pointer items-center justify-center rounded-full px-6 font-medium ${
+          handedOff ? "bg-primary text-white" : "border-[1.5px] border-ink text-ink"
+        } ${hasPatientMessage || handedOff ? "" : "invisible"}`}
+      >
+        Continue to the questions
+      </button>
+      {/* Scrolled into view after each message: the end of the chat, clear of the help bar on phones. */}
+      <div ref={endRef} className="scroll-mb-28 lg:scroll-mb-6" />
     </div>
   );
 }
