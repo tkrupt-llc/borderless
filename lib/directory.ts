@@ -1,9 +1,9 @@
 import directory from "@/content/directory/services.json";
 
-// The referral directory (FICTIONAL example services in the prototype).
+// The referral directory: Abu Dhabi options. DRAFT details, to be confirmed with each provider.
 export type Service = (typeof directory.services)[number];
 export const SERVICES: Service[] = directory.services;
-export const DIRECTORY_IS_EXAMPLE = directory.status === "example";
+export const DIRECTORY_IS_DRAFT = directory.status === "draft";
 
 export function serviceById(id: string | null | undefined): Service | undefined {
   return SERVICES.find((s) => s.id === id);

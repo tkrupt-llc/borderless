@@ -30,7 +30,7 @@ async function loadRows(now: Date) {
     "sessions",
   );
   const ids = sessions.map((s) => s.id);
-  const [consents, receipt, scores, tasks, adverse] = await Promise.all([
+  const [consents, receipt, scores, tasks, adverse, stalled] = await Promise.all([
     db().from("consent_records").select("session_id, purpose, granted, created_at").eq("purpose", "service_improvement").gte("created_at", since).limit(20000)
       .then((r) => rows<ConsentRow & { session_id: string }>(r, "consents")),
     db().from("receipt_events").select("session_id, status, created_at").gte("created_at", since).limit(20000)
@@ -41,11 +41,13 @@ async function loadRows(now: Date) {
       .then((r) => rows<{ created_at: string; due_at: string; acknowledged_at: string | null }>(r, "crisis tasks")),
     db().from("adverse_events").select("category, severity").gte("created_at", since).limit(5000)
       .then((r) => rows<{ category: string; severity: string }>(r, "adverse events")),
+    db().from("referrals").select("session_id").not("stalled_at", "is", null).gte("referred_at", since).limit(10000)
+      .then((r) => rows<{ session_id: string }>(r, "stalled referrals")),
   ]);
   const bySession = new Map<string, ConsentRow[]>();
   for (const c of consents) bySession.set(c.session_id, [...(bySession.get(c.session_id) ?? []), c]);
   const statsConsent = (id: string) => latestConsents(bySession.get(id) ?? []).service_improvement === true;
-  return { sessions, ids, receipt, scores, tasks, adverse, statsConsent };
+  return { sessions, ids, receipt, scores, tasks, adverse, stalled, statsConsent };
 }
 
 export async function loadOutcomes(now = new Date()) {
@@ -59,6 +61,7 @@ export async function loadOutcomes(now = new Date()) {
     scores: r.scores.map((s) => ({ sessionId: s.session_id, instrument: s.instrument, total: s.total })),
     crisisTasks: r.tasks.map((t) => ({ createdAt: t.created_at, dueAt: t.due_at, acknowledgedAt: t.acknowledged_at })),
     adverse: r.adverse,
+    stalledReferrals: r.stalled.map((s) => ({ sessionId: s.session_id })),
   });
   return { ...outcomes, days: OUTCOME_DAYS, simulated: r.sessions.filter((s) => s.is_simulated).length };
 }

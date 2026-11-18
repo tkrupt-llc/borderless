@@ -155,6 +155,8 @@ export const TASK_LABELS: Record<string, string> = {
   not_helping: "Coping card not helping",
   not_on_track: "Not on track",
   patient_message: "Message from patient",
+  handoff_stalled: "Hand-off stalled",
+  handoff_check: "Urgent hand-off check",
 };
 
 const TIER_STYLE: Record<string, string> = {

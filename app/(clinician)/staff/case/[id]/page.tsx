@@ -12,8 +12,10 @@ import { seriesFrom, TrendChart } from "@/components/trend-chart";
 import { STEP_NAMES } from "@/lib/rules/routing";
 import { summaryToText } from "@/lib/summary/build";
 import { bankItem } from "@/lib/item-bank";
-import { acknowledgeTask, addHistory, closeTask, referToService, setReceiptStatus } from "../../actions";
-import { DIRECTORY_IS_EXAMPLE, serviceById, servicesForStep } from "@/lib/directory";
+import { acknowledgeTask, addHistory, closeTask, referToService } from "../../actions";
+import { DIRECTORY_IS_DRAFT, serviceById, servicesForStep } from "@/lib/directory";
+import { applyFollowUps, latestReferral } from "@/lib/referral/persist";
+import { ReferralActions } from "../../referral-actions";
 import { PriorityBadge, StaffShell, TASK_LABELS } from "../../staff-header";
 import { caseRef } from "@/lib/case-ref";
 import { ACTIVITY_WORDS, actorWord } from "@/lib/staff/activity-words";
@@ -36,7 +38,7 @@ function Panel({ id, title, aside, children }: { id: string; title: string; asid
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const RECEIPT_WORDS: Record<string, string> = {
   received: "Received", reviewed: "Reviewed", accepted: "Accepted", re_routed: "Re-routed", booked: "Booked",
-  first_contact_confirmed: "First contact confirmed", contact_attempted: "Tried to call", spoke: "Spoke with patient",
+  first_contact_confirmed: "First contact confirmed", referred: "Referred", closed: "Hand-off closed", contact_attempted: "Tried to call", spoke: "Spoke with patient",
 };
 const time = (iso: string) =>
   new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
@@ -47,6 +49,13 @@ const SAFE_TIME: Record<string, string> = {
   weekday_evenings: "Weekday evenings",
   weekends: "Weekends",
   any_time: "Any time",
+};
+
+const HANDOFF_WORDS = { referred: "Referred", booked: "Booked", first_contact: "First contact", closed: "Closed" } as const;
+const PATIENT_ANSWER: Record<string, string> = {
+  not_yet: "Not booked yet",
+  help: "Needs help booking",
+  not_attended: "Didn't see them yet",
 };
 
 export default function CasePage({ params }: PageProps<"/staff/case/[id]">) {
@@ -61,7 +70,9 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
   const staff = await requireStaff();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const [data, chain] = await Promise.all([loadCase(id), loadCaseTrend(id)]);
+  // Apply any due hand-off rules for this case first, so the panel is current.
+  await applyFollowUps(id).catch((e) => console.error(e));
+  const [data, chain, handoff] = await Promise.all([loadCase(id), loadCaseTrend(id), latestReferral(id)]);
   if (!data) notFound();
   const trend = chain && chain.sessions.length > 1 ? seriesFrom(chain.points) : [];
   const pathLabel = (p: string) =>
@@ -73,7 +84,6 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
   const openTasks = data.tasks.filter((t) => !t.closed_at);
   // The level the clinician settled on: their override, else the accepted proposal (null = urgent pathway).
   const decidedStep = decision?.action === "override" ? decision.new_step : proposal?.urgent ? null : (proposal?.step ?? null);
-  const referral = data.receipt.findLast((r) => r.status === "booked" && r.service_id);
   const topTier = ["imminent", "urgent", "elevated", "normal"].find((tier) => openTasks.some((t) => t.priority === tier));
   // The answers a clinician most needs to see verbatim: any item above zero on the risk instruments.
   const riskAnswers = data.answers.filter(
@@ -459,18 +469,54 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
           {data.receipt.length > 0 && (
             <Panel
               id="refer-h"
-              title="Refer to a service"
+              title={handoff && handoff.status !== "closed" ? "Hand-off" : "Refer to a service"}
               aside={
-                DIRECTORY_IS_EXAMPLE ? (
-                  <span className="rounded-md border border-[#e3c27a] bg-[#fbefd2] px-2 py-0.5 text-[0.75rem] font-semibold text-[#5c3a00]">Example services</span>
+                DIRECTORY_IS_DRAFT ? (
+                  <span className="rounded-md border border-[#e3c27a] bg-[#fbefd2] px-2 py-0.5 text-[0.75rem] font-semibold text-[#5c3a00]">Details to confirm</span>
                 ) : undefined
               }
             >
-              {referral ? (
-                <p className="rounded-lg bg-sage-soft px-4 py-3 text-[0.875rem]">
-                  <strong className="font-semibold">Referred to {serviceById(referral.service_id)?.name}</strong> {time(referral.created_at)}. The
-                  patient&apos;s receipt shows this.
-                </p>
+              {handoff && handoff.status !== "closed" ? (
+                <div className="flex flex-col gap-3">
+                  <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem]" aria-label="Hand-off status">
+                    {(["referred", "booked", "first_contact", "closed"] as const).map((st, i) => {
+                      const order = ["referred", "booked", "first_contact", "closed"];
+                      const done = order.indexOf(handoff.status) >= i;
+                      return (
+                        <li key={st} className={`rounded-full px-2.5 py-0.5 ${done ? "bg-primary font-semibold text-white" : "bg-sage-soft text-muted"}`}>
+                          {HANDOFF_WORDS[st]}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[0.875rem]">
+                    <dt className="text-muted">Service</dt>
+                    <dd>{serviceById(handoff.service_id)?.name ?? handoff.service_id}</dd>
+                    <dt className="text-muted">Referred</dt>
+                    <dd>{time(handoff.referred_at)}{handoff.urgent && <strong className="font-semibold text-danger"> · urgent: back to the queue after 48 h without progress</strong>}</dd>
+                    {handoff.booked_for && (
+                      <>
+                        <dt className="text-muted">Appointment</dt>
+                        <dd>{new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${handoff.booked_for}T12:00:00`))}</dd>
+                      </>
+                    )}
+                    {handoff.last_patient_answer && (
+                      <>
+                        <dt className="text-muted">Patient said</dt>
+                        <dd>{PATIENT_ANSWER[handoff.last_patient_answer] ?? handoff.last_patient_answer}</dd>
+                      </>
+                    )}
+                    {handoff.stalled_at && (
+                      <>
+                        <dt className="text-muted">Stalled</dt>
+                        <dd className="font-semibold text-danger">
+                          {handoff.help_requested_at ? "Patient asked for help booking" : "Not booked or not seen in time"} · {time(handoff.stalled_at)}
+                        </dd>
+                      </>
+                    )}
+                  </dl>
+                  {write && <ReferralActions sessionId={id} status={handoff.status} />}
+                </div>
               ) : !decision && !proposal?.urgent ? (
                 <p className="text-[0.875rem] text-muted">Accept or override the proposed level first; services are matched to it.</p>
               ) : decidedStep === 0 ? (
@@ -492,10 +538,8 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[0.8125rem]">
                           <dt className="text-muted">How</dt>
                           <dd>{svc.mode} · {svc.area}</dd>
-                          <dt className="text-muted">Languages</dt>
-                          <dd>{svc.languages.join(", ")}</dd>
-                          <dt className="text-muted">Usual wait</dt>
-                          <dd>{svc.typicalWaitDays} working days</dd>
+                          <dt className="text-muted">Booking</dt>
+                          <dd>{svc.booking}</dd>
                           <dt className="text-muted">Cost</dt>
                           <dd>{svc.cost}</dd>
                         </dl>
@@ -531,11 +575,6 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                   </li>
                 ))}
               </ol>
-            )}
-            {write && data.receipt.length > 0 && (
-              <span className="flex flex-wrap gap-2">
-                <ActionButton action={setReceiptStatus.bind(null, id, "first_contact_confirmed")}>First contact confirmed</ActionButton>
-              </span>
             )}
           </Panel>
           )}

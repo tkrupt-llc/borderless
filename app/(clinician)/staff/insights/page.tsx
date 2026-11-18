@@ -76,6 +76,7 @@ async function InsightsView() {
               lead: true,
             },
             { label: "Successful hand-off", value: pct(out.handOff.done, out.handOff.of), sub: `${out.handOff.done} of ${out.handOff.of} referred reached the service` },
+            { label: "Hand-offs stalled", value: String(out.stalled.n), sub: `of ${out.stalled.of} referred · back to the queue` },
             { label: "Follow-up on time", value: pct(out.followUpOnTime.done, out.followUpOnTime.of), sub: `${out.followUpOnTime.done} of ${out.followUpOnTime.of} within a week of due` },
             { label: "Waiting time", value: out.waitDays === null ? "–" : `${out.waitDays.toFixed(1)} days`, sub: `median referral to booking · ${out.waitN}` },
             { label: "Reliable improvement", value: pct(out.reliableImprovement.done, out.reliableImprovement.of), sub: `${out.reliableImprovement.done} of ${out.reliableImprovement.of} with a follow-up` },

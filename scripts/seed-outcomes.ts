@@ -29,7 +29,7 @@ const GENDERS = ["Female", "Male"] as const;
 const NATIONALITIES = ["Emirati", "Arab expatriate", "South Asian", "Western", "Other"] as const;
 const LANGUAGES = ["Arabic", "English", "Hindi/Urdu"] as const;
 const EMIRATES = ["Abu Dhabi", "Abu Dhabi", "Abu Dhabi", "Al Ain", "Al Dhafra", "Dubai", "Sharjah"] as const;
-const SERVICES = ["palm-grove-counselling", "creekside-family-health"];
+const SERVICES = ["seha-primary-care", "pura-app", "sakina"];
 
 const N = 160;
 const now = Date.now();
@@ -75,6 +75,7 @@ async function main() {
   const receipt: Record<string, unknown>[] = [];
   const scores: Record<string, unknown>[] = [];
   const tasks: Record<string, unknown>[] = [];
+  const referrals: Record<string, unknown>[] = [];
   const followUps: { parent: string; at: number; plan: (typeof plan)[number]; baseline: number }[] = [];
 
   plan.forEach((p, k) => {
@@ -102,12 +103,25 @@ async function main() {
       receipt.push({ session_id: id, status: "spoke", created_at: at(spoke) });
       if (chance(0.6)) {
         const refAt = spoke + 2 + rand() * 24;
-        receipt.push({ session_id: id, status: "referred", service_id: pick(SERVICES), created_at: at(refAt) });
+        const service = pick(SERVICES);
+        receipt.push({ session_id: id, status: "referred", service_id: service, created_at: at(refAt) });
+        // Every simulated referral also gets a hand-off record, closed so the follow-up rules leave it alone.
+        const ref: Record<string, unknown> = { session_id: id, service_id: service, urgent: p.crisis, referred_at: at(refAt), is_simulated: true, status: "closed", closed_at: at(refAt + 24 * 30) };
         if (chance(0.8)) {
           const bookAt = refAt + 24 * (1 + rand() * 9);
           receipt.push({ session_id: id, status: "booked", created_at: at(bookAt) });
-          if (chance(0.82)) receipt.push({ session_id: id, status: "first_contact_confirmed", created_at: at(bookAt + 24 * (1 + rand() * 6)) });
+          Object.assign(ref, { booked_at: at(bookAt), booked_for: at(bookAt + 24 * 3).slice(0, 10) });
+          if (bookAt - refAt > 24 * 3) ref.reminder_at = at(refAt + 24 * 3);
+          if (bookAt - refAt > 24 * 7) ref.stalled_at = at(refAt + 24 * 7);
+          if (chance(0.82)) {
+            const fc = bookAt + 24 * (1 + rand() * 6);
+            receipt.push({ session_id: id, status: "first_contact_confirmed", created_at: at(fc) });
+            ref.first_contact_at = at(fc);
+          } else ref.stalled_at = ref.stalled_at ?? at(bookAt + 24 * 5);
+        } else {
+          Object.assign(ref, { reminder_at: at(refAt + 24 * 3), stalled_at: at(refAt + 24 * 7), help_requested_at: chance(0.4) ? at(refAt + 24 * 2) : null });
         }
+        referrals.push(ref);
       }
     }
     if (p.followUp && p.path === "full") followUps.push({ parent: id, at: p.created + (FOLLOW + (chance(0.8) ? rand() * 5 : 8 + rand() * 10)) * 24 * H, plan: p, baseline: phq });
@@ -137,6 +151,7 @@ async function main() {
   await must(db.from("receipt_events").insert(receipt), "receipt");
   await must(db.from("scores").insert(scores), "scores");
   await must(db.from("tasks").insert(tasks), "tasks");
+  await must(db.from("referrals").insert(referrals), "referrals");
   await must(
     db.from("adverse_events").insert([
       { session_id: ids[3], category: "care_delay", severity: "low", description: "SIMULATED: call-back made a day late.", created_at: iso(now - 20 * 24 * H) },
@@ -144,7 +159,7 @@ async function main() {
     ]),
     "adverse events",
   );
-  console.log(`Seeded ${ids.length} simulated check-ins and ${due.length} follow-ups (synthetic).`);
+  console.log(`Seeded ${ids.length} simulated check-ins, ${due.length} follow-ups and ${referrals.length} hand-offs (synthetic).`);
 }
 
 const FOLLOW = 28;

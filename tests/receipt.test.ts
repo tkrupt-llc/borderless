@@ -42,7 +42,7 @@ describe("patient receipt timeline", () => {
   it("booked and first contact confirmed: everything is done", () => {
     const v = build([
       ev("received", 9), ev("reviewed", 10), ev("accepted", 10),
-      { ...ev("referred", 10), serviceId: "palm-grove-counselling" }, ev("booked", 11), ev("first_contact_confirmed", 12),
+      { ...ev("referred", 10), serviceId: "seha-primary-care" }, ev("booked", 11), ev("first_contact_confirmed", 12),
     ]);
     expect(Object.values(states(v)).every((s) => s === "done")).toBe(true);
   });
@@ -65,7 +65,7 @@ describe("referral on the receipt", () => {
       events: [
         { status: "received", reason: null, createdAt: "2026-11-17T08:00:00Z" },
         { status: "accepted", reason: null, createdAt: "2026-11-17T09:00:00Z" },
-        { status: "booked", reason: null, createdAt: "2026-11-17T09:05:00Z", serviceId: "palm-grove-counselling" },
+        { status: "booked", reason: null, createdAt: "2026-11-17T09:05:00Z", serviceId: "seha-primary-care" },
       ],
       proposal: { step: 1, urgent: false },
       decision: { action: "accept", newStep: null },
@@ -73,14 +73,14 @@ describe("referral on the receipt", () => {
     })!;
     // An older referral stored as "booked" with a service still reads as a referral.
     const referred = view.steps.find((s) => s.key === "referred")!;
-    expect(referred.title).toBe("Referred to Palm Grove Community Counselling");
-    expect(referred.body).toContain("within 5 working days");
+    expect(referred.title).toBe("Referred to SEHA primary care");
+    expect(referred.body).toContain("Book an appointment at your nearest SEHA primary care clinic.");
     expect(referred.state).toBe("done");
     expect(view.steps.find((s) => s.key === "booked")!.state).toBe("now");
   });
 
   it("shows referred -> booked -> first contact in order", () => {
-    const base = [ev("received", 9), ev("accepted", 10), { ...ev("referred", 10), serviceId: "palm-grove-counselling" }];
+    const base = [ev("received", 9), ev("accepted", 10), { ...ev("referred", 10), serviceId: "seha-primary-care" }];
     const decision = { action: "accept", newStep: null };
     expect(states(build(base, { decision }))).toMatchObject({ referred: "done", booked: "now", contact: "next" });
     expect(states(build([...base, ev("booked", 11)], { decision }))).toMatchObject({ referred: "done", booked: "done", contact: "now" });

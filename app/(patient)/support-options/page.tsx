@@ -18,8 +18,8 @@ export default function SupportOptionsPage() {
             Your support <em className="text-primary">options</em>
           </h1>
           <p className="mt-1.5 text-text-2">
-            From things you can do yourself to specialist care. Your clinician chooses the right one with you, and you
-            can always ask for more support.
+            From things you can do yourself, to your family doctor, online therapy and specialist care. Your clinician
+            chooses the right one with you, and you can always ask for more support.
           </p>
         </div>
 
@@ -32,6 +32,7 @@ export default function SupportOptionsPage() {
                   <span className="shrink-0 rounded-full bg-sky px-2.5 py-0.5 text-small font-semibold text-blue">Step {o.step}</span>
                 )}
               </span>
+              <p className="text-caption text-text-2">{o.what}</p>
               <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-caption">
                 <dt className="text-muted">Who it&apos;s for</dt>
                 <dd>{o.forWho}</dd>
@@ -40,6 +41,11 @@ export default function SupportOptionsPage() {
                 <dt className="text-muted">How it works</dt>
                 <dd>{o.handOff}</dd>
               </dl>
+              {"href" in o && o.href && (
+                <Link href={o.href} className="inline-flex min-h-11 items-center self-start font-semibold">
+                  {o.id === "emergency" ? "Open the crisis page →" : "Open the coping cards →"}
+                </Link>
+              )}
               {"tel" in o && o.tel && (
                 <a
                   href={`tel:${o.tel}`}

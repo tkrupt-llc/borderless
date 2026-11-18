@@ -5,6 +5,7 @@ import { loadReceipt } from "../../actions";
 import { RESULT_KEY, SUBMITTED_AT_KEY, useStoredValue } from "@/lib/check/local-answers";
 import { buildReceipt, formatWhen, type ReceiptStep, type ReceiptView } from "@/lib/receipt/build";
 import { FollowUpLink } from "@/components/follow-up-link";
+import { NextStepCard } from "./next-step-card";
 
 function readToken(raw: string | null): string | null {
   try {
@@ -74,6 +75,8 @@ export function Receipt() {
           </p>
         )}
       </div>
+
+      {view?.referral && <NextStepCard referral={view.referral} />}
 
       {view?.messages && view.messages.length > 0 && (
         <section aria-labelledby="msgs-h" className="mx-5 mt-4 flex flex-col gap-2.5 rounded-2xl bg-sky px-4 py-3.5">

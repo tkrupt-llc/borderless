@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { audit } from "@/lib/staff/audit";
+import * as referral from "@/lib/referral/persist";
 import { refresh } from "next/cache";
 import { db } from "@/lib/db/server";
 import { canWrite, requireStaff, type Staff } from "@/lib/staff/auth";
@@ -231,11 +232,23 @@ export async function referToService(sessionId: string, serviceId: string): Prom
     const id = uuid.parse(sessionId);
     const service = serviceById(serviceId);
     if (!service) throw new Error("unknown service");
-    must(
-      await db().from("receipt_events").insert({ session_id: id, status: "referred", service_id: service.id, typical_wait_days: service.typicalWaitDays }),
-      "referral",
-    );
-    await audit(staff, "referred", "session", id, id, { service: service.id });
+    // Urgent if the case ever had an urgent or imminent task: it then returns to the queue after 48 h without progress.
+    const urgentTasks = await db().from("tasks").select("id").eq("session_id", id).in("priority", ["urgent", "imminent"]).limit(1);
+    must(urgentTasks, "read urgency");
+    await referral.createReferral(`${staff.role}:${staff.id}`, id, service.id, (urgentTasks.data ?? []).length > 0);
+  });
+}
+
+/** Referral steps after the patient is referred: booked (with date), first contact, closed. */
+export async function updateReferral(sessionId: string, step: "booked" | "first_contact" | "closed", bookedFor?: string): Promise<Result> {
+  return run(async (staff) => {
+    const id = uuid.parse(sessionId);
+    const row = await referral.latestReferral(id);
+    if (!row || row.status === "closed") throw new Error("no open referral");
+    const actor = `${staff.role}:${staff.id}`;
+    if (step === "booked") await referral.setBooked(actor, row, z.iso.date().parse(bookedFor));
+    else if (step === "first_contact") await referral.setFirstContact(actor, row);
+    else await referral.closeReferral(actor, row);
   });
 }
 

@@ -1,42 +1,39 @@
 {
-  "status": "example",
-  "source": "FICTIONAL example services for the prototype. Names, areas and wait times are made up and do not refer to real providers. A pilot site replaces this file with its real referral directory.",
+  "status": "draft",
+  "source": "Abu Dhabi referral options (from the project's support-options table). DRAFT: booking routes, costs and eligibility to be confirmed with each provider before a pilot. No wait times are shown until a provider confirms them.",
   "services": [
     {
-      "id": "palm-grove-counselling",
-      "name": "Palm Grove Community Counselling",
-      "kind": "Counselling",
-      "steps": [1],
-      "mode": "In person or by video",
-      "area": "Dubai",
-      "languages": ["English", "Arabic", "Hindi", "Urdu"],
-      "typicalWaitDays": 5,
-      "cost": "Low cost, sliding scale",
-      "about": "Short-term counselling, usually 6 to 8 sessions."
-    },
-    {
-      "id": "creekside-family-health",
-      "name": "Creekside Family Health Centre",
-      "kind": "Primary care (family doctor)",
-      "steps": [2],
+      "id": "seha-primary-care",
+      "name": "SEHA primary care",
+      "kind": "Family doctor and community clinics",
+      "steps": [1, 2],
       "mode": "In person",
-      "area": "Sharjah",
-      "languages": ["English", "Arabic", "Tagalog"],
-      "typicalWaitDays": 3,
-      "cost": "Covered by most insurance plans",
-      "about": "A family doctor review, including physical health checks and medication if needed."
+      "area": "Abu Dhabi",
+      "cost": "Check your insurance plan for cover and any co-payment.",
+      "about": "Abu Dhabi's public family doctor and community clinics. Mental health screenings are part of primary care, and a family doctor can treat mild to moderate low mood or anxiety and look after physical health at the same time.",
+      "booking": "Book an appointment at your nearest SEHA primary care clinic."
     },
     {
-      "id": "harbour-psychology",
-      "name": "Harbour Psychology and Tele-Mental Health",
-      "kind": "Psychology and psychiatry",
+      "id": "pura-app",
+      "name": "Pura app",
+      "kind": "Online therapy",
+      "steps": [1, 3],
+      "mode": "Online, anywhere in the UAE",
+      "area": "UAE",
+      "cost": "Check the app for prices and insurance cover.",
+      "about": "An app from PureHealth, SEHA's parent company. Private online sessions with licensed psychologists and psychiatrists from SAKINA, plus guided meditations, educational content and resilience resources.",
+      "booking": "Download the Pura app and book an online session."
+    },
+    {
+      "id": "sakina",
+      "name": "SAKINA",
+      "kind": "Specialist mental health care",
       "steps": [3, 4],
-      "mode": "By video or in person",
-      "area": "Abu Dhabi and online",
-      "languages": ["English", "Arabic"],
-      "typicalWaitDays": 7,
-      "cost": "Insurance or self-pay",
-      "about": "Psychologists for talking therapy, and a psychiatrist for specialist assessment."
+      "mode": "In person",
+      "area": "Abu Dhabi",
+      "cost": "Check your insurance plan for cover.",
+      "about": "SEHA's specialist mental health network: psychiatry, psychology, child and adolescent services, memory and elderly care, family support and community mental health.",
+      "booking": "Contact SAKINA to book. In most cases no referral is required."
     }
   ]
 }

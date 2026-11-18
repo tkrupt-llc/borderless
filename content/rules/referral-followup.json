@@ -1,0 +1,9 @@
+{
+  "version": "referral-followup-v0.1-draft",
+  "status": "draft",
+  "source": "Referral follow-through rules (challenge brief). Deterministic, never AI. DRAFT timings for the psychiatrist and the pilot site to confirm.",
+  "reminderAfterDays": 3,
+  "stallAfterDays": 7,
+  "attendanceCheckAfterBookedDays": 2,
+  "urgentRequeueHours": 48
+}

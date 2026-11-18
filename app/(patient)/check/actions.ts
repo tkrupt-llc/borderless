@@ -17,6 +17,9 @@ import { caseRef } from "@/lib/case-ref";
 import { factsFromScores, scoreAll, type Score } from "@/lib/rules/scoring";
 import { CHANNELS, channelPurpose, may, purposesFor } from "@/lib/consent";
 import { CONDITION_IDS } from "@/lib/physical-health";
+import { applyFollowUps, latestReferral, patientAnswer, toReferral } from "@/lib/referral/persist";
+import { patientCard } from "@/lib/referral/followup";
+import { serviceById } from "@/lib/directory";
 import { derivedScreens, notOnTrack } from "@/lib/followup/trend";
 
 // Without Supabase keys (tests, or a deploy before set-up) the flow still runs
@@ -91,9 +94,21 @@ export async function loadReceipt(): Promise<ReceiptView | null> {
     // The cookie, never an id from the URL, decides whose receipt this is.
     const id = await readSessionId();
     if (!id) return null;
-    const [data, messages] = await Promise.all([persist.loadReceiptData(id), persist.loadPatientMessages(id)]);
+    // Hand-off rules for this case run here too, so the card is current without a cron job.
+    await applyFollowUps(id).catch((e) => console.error(e));
+    const [data, messages, handoff] = await Promise.all([persist.loadReceiptData(id), persist.loadPatientMessages(id), latestReferral(id)]);
     const view = buildReceipt(data);
-    if (view) return { ...view, ref: caseRef(id), messages };
+    const service = handoff ? serviceById(handoff.service_id) : undefined;
+    const referral =
+      handoff && service && handoff.status !== "closed"
+        ? {
+            service: { name: service.name, kind: service.kind, mode: service.mode, booking: service.booking, about: service.about },
+            status: handoff.status,
+            bookedFor: handoff.booked_for,
+            card: patientCard(toReferral(handoff), new Date()),
+          }
+        : null;
+    if (view) return { ...view, ref: caseRef(id), messages, referral };
     // No check-in, only messages ("Talk to someone"): show the conversation on its own.
     return messages.length > 0 ? { sentAt: messages[0].at, steps: [], ref: caseRef(id), messages } : null;
   } catch (e) {
@@ -394,6 +409,33 @@ export async function savePhysicalHealth(input: unknown): Promise<{ ok: true } |
     if (!id) return { ok: false, reason: "no_session" };
     await persist.addConsents(id, "health", { physical_health: d.physicalHealth, gp_sharing: d.gpSharing });
     await persist.savePhysicalHealth(id, d.physicalHealth, d.conditions, d.other || null);
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, reason: "error" };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// "Your next step": the patient's answers about the hand-off
+// ---------------------------------------------------------------------------
+
+const ReferralAnswer = z.discriminatedUnion("answer", [
+  z.object({ answer: z.literal("booked"), bookedFor: z.iso.date() }),
+  z.object({ answer: z.enum(["not_yet", "help", "attended", "not_attended"]) }),
+]);
+
+export async function answerReferral(input: unknown): Promise<{ ok: true } | Fail> {
+  const parsed = ReferralAnswer.safeParse(input);
+  if (!parsed.success) return { ok: false, reason: "invalid" };
+  if (!isDbConfigured()) return { ok: false, reason: "error" };
+  try {
+    const id = await readSessionId();
+    if (!id) return { ok: false, reason: "no_session" };
+    const row = await latestReferral(id);
+    if (!row || row.status === "closed") return { ok: false, reason: "invalid" };
+    const d = parsed.data;
+    await patientAnswer(row, d.answer, d.answer === "booked" ? d.bookedFor : undefined);
     return { ok: true };
   } catch (e) {
     console.error(e);

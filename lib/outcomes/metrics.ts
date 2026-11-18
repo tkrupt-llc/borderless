@@ -24,6 +24,8 @@ export type OutcomeInput = {
   scores: { sessionId: string; instrument: string; total: number }[];
   crisisTasks: { createdAt: string; dueAt: string; acknowledgedAt: string | null }[];
   adverse: { category: string; severity: string }[];
+  /** Referrals that went back to the queue as "Hand-off stalled" (not booked in time, help asked, or not seen). */
+  stalledReferrals?: { sessionId: string }[];
 };
 
 const hours = (a: string, b: string) => (new Date(b).getTime() - new Date(a).getTime()) / 3_600_000;
@@ -114,6 +116,7 @@ export function computeOutcomes(input: OutcomeInput) {
     reliableImprovement: { done: improved, of: improvable },
     crisis: { done: crisisDone, of: input.crisisTasks.length },
     adverse: { total: input.adverse.length, severe: input.adverse.filter((a) => a.severity === "severe").length },
+    stalled: { n: (input.stalledReferrals ?? []).filter((r) => ids.has(r.sessionId)).length, of: referred.length },
     fairness,
     minGroup: MIN_GROUP,
   };

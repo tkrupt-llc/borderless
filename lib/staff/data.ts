@@ -1,4 +1,5 @@
 import "server-only";
+import { applyFollowUps } from "@/lib/referral/persist";
 import { db } from "@/lib/db/server";
 import { buildSummary, type SummaryLine } from "@/lib/summary/build";
 
@@ -34,6 +35,8 @@ export async function loadQueue(): Promise<QueueTask[]> {
     red_flag_events: { rule_id: string } | null;
     sessions: { path: string; contact_phone: string | null; clinic_id: string | null } | null;
   };
+  // Hand-off rules run on every queue refresh (no cron): stalled referrals come back as tasks.
+  await applyFollowUps().catch((e) => console.error("referral follow-ups", e));
   const data = rows<Row>(
     await db()
       .from("tasks")

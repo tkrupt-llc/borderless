@@ -18,7 +18,20 @@ export type ReceiptInput = {
 
 export type ReceiptStep = { key: string; title: string; body: string; state: "done" | "now" | "next" };
 /** ref: the case reference the care team also sees (added by the server). */
-export type ReceiptView = { sentAt: string; steps: ReceiptStep[]; ref?: string; messages?: { body: string; at: string; fromPatient?: boolean }[] };
+export type ReferralCardView = {
+  service: { name: string; kind: string; mode: string; booking: string; about: string };
+  status: string;
+  bookedFor: string | null;
+  card: import("@/lib/referral/followup").PatientCard;
+};
+export type ReceiptView = {
+  sentAt: string;
+  steps: ReceiptStep[];
+  ref?: string;
+  messages?: { body: string; at: string; fromPatient?: boolean }[];
+  /** The open hand-off to a service, for the "Your next step" card. */
+  referral?: ReferralCardView | null;
+};
 
 const fmt = new Intl.DateTimeFormat("en-GB", {
   weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true,
@@ -75,7 +88,7 @@ export function buildReceipt(input: ReceiptInput): ReceiptView | null {
     "referred",
     service ? `Referred to ${service.name}` : "Referral",
     service
-      ? `${service.kind}, ${service.mode.toLowerCase()}. They usually get in touch within ${service.typicalWaitDays} working days. We only share your details with them if you agree.`
+      ? `${service.kind}, ${service.mode.toLowerCase()}. ${service.booking} We only share your details with them if you agree.`
       : referred
         ? `Referred ${formatWhen(referred.createdAt)}.`
         : "If you need a service, your clinician refers you and it shows here.",

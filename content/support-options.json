@@ -1,56 +1,64 @@
 {
   "status": "draft",
-  "source": "Support options in Abu Dhabi by stepped-care level (challenge brief). Kinds of support, not named providers: a pilot site adds its real services in content/directory/services.json. Cost notes are general; the psychiatrist and the licensed provider approve the final text.",
+  "source": "Support options in Abu Dhabi, matching stepped care (self-help, family doctor, online therapy, specialist) with 800-SAKINA and 999/998 always available. From the project's support-options table. DRAFT: booking routes and costs to be confirmed with each provider; the psychiatrist and the licensed provider approve the final text.",
   "region": "Abu Dhabi",
   "options": [
     {
       "id": "self-help",
       "step": 0,
-      "title": "Self-help",
-      "forWho": "When things are manageable and you'd like tools to use on your own.",
-      "cost": "Free in this app.",
-      "handOff": "No referral needed. Coping cards and guides are always here, and you can check in again any time."
+      "title": "Coping cards and guides",
+      "what": "Short exercises inside borderless: breathing, grounding, STOP, TIP and more, plus guides for sleep and worry over a few weeks.",
+      "forWho": "Mild scores, or anyone while they wait for a reply.",
+      "cost": "Free.",
+      "handOff": "No referral needed. Open them any time from the menu or your timeline.",
+      "href": "/coping"
     },
     {
-      "id": "community",
-      "step": 1,
-      "title": "Community and counselling",
-      "forWho": "Mild to moderate low mood, worry or stress, when talking to someone would help.",
-      "cost": "Varies. Some community services are low cost or free; check whether your insurance plan covers counselling.",
-      "handOff": "Your clinician suggests a service. With your agreement they refer you, and the service contacts you."
-    },
-    {
-      "id": "primary-care",
+      "id": "seha-primary-care",
       "step": 2,
-      "title": "Primary care (your family doctor)",
-      "forWho": "When physical health, medicines or sleep are part of the picture, or you'd like your family doctor involved.",
-      "cost": "Usually covered by health insurance in Abu Dhabi. Check your plan for any co-payment.",
-      "handOff": "With your consent, your clinician gives you a summary for your family doctor. Sending it directly through Malaffi is on the roadmap."
+      "title": "SEHA primary care",
+      "what": "Abu Dhabi's public family doctor and community clinics. Mental health screenings are part of primary care, and a family doctor can treat mild to moderate low mood or anxiety and look after physical health at the same time.",
+      "forWho": "Ongoing low mood or worry, especially if you also have a physical health condition.",
+      "cost": "Check your insurance plan for cover and any co-payment.",
+      "handOff": "Your clinician refers you and you book at your nearest SEHA clinic. With your consent, they can give you a summary for your family doctor."
     },
     {
-      "id": "tele-mental-health",
+      "id": "pura-app",
       "step": 3,
-      "title": "Tele-mental health",
-      "forWho": "When you'd prefer video or phone sessions, or can't easily travel.",
-      "cost": "Check your insurance plan. Some plans cover video sessions with licensed providers.",
-      "handOff": "Your clinician refers you. The provider contacts you to book a first session."
-    },
-    {
-      "id": "specialist",
-      "step": 4,
-      "title": "Specialist mental health care (psychiatrist)",
-      "forWho": "More severe or long-lasting difficulties, or when other support hasn't helped.",
-      "cost": "Usually covered by health insurance, sometimes with a referral. Check your plan.",
-      "handOff": "Your clinician makes the referral and tells you what to expect. You'll see each step on your timeline."
+      "title": "Pura app",
+      "what": "An app from PureHealth, SEHA's parent company. Private online sessions with licensed psychologists and psychiatrists from SAKINA, from anywhere in the UAE, plus guided meditations, educational content and resilience resources.",
+      "forWho": "If you'd like therapy but prefer online, or can't easily get to a clinic.",
+      "cost": "Check the app for prices and insurance cover.",
+      "handOff": "Your clinician suggests it; you download the app and book a session."
     },
     {
       "id": "sakina",
+      "step": 4,
+      "title": "SAKINA",
+      "what": "SEHA's specialist mental health network: psychiatry, psychology, child and adolescent services, memory and elderly care, family support and community mental health.",
+      "forWho": "Moderate to severe scores, children and teenagers, older adults, or when a clinician thinks specialist care is needed.",
+      "cost": "Check your insurance plan for cover.",
+      "handOff": "Your clinician refers you and tells you what to expect. In most cases no referral is required."
+    },
+    {
+      "id": "sakina-line",
       "step": null,
-      "title": "800-SAKINA, 24/7 support line",
-      "forWho": "Anyone who wants to talk to someone right now.",
+      "title": "800-SAKINA (800 725462)",
+      "what": "A free, 24/7 support line in Arabic and English, with psychological first aid and direct access to qualified mental health professionals.",
+      "forWho": "Anyone who needs to talk to a professional now, at any hour.",
       "cost": "Free to call.",
-      "handOff": "Call 800 725462 any time. No referral needed.",
+      "handOff": "Call any time. No referral needed.",
       "tel": "800725462"
+    },
+    {
+      "id": "emergency",
+      "step": null,
+      "title": "999 (police) or 998 (ambulance)",
+      "what": "Emergency response.",
+      "forWho": "If you or someone else is in immediate danger.",
+      "cost": "Free.",
+      "handOff": "Call straight away. The crisis page shows these first.",
+      "href": "/help-now"
     }
   ]
 }
