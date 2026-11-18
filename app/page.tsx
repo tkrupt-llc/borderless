@@ -93,7 +93,7 @@ export default function Landing() {
           <a href="#safe" className="text-ink no-underline">Why it&apos;s safe</a>
           <a href="#clinicians" className="text-ink no-underline">For clinicians</a>
           <Link
-            href={START}
+            href="/start"
             className="tap inline-flex min-h-11 items-center rounded-full bg-primary px-[22px] py-3 font-medium text-white no-underline hover:text-white"
           >
             Start check-in
@@ -356,7 +356,7 @@ export default function Landing() {
             <nav aria-label="Footer" className="flex flex-wrap gap-12 text-body">
               <div className="flex flex-col gap-2">
                 <strong>Get support</strong>
-                <Link href={START} className="text-ink no-underline hover:underline">Start a check-in</Link>
+                <Link href="/start" className="text-ink no-underline hover:underline">Start a check-in</Link>
                 <Link href="/talk" className="text-ink no-underline hover:underline">Talk to someone</Link>
                 <Link href="/coping" className="text-ink no-underline hover:underline">Coping cards</Link>
                 <Link href="/help-now" className="text-ink no-underline hover:underline">Crisis support</Link>
