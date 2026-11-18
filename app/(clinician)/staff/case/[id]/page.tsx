@@ -555,10 +555,10 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             <p className="text-[0.75rem] text-muted">Self-reported, not verified.</p>
             {may.exportToGp(data.consents) ? (
               <a href={`/staff/case/${id}/gp-summary`} className="inline-flex min-h-10 items-center self-start text-caption font-semibold">
-                Download GP summary (FHIR R4)
+                Download family doctor summary (FHIR R4)
               </a>
             ) : (
-              <p className="text-caption text-muted">No consent to share a summary with a GP.</p>
+              <p className="text-caption text-muted">No consent to share a summary with the family doctor.</p>
             )}
             <p className="text-[0.75rem] text-muted">Sending to Malaffi (Abu Dhabi health information exchange) is on the roadmap.</p>
           </Panel>

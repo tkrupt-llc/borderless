@@ -35,7 +35,7 @@ export default function MyDataPage() {
         <MyChoicesList />
 
         <a href="/my-data/gp-summary" className="inline-flex min-h-11 items-center self-start text-caption">
-          Download a summary for my GP (if you chose to share one)
+          Download a summary for my family doctor (if you chose to share one)
         </a>
 
         <DeleteData />

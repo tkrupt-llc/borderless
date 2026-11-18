@@ -27,7 +27,7 @@ export default function PrivacyPage() {
         <ul>
           <li>Only your care team, after signing in to the clinician console.</li>
           <li>Never your employer or university. If you opened the check-in from their website, they only see totals for groups of 10 people or more.</li>
-          <li>Your GP, only if you choose &ldquo;Share a summary with my GP&rdquo;. You or your clinician download it; nothing is sent automatically.</li>
+          <li>Your family doctor, only if you choose &ldquo;Share a summary with my family doctor&rdquo;. You or your clinician download it; nothing is sent automatically.</li>
         </ul>
       </section>
 
@@ -46,7 +46,7 @@ export default function PrivacyPage() {
       <section className="flex flex-col gap-2">
         <h2>Your choices</h2>
         <p>
-          You can see what we keep, change any choice, download a GP summary or delete everything at any time on{" "}
+          You can see what we keep, change any choice, download a summary for your family doctor or delete everything at any time on{" "}
           <Link href="/my-data">See or delete your data</Link>. Every change is recorded so your care team knows.
         </p>
         <p>Quick exit leaves the site in one tap and clears this browser&apos;s link to your check-in.</p>

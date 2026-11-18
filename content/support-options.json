@@ -23,9 +23,9 @@
       "id": "primary-care",
       "step": 2,
       "title": "Primary care (your family doctor)",
-      "forWho": "When physical health, medicines or sleep are part of the picture, or you'd like your GP involved.",
+      "forWho": "When physical health, medicines or sleep are part of the picture, or you'd like your family doctor involved.",
       "cost": "Usually covered by health insurance in Abu Dhabi. Check your plan for any co-payment.",
-      "handOff": "With your consent, your clinician gives you a summary for your GP. Sending it directly through Malaffi is on the roadmap."
+      "handOff": "With your consent, your clinician gives you a summary for your family doctor. Sending it directly through Malaffi is on the roadmap."
     },
     {
       "id": "tele-mental-health",

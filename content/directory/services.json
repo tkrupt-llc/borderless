@@ -17,14 +17,14 @@
     {
       "id": "creekside-family-health",
       "name": "Creekside Family Health Centre",
-      "kind": "Primary care (GP)",
+      "kind": "Primary care (family doctor)",
       "steps": [2],
       "mode": "In person",
       "area": "Sharjah",
       "languages": ["English", "Arabic", "Tagalog"],
       "typicalWaitDays": 3,
       "cost": "Covered by most insurance plans",
-      "about": "A GP review, including physical health checks and medication if needed."
+      "about": "A family doctor review, including physical health checks and medication if needed."
     },
     {
       "id": "harbour-psychology",
