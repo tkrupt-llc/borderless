@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ReplyBox } from "../../reply-box";
 import { AdverseEventForm } from "../../adverse-event-form";
 import { allowedChannels, may, purposeById } from "@/lib/consent";
 import { conditionLabel } from "@/lib/physical-health";
@@ -317,8 +318,10 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             </Panel>
           )}
 
-          {data.teamMessages.length > 0 && (
-            <Panel id="msgs-h" title="Messages">
+          <Panel id="msgs-h" title="Messages">
+            {data.teamMessages.length === 0 ? (
+              <p className="text-caption text-muted">No messages yet. A reply shows on the patient&apos;s timeline.</p>
+            ) : (
               <ol className="flex flex-col gap-2 text-caption">
                 {data.teamMessages.map((m) => (
                   <li
@@ -332,8 +335,9 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                   </li>
                 ))}
               </ol>
-            </Panel>
-          )}
+            )}
+            {write && <ReplyBox sessionId={id} />}
+          </Panel>
 
           <Panel id="activity-h" title="Activity">
             <ol className="flex flex-col gap-1.5 text-[0.875rem]">
@@ -436,7 +440,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                   ))}
               </dl>
             ) : (
-              <p className="text-[0.875rem] text-text-2">No phone number shared. Review the case; the person can share a number through &ldquo;Talk to a person&rdquo; or &ldquo;Alert my care team&rdquo;.</p>
+              <p className="text-[0.875rem] text-text-2">No phone number shared. Review the case; the person can share a number through &ldquo;Talk to someone&rdquo; or &ldquo;Alert my care team&rdquo;.</p>
             )}
             {data.contacts.length > 0 && (
               <ul className="flex flex-col gap-1 border-t border-line-warm pt-2 text-caption">

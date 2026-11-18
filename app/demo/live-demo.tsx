@@ -332,7 +332,7 @@ export function LiveDemo({ rules }: { rules: Rules }) {
                 I need help now
               </button>
               <span className="flex min-h-[46px] items-center justify-center rounded-full border-[1.5px] border-ink text-center text-[0.875rem] text-text-2">
-                Talk to a person (call-back)
+                Talk to someone (call-back)
               </span>
             </div>
           </section>

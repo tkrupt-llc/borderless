@@ -251,6 +251,17 @@ export async function replyToPatient(sessionId: string, body: string): Promise<R
     const id = uuid.parse(sessionId);
     const text = z.string().trim().min(3).max(1000).parse(body);
     must(await db().from("patient_messages").insert({ session_id: id, body: text, sent_by: staff.id }), "message");
+    // A reply answers the person's message: close any open "Message from patient" task.
+    const now = new Date().toISOString();
+    must(
+      await db()
+        .from("tasks")
+        .update({ acknowledged_at: now, closed_at: now })
+        .eq("session_id", id)
+        .eq("type", "patient_message")
+        .is("closed_at", null),
+      "close message task",
+    );
     await audit(staff, "patient_message_sent", "session", id, id, { length: text.length });
   });
 }
