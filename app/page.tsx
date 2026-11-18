@@ -117,14 +117,17 @@ export default function Landing() {
               <p className="text-lead text-text-2">
                 Answer a few short questions. A clinician reads every answer and tells you your next step.
               </p>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Link href={START} className={primaryBtn}>
                   Start a 2-minute check-in
                 </Link>
-                <a href="#how" className="inline-flex min-h-12 items-center font-medium text-primary-dark underline underline-offset-2">
-                  See how it works
-                </a>
+                <Link href="/check/full/consent" className={outlineBtn}>
+                  Full check-in · about 10 min
+                </Link>
               </div>
+              <a href="#how" className="inline-flex min-h-11 items-center self-start font-medium text-primary-dark underline underline-offset-2">
+                See how it works
+              </a>
               <p className="text-body text-text-2">
                 No account needed · Not for emergencies: call{" "}
                 <a href="tel:999" className="font-semibold text-ink">999</a> or{" "}
@@ -328,7 +331,11 @@ export default function Landing() {
             </div>
             <p className="max-w-[560px] text-body text-text-2">
               Next you&apos;ll see what happens to your answers, then five short questions. A clinician reads them and you
-              get a reply-by time.
+              get a reply-by time. Want to say more? Try the{" "}
+              <Link href="/check/full/consent" className="font-semibold">
+                full check-in (about 10 minutes)
+              </Link>
+              .
             </p>
           </div>
         </section>
