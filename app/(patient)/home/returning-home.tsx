@@ -179,7 +179,8 @@ export function ReturningHome() {
         <div className="flex flex-wrap gap-2">
           <Link href="/coping" className={chip}>Coping cards</Link>
           <Link href="/coping/my-reasons" className={chip}>My reasons and next steps</Link>
-          <Link href="/talk" className={chip}>Talk to a person</Link>
+          <Link href="/talk" className={chip}>Talk to someone</Link>
+          <Link href="/support-options" className={chip}>Your support options</Link>
         </div>
       </div>
     </div>

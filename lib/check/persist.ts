@@ -3,9 +3,10 @@ import { db } from "@/lib/db/server";
 import { bankItem } from "@/lib/item-bank";
 import type { RuleFile } from "@/lib/contracts/rules";
 import type { Score } from "@/lib/rules/scoring";
-import type { Proposal } from "@/lib/rules/routing";
+import { STEP_NAMES, type Proposal } from "@/lib/rules/routing";
 import { dueAt, nextWorkingDay } from "@/lib/rules/tiers";
 import consent from "@/content/consent.json";
+import { latestConsents, purposesFor, type ConsentRow } from "@/lib/consent";
 import { newFollowUpToken } from "@/lib/followup/trend";
 import { readClinicId } from "@/lib/db/patient-session";
 import { clinicById } from "@/lib/clinics";
@@ -47,18 +48,28 @@ export async function createSession(path: Path, discreetMode: boolean, choices: 
 
   // One row per purpose asked on this screen, with the version shown. Purposes
   // asked later (on the result page) are recorded when the person answers them.
-  await addConsents(session.id, "start", choices);
+  await addConsents(session.id, "start", choices, path);
   return session.id;
 }
 
-/** Appends one row per purpose asked at `askOn`: the consent log is append-only, newest row wins. */
-export async function addConsents(sessionId: string, askOn: "start" | "result", choices: ConsentChoices) {
-  const rows = consent.purposes
-    .filter((p) => p.askOn === askOn)
-    .map((p) => ({ session_id: sessionId, purpose: p.id, granted: choices[p.id] === true, version: consent.version }));
+/** Appends one row per purpose asked at `askOn` (for this path): the consent log is append-only, newest row wins. */
+export async function addConsents(sessionId: string, askOn: string, choices: ConsentChoices, path?: string) {
+  const rows = purposesFor(askOn, path).map((p) => ({ session_id: sessionId, purpose: p.id, granted: choices[p.id] === true, version: consent.version }));
   if (rows.length === 0) return;
   check(await db().from("consent_records").insert(rows), "consent records");
   await audit("consent_recorded", sessionId, "session", { version: consent.version, askOn, choices });
+}
+
+/**
+ * One consent changed later ("See or delete your data"): a new row (the log is
+ * append-only) and an audit line with the purpose and the new choice.
+ */
+export async function changeConsent(sessionId: string, purpose: string, granted: boolean) {
+  check(
+    await db().from("consent_records").insert({ session_id: sessionId, purpose, granted, version: consent.version }),
+    "consent change",
+  );
+  await audit(granted ? "consent_granted" : "consent_revoked", sessionId, "session", { purpose, version: consent.version });
 }
 
 export async function getSession(id: string) {
@@ -77,8 +88,8 @@ export async function getConsents(sessionId: string): Promise<ConsentChoices> {
       .eq("session_id", sessionId)
       .order("created_at", { ascending: true }),
     "read consents",
-  ) as { purpose: string; granted: boolean }[];
-  return Object.fromEntries(rows.map((r) => [r.purpose, r.granted]));
+  ) as ConsentRow[];
+  return latestConsents(rows);
 }
 
 /** Upsert: changing an answer on the way back replaces it. */
@@ -559,4 +570,41 @@ export async function saveContactPrefs(sessionId: string, p: ContactPrefs) {
 
 export async function saveFeeling(sessionId: string, feeling: "easy" | "ok" | "hard") {
   await audit(`check_in_felt_${feeling}`, sessionId, "session");
+}
+
+// ---------------------------------------------------------------------------
+// Physical health (optional, consented) and the GP summary
+// ---------------------------------------------------------------------------
+
+/** Stores the checklist only with the physical-health consent; without it, clears anything stored. */
+export async function savePhysicalHealth(sessionId: string, granted: boolean, conditions: string[], other: string | null) {
+  check(
+    await db()
+      .from("sessions")
+      .update(granted ? { physical_conditions: conditions, physical_other: other } : { physical_conditions: null, physical_other: null })
+      .eq("id", sessionId),
+    "save physical health",
+  );
+  if (granted) await audit("physical_health_shared", sessionId, "session", { conditions });
+}
+
+/** Everything the GP summary may contain, plus the consents that decide what goes in. */
+export async function loadGpSummaryData(sessionId: string) {
+  const [session, scores, proposals, consents] = await Promise.all([
+    db().from("sessions").select("created_at, physical_conditions, physical_other").eq("id", sessionId).maybeSingle(),
+    db().from("scores").select("instrument, total, band, created_at").eq("session_id", sessionId).order("created_at"),
+    db().from("triage_proposals").select("step, urgent, created_at").eq("session_id", sessionId).order("created_at"),
+    getConsents(sessionId),
+  ]);
+  const s = check(session, "read session") as { created_at: string; physical_conditions: string[] | null; physical_other: string | null } | null;
+  if (!s) return null;
+  const p = (check(proposals, "read proposals") as { step: number | null; urgent: boolean }[]).at(-1);
+  return {
+    createdAt: s.created_at,
+    physicalConditions: s.physical_conditions,
+    physicalOther: s.physical_other,
+    scores: check(scores, "read scores") as { instrument: string; total: number; band: string }[],
+    proposedStep: p ? (p.urgent ? "urgent support" : p.step !== null ? STEP_NAMES[p.step] : null) : null,
+    consents,
+  };
 }

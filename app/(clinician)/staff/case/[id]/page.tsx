@@ -1,4 +1,7 @@
 import { Suspense } from "react";
+import { AdverseEventForm } from "../../adverse-event-form";
+import { allowedChannels, may, purposeById } from "@/lib/consent";
+import { conditionLabel } from "@/lib/physical-health";
 import { SKIPPED } from "@/lib/check/skip";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -414,6 +417,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 {(
                   [
                     ["Reach by", session.contact_method ? CONTACT_METHOD[session.contact_method] : null],
+                    ["May contact by", allowedChannels(data.consents).map((c) => CONTACT_METHOD[c]).join(", ") || "No channel allowed at the moment"],
                     ["Phone", session.contact_phone],
                     ["Email", session.contact_email],
                     ["Safe times", session.contact_times?.length ? session.contact_times.map((t) => SAFE_TIME[t] ?? t).join(", ") : null],
@@ -533,11 +537,40 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
           )}
 
           {/* --- Consent and history ---------------------------------------- */}
+          <Panel id="health-h" title="Physical health">
+            {!may.sharePhysicalHealth(data.consents) ? (
+              <p className="text-caption text-muted">Not shared. The person did not choose to share physical health.</p>
+            ) : (session.physical_conditions?.length ?? 0) > 0 || session.physical_other ? (
+              <ul className="flex list-disc flex-col gap-0.5 ps-5 text-caption">
+                {session.physical_conditions?.map((c) => <li key={c}>{conditionLabel(c)}</li>)}
+                {session.physical_other && <li>Other: {session.physical_other}</li>}
+              </ul>
+            ) : (
+              <p className="text-caption text-muted">Shared: none of the listed conditions.</p>
+            )}
+            <p className="text-[0.75rem] text-muted">Self-reported, not verified.</p>
+            {may.exportToGp(data.consents) ? (
+              <a href={`/staff/case/${id}/gp-summary`} className="inline-flex min-h-10 items-center self-start text-caption font-semibold">
+                Download GP summary (FHIR R4)
+              </a>
+            ) : (
+              <p className="text-caption text-muted">No consent to share a summary with a GP.</p>
+            )}
+            <p className="text-[0.75rem] text-muted">Sending to Malaffi (Abu Dhabi health information exchange) is on the roadmap.</p>
+          </Panel>
+
+          {write && (
+            <Panel id="adverse-h" title="Safety reporting">
+              <AdverseEventForm sessionId={id} />
+            </Panel>
+          )}
+
           <Panel id="consent-h" title="Consent and history">
             <ul className="text-caption">
               {Object.entries(data.consents).map(([purpose, granted]) => (
                 <li key={purpose}>
-                  {sentence(purpose.replaceAll("_", " "))}: <strong className="font-semibold">{granted ? "Yes" : "No"}</strong>
+                  {purposeById(purpose)?.title ?? sentence(purpose.replaceAll("_", " "))}:{" "}
+                  <strong className="font-semibold">{granted ? "Yes" : "No"}</strong>
                 </li>
               ))}
             </ul>

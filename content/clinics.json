@@ -1,7 +1,24 @@
 {
   "status": "example",
-  "source": "FICTIONAL example clinic for the embedded check-in demo. A pilot site adds its real clinics here.",
+  "source": "FICTIONAL example organisations for the embedded check-in demo. kind: clinic (its care team reads check-ins) or employer / university (sees aggregates only, minimum group size 10; never a person, an answer or a score). A pilot site adds its real organisations here.",
   "clinics": [
-    { "id": "demo-clinic", "name": "Demo Wellbeing Clinic", "contact": "Front desk: [clinic phone]" }
+    {
+      "id": "demo-clinic",
+      "name": "Demo Wellbeing Clinic",
+      "contact": "Front desk: [clinic phone]",
+      "kind": "clinic"
+    },
+    {
+      "id": "demo-employer",
+      "name": "Example Company",
+      "kind": "employer",
+      "contact": ""
+    },
+    {
+      "id": "demo-university",
+      "name": "Example University",
+      "kind": "university",
+      "contact": ""
+    }
   ]
 }

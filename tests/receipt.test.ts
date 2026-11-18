@@ -14,13 +14,13 @@ describe("patient receipt timeline", () => {
 
   it("just sent: review is the current step, with a reply-by time", () => {
     const v = build([ev("received", 9)]);
-    expect(states(v)).toEqual({ received: "done", reviewed: "now", outcome: "next", booked: "next", contact: "next" });
+    expect(states(v)).toEqual({ received: "done", reviewed: "now", outcome: "next", referred: "next", booked: "next", contact: "next" });
     expect(v.steps[1].body).toMatch(/^You'll hear from us by /);
   });
 
-  it("accepted: names the agreed step and moves on to booking", () => {
+  it("accepted: names the agreed step and moves on to the referral", () => {
     const v = build([ev("received", 9), ev("reviewed", 10), ev("accepted", 10)], { decision: { action: "accept", newStep: null } });
-    expect(states(v)).toMatchObject({ reviewed: "done", outcome: "done", booked: "now" });
+    expect(states(v)).toMatchObject({ reviewed: "done", outcome: "done", referred: "now", booked: "next" });
     expect(v.steps[2].body).toBe("Your clinician agreed the next step: community or counsellor.");
   });
 
@@ -40,13 +40,16 @@ describe("patient receipt timeline", () => {
   });
 
   it("booked and first contact confirmed: everything is done", () => {
-    const v = build([ev("received", 9), ev("reviewed", 10), ev("accepted", 10), ev("booked", 11), ev("first_contact_confirmed", 12)]);
+    const v = build([
+      ev("received", 9), ev("reviewed", 10), ev("accepted", 10),
+      { ...ev("referred", 10), serviceId: "palm-grove-counselling" }, ev("booked", 11), ev("first_contact_confirmed", 12),
+    ]);
     expect(Object.values(states(v)).every((s) => s === "done")).toBe(true);
   });
 
   it("adds the follow-up step only when the person chose it, and never as the current step", () => {
     expect(build([ev("received", 9)]).steps.some((s) => s.key === "follow_up")).toBe(false);
-    const v = build([ev("received", 9), ev("reviewed", 10), ev("accepted", 10), ev("booked", 11), ev("spoke", 12)], { followUp: true });
+    const v = build([ev("received", 9), ev("reviewed", 10), ev("accepted", 10), ev("referred", 10), ev("booked", 11), ev("spoke", 12)], { followUp: true });
     expect(states(v).follow_up).toBe("next");
   });
 
@@ -68,9 +71,19 @@ describe("referral on the receipt", () => {
       decision: { action: "accept", newStep: null },
       followUp: false,
     })!;
-    const booked = view.steps.find((s) => s.key === "booked")!;
-    expect(booked.title).toBe("Referred to Palm Grove Community Counselling");
-    expect(booked.body).toContain("within 5 working days");
-    expect(booked.state).toBe("done");
+    // An older referral stored as "booked" with a service still reads as a referral.
+    const referred = view.steps.find((s) => s.key === "referred")!;
+    expect(referred.title).toBe("Referred to Palm Grove Community Counselling");
+    expect(referred.body).toContain("within 5 working days");
+    expect(referred.state).toBe("done");
+    expect(view.steps.find((s) => s.key === "booked")!.state).toBe("now");
+  });
+
+  it("shows referred -> booked -> first contact in order", () => {
+    const base = [ev("received", 9), ev("accepted", 10), { ...ev("referred", 10), serviceId: "palm-grove-counselling" }];
+    const decision = { action: "accept", newStep: null };
+    expect(states(build(base, { decision }))).toMatchObject({ referred: "done", booked: "now", contact: "next" });
+    expect(states(build([...base, ev("booked", 11)], { decision }))).toMatchObject({ referred: "done", booked: "done", contact: "now" });
+    expect(states(build([...base, ev("booked", 11), ev("first_contact_confirmed", 12)], { decision }))).toMatchObject({ contact: "done" });
   });
 });

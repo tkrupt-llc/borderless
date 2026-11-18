@@ -1,5 +1,6 @@
 import { PatientHeader } from "@/components/patient-header";
 import { DeleteData } from "./delete-data";
+import { MyChoicesList } from "./my-choices";
 
 // "You can delete your data at any time" (the data promise on the start page).
 export default function MyDataPage() {
@@ -21,12 +22,21 @@ export default function MyDataPage() {
           <ul className="mt-1.5 flex list-disc flex-col gap-1 ps-5 text-caption text-text-2">
             <li>Your answers and scores</li>
             <li>What you wrote in the chat, if you used it</li>
-            <li>Your phone number and call preferences, only if you shared them</li>
+            <li>Your phone number or email and contact preferences, only if you shared them</li>
+            <li>Physical health conditions, only if you chose to share them</li>
             <li>The choices you made about sharing</li>
             <li>Notes your care team adds</li>
           </ul>
-          <p className="mt-2 text-caption text-text-2">No name or account. Only your care team can see it.</p>
+          <p className="mt-2 text-caption text-text-2">
+            No name or account. Only your care team can see it. Never shared with your employer or university.
+          </p>
         </section>
+
+        <MyChoicesList />
+
+        <a href="/my-data/gp-summary" className="inline-flex min-h-11 items-center self-start text-caption">
+          Download a summary for my GP (if you chose to share one)
+        </a>
 
         <DeleteData />
       </div>

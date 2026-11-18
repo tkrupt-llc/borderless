@@ -13,6 +13,7 @@
     "test:ai": "tsx scripts/test-ai.ts",
     "test:redteam": "tsx scripts/test-redteam.ts",
     "seed:staff": "tsx scripts/seed-staff.ts",
+    "seed:outcomes": "tsx scripts/seed-outcomes.ts",
     "db:push": "supabase db push --remote",
     "db:types": "supabase gen types typescript --remote > lib/db/types.ts"
   },

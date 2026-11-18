@@ -5,20 +5,22 @@ import wording from "@/content/result-wording.json";
 import { SCORED_INSTRUMENTS } from "@/lib/rules/scoring";
 
 const migration = readFileSync("supabase/migrations/20261111000000_init.sql", "utf8");
+const added = [...readFileSync("supabase/migrations/20261118000000_brief_gaps.sql", "utf8").matchAll(/alter type consent_purpose add value if not exists '([^']+)'/g)].map((m) => m[1]);
 
 describe("consent content", () => {
   const enumValues = /create type consent_purpose as enum \(([^)]*)\)/
     .exec(migration)![1]
     .match(/'([^']+)'/g)!
-    .map((v) => v.slice(1, -1));
+    .map((v) => v.slice(1, -1))
+    .concat(added);
 
   it("only uses purposes the database accepts", () => {
     for (const p of consent.purposes) expect(enumValues).toContain(p.id);
   });
 
-  it("asks only clinician review before the questions; the rest on the result page", () => {
-    expect(consent.purposes.filter((p) => p.askOn === "start").map((p) => p.id)).toEqual(["clinician_review"]);
-    for (const p of consent.purposes) expect(["start", "result"]).toContain(p.askOn);
+  it("asks only care-team access (and AI help on the full check-in) before the questions; the rest where it matters", () => {
+    expect(consent.purposes.filter((p) => p.askOn === "start").map((p) => p.id)).toEqual(["clinician_review", "ai_help"]);
+    for (const p of consent.purposes) expect(["start", "contact", "health", "result"]).toContain(p.askOn);
   });
 
   it("pre-ticks nothing", () => {

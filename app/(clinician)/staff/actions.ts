@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { audit } from "@/lib/staff/audit";
 import { refresh } from "next/cache";
 import { db } from "@/lib/db/server";
 import { canWrite, requireStaff, type Staff } from "@/lib/staff/auth";
@@ -17,15 +18,6 @@ const uuid = z.string().uuid();
 
 function must(result: { error: { message: string } | null }, what: string) {
   if (result.error) throw new Error(`${what}: ${result.error.message}`);
-}
-
-async function audit(staff: Staff, action: string, objectType: string, objectId: string, sessionId: string | null, metadata: object = {}) {
-  must(
-    await db().from("audit_events").insert({
-      actor: `${staff.role}:${staff.id}`, action, object_type: objectType, object_id: objectId, session_id: sessionId, metadata,
-    }),
-    "audit",
-  );
 }
 
 async function run(fn: (staff: Staff) => Promise<void>): Promise<Result> {
@@ -240,7 +232,7 @@ export async function referToService(sessionId: string, serviceId: string): Prom
     const service = serviceById(serviceId);
     if (!service) throw new Error("unknown service");
     must(
-      await db().from("receipt_events").insert({ session_id: id, status: "booked", service_id: service.id, typical_wait_days: service.typicalWaitDays }),
+      await db().from("receipt_events").insert({ session_id: id, status: "referred", service_id: service.id, typical_wait_days: service.typicalWaitDays }),
       "referral",
     );
     await audit(staff, "referred", "session", id, id, { service: service.id });
@@ -295,5 +287,24 @@ export async function markReviewed(sessionId: string): Promise<Result> {
     must(await db().from("tasks").update({ acknowledged_at: now, acknowledged_by: staff.id }).eq("session_id", id).is("acknowledged_at", null).is("closed_at", null), "acknowledge");
     must(await db().from("tasks").update({ closed_at: now }).eq("session_id", id).is("closed_at", null), "close");
     await audit(staff, "case_reviewed", "session", id, id);
+  });
+}
+
+/** "Report adverse event": counted on the service overview; linked to a case when there is one. */
+export async function reportAdverseEvent(input: unknown): Promise<Result> {
+  return run(async (staff) => {
+    const d = z
+      .object({
+        sessionId: z.string().uuid().nullable(),
+        category: z.enum(["self_harm", "harm_to_others", "missed_urgent_contact", "care_delay", "privacy", "other"]),
+        severity: z.enum(["low", "moderate", "severe"]),
+        description: z.string().trim().min(5).max(2000),
+      })
+      .parse(input);
+    must(
+      await db().from("adverse_events").insert({ session_id: d.sessionId, category: d.category, severity: d.severity, description: d.description, reported_by: staff.id }),
+      "adverse event",
+    );
+    await audit(staff, "adverse_event_reported", "adverse_event", d.sessionId ?? "service", d.sessionId, { category: d.category, severity: d.severity });
   });
 }

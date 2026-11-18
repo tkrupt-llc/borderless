@@ -4,6 +4,11 @@ import { loadInsights, type Insights } from "@/lib/staff/insights";
 import { loadQueue } from "@/lib/staff/data";
 import { PriorityBadge, StaffShell } from "../staff-header";
 import { serviceById } from "@/lib/directory";
+import { loadOutcomes } from "@/lib/staff/outcomes";
+import { cellText, shareText } from "@/lib/outcomes/aggregate";
+import { AdverseEventForm } from "../adverse-event-form";
+import clinics from "@/content/clinics.json";
+import Link from "next/link";
 
 export default function InsightsPage() {
   return (
@@ -37,7 +42,8 @@ function Panel({ id, title, note, children }: { id: string; title: string; note?
 
 async function InsightsView() {
   const staff = await requireStaff();
-  const [data, queue] = await Promise.all([loadInsights(), loadQueue()]);
+  const [data, queue, out] = await Promise.all([loadInsights(), loadQueue(), loadOutcomes()]);
+  const orgs = clinics.clinics.filter((c) => "kind" in c && c.kind !== "clinic");
   return (
     <StaffShell staff={staff} active="insights" counts={{ open: queue.length, escalated: queue.filter((t) => t.escalatedAt).length }}>
       <div>
@@ -46,6 +52,102 @@ async function InsightsView() {
         </h1>
         <p className="text-[0.8125rem] text-muted">Last {data.days} days · computed from the app&apos;s own records · times in UAE time</p>
       </div>
+
+      {/* Outcomes (challenge brief): screen-to-first-contact first. */}
+      <section aria-labelledby="outcomes-h" className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="outcomes-h" className="text-[1.0625rem] font-semibold">
+            Outcomes
+          </h2>
+          <span className="rounded-md border border-[#e3c27a] bg-[#fbefd2] px-2 py-0.5 text-[0.75rem] font-semibold text-[#5c3a00]">
+            Synthetic demo data · {out.simulated} simulated journeys
+          </span>
+        </div>
+        <p className="text-[0.8125rem] text-muted">
+          Last {out.days} days · {out.counted} people who agreed to anonymous statistics ({out.excludedNoConsent} not counted) ·
+          groups under {out.minGroup} are not shown
+        </p>
+        <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)] sm:grid-cols-4">
+          {[
+            {
+              label: "Screen to first contact",
+              value: out.screenToFirstContactHours === null ? "–" : duration(out.screenToFirstContactHours * 60),
+              sub: `median · ${plural(out.screenToFirstContactN, "person", "people")}`,
+              lead: true,
+            },
+            { label: "Successful hand-off", value: pct(out.handOff.done, out.handOff.of), sub: `${out.handOff.done} of ${out.handOff.of} referred reached the service` },
+            { label: "Follow-up on time", value: pct(out.followUpOnTime.done, out.followUpOnTime.of), sub: `${out.followUpOnTime.done} of ${out.followUpOnTime.of} within a week of due` },
+            { label: "Waiting time", value: out.waitDays === null ? "–" : `${out.waitDays.toFixed(1)} days`, sub: `median referral to booking · ${out.waitN}` },
+            { label: "Reliable improvement", value: pct(out.reliableImprovement.done, out.reliableImprovement.of), sub: `${out.reliableImprovement.done} of ${out.reliableImprovement.of} with a follow-up` },
+            { label: "Crisis responses completed", value: pct(out.crisis.done, out.crisis.of), sub: `${out.crisis.done} of ${out.crisis.of} urgent alerts on time` },
+            { label: "Adverse events", value: String(out.adverse.total), sub: plural(out.adverse.severe, "severe", "severe") },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className={`flex flex-col gap-0.5 border-line-warm px-5 py-3 not-first:border-s max-sm:border-t sm:nth-[n+5]:border-t ${s.lead ? "bg-sky" : ""}`}
+            >
+              <dt className={`text-[0.75rem] font-medium ${s.lead ? "text-blue-ink" : "text-muted"}`}>{s.label}</dt>
+              <dd className="text-[1.5rem] leading-tight font-semibold text-ink tabular-nums">{s.value}</dd>
+              <dd className="text-[0.75rem] text-muted">{s.sub}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <Panel id="fair-h" title="Fairness" note={`Who reached first contact, by group · groups under ${out.minGroup} not shown`}>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {out.fairness.map((f) => (
+              <table key={f.dim} className="w-full border-collapse text-left text-[0.8125rem]">
+                <caption className="pb-1 text-left text-[0.75rem] font-semibold tracking-[0.04em] text-muted uppercase">{f.label}</caption>
+                <thead className="sr-only">
+                  <tr>
+                    <th scope="col">Group</th>
+                    <th scope="col">People</th>
+                    <th scope="col">Reached first contact</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {f.groups.length === 0 ? (
+                    <tr>
+                      <td className="py-1 text-muted">No data</td>
+                    </tr>
+                  ) : (
+                    f.groups.map((g) => (
+                      <tr key={g.group} className="border-t border-line-warm">
+                        <th scope="row" className="py-1 pe-2 font-medium">{g.group}</th>
+                        <td className="py-1 pe-2 text-muted tabular-nums">{cellText(g.count)}</td>
+                        <td className="py-1 tabular-nums">{g.count.suppressed ? "–" : shareText(g.reachedContact)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            ))}
+          </div>
+        </Panel>
+
+        <div className="grid gap-5 xl:grid-cols-2">
+          <Panel id="adverse-h" title="Adverse events" note="Reported by clinicians">
+            <p className="text-[0.875rem]">
+              {out.adverse.total === 0 ? "None reported in this period." : `${out.adverse.total} reported, ${out.adverse.severe} severe.`}
+            </p>
+            <AdverseEventForm />
+          </Panel>
+          <Panel id="orgs-h" title="Employer and university views" note={`Aggregates only · minimum group ${out.minGroup}`}>
+            <p className="text-[0.875rem] text-text-2">
+              Organisations that link to the check-in see totals only, never a person, an answer or a score.
+            </p>
+            <ul className="flex flex-col gap-1">
+              {orgs.map((o) => (
+                <li key={o.id}>
+                  <Link href={`/staff/org/${o.id}`} className="inline-flex min-h-10 items-center text-[0.875rem] font-semibold">
+                    See what {o.name} sees →
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </div>
+      </section>
 
       {/* Headline numbers. */}
       <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)] sm:grid-cols-3 xl:grid-cols-5">

@@ -26,6 +26,16 @@ export default function ReceiptPage() {
           </span>
           <ChevronRight />
         </Link>
+        <Link
+          href="/support-options"
+          className="flex min-h-11 items-center justify-between rounded-2xl bg-surface px-4 py-3.5 text-ink no-underline hover:text-ink"
+        >
+          <span className="flex flex-col">
+            <strong className="text-base font-semibold">Your support options</strong>
+            <span className="text-small text-muted">From self-help to specialist care in Abu Dhabi</span>
+          </span>
+          <ChevronRight />
+        </Link>
         <HowDidThatFeel />
         <p className="text-small text-muted">If things get worse before then, tap &ldquo;I need help now&rdquo;.</p>
         <Link href="/my-data" className="inline-flex min-h-11 items-center self-start text-caption text-primary-dark underline underline-offset-2">

@@ -6,17 +6,16 @@ import { useParams, useRouter } from "next/navigation";
 import { startCheckIn } from "../../actions";
 import { clearAnswers } from "@/lib/check/local-answers";
 import { isDiscreet } from "@/lib/discreet";
-import consent from "@/content/consent.json";
+import { purposesFor } from "@/lib/consent";
 import en from "@/content/i18n/en.json";
-
-// Only what is needed to start; the rest is asked on the result page (research: ask only what is needed).
-const START_PURPOSES = consent.purposes.filter((p) => p.askOn === "start");
 
 export function ConsentForm() {
   const { path } = useParams<{ path: string }>();
   const router = useRouter();
+  // Only what is needed to start; the rest is asked where it matters (research: ask only what is needed).
+  const START_PURPOSES = purposesFor("start", path);
   const [choices, setChoices] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(START_PURPOSES.map((p) => [p.id, p.default])),
+    Object.fromEntries(purposesFor("start", path).map((p) => [p.id, p.default])),
   );
   const [failed, setFailed] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -36,8 +35,8 @@ export function ConsentForm() {
         return;
       }
       clearAnswers(path);
-      // The full check-in starts with the AI conversation; the quick check goes straight to the questions.
-      router.push(path === "full" ? `/check/${path}/chat` : `/check/${path}/1`);
+      // The full check-in starts with the AI conversation only with "AI help"; otherwise straight to the questions.
+      router.push(path === "full" && choices.ai_help ? `/check/${path}/chat` : `/check/${path}/1`);
     });
   }
 
@@ -57,7 +56,10 @@ export function ConsentForm() {
               className="mt-1 size-5 shrink-0 cursor-pointer accent-primary"
             />
             <span className="flex flex-col">
-              <strong className="font-semibold">{p.title}</strong>
+              <strong className="font-semibold">
+                {p.title}
+                {"required" in p && p.required ? <span className="font-normal text-muted"> (needed)</span> : <span className="font-normal text-muted"> (optional)</span>}
+              </strong>
               <span className="text-caption text-muted">{p.explanation}</span>
             </span>
           </label>
@@ -76,20 +78,18 @@ export function ConsentForm() {
         </ul>
       </details>
 
-      {!choices.clinician_review && (
-        <p className="rounded-2xl bg-sky px-4 py-3 text-caption text-text-2">
-          Without clinician review, your answers stay with you and no one will contact you. If you are in danger,
-          &ldquo;I need help now&rdquo; still works.
-        </p>
-      )}
+      <p className="text-caption text-text-2">
+        Never shared with your employer or university. You can change these choices later in &ldquo;See or delete your
+        data&rdquo;.
+      </p>
 
       {/* Nothing is pre-ticked, so the button says plainly what will happen. */}
       <button
         type="submit"
-        disabled={pending}
-        className="tap mt-2 flex min-h-[52px] cursor-pointer items-center justify-center rounded-full bg-primary px-6 font-semibold text-white disabled:cursor-wait disabled:opacity-80"
+        disabled={pending || !choices.clinician_review}
+        className="tap mt-2 flex min-h-[52px] cursor-pointer items-center justify-center rounded-full bg-primary px-6 font-semibold text-white disabled:cursor-default disabled:opacity-45"
       >
-        {pending ? "Saving…" : choices.clinician_review ? "I understand, let's start" : "Start without clinician review"}
+        {pending ? "Saving…" : "I understand, let's start"}
       </button>
       <Link href="/start" className="flex min-h-11 items-center justify-center text-caption">
         Not now

@@ -15,7 +15,8 @@ import { proposeStep } from "@/lib/rules/routing";
 import { buildReceipt, type ReceiptView } from "@/lib/receipt/build";
 import { caseRef } from "@/lib/case-ref";
 import { factsFromScores, scoreAll, type Score } from "@/lib/rules/scoring";
-import consent from "@/content/consent.json";
+import { CHANNELS, channelPurpose, may, purposesFor } from "@/lib/consent";
+import { CONDITION_IDS } from "@/lib/physical-health";
 import { derivedScreens, notOnTrack } from "@/lib/followup/trend";
 
 // Without Supabase keys (tests, or a deploy before set-up) the flow still runs
@@ -40,8 +41,10 @@ export async function startCheckIn(input: unknown): Promise<{ ok: true } | Fail>
     return { ok: false, reason: "invalid" };
   }
   const path = parsed.data.path;
-  const known = new Set(consent.purposes.map((p) => p.id));
+  const known = new Set(purposesFor("start", path).map((p) => p.id));
   const choices = Object.fromEntries(Object.entries(parsed.data.consents).filter(([k]) => known.has(k)));
+  // Care-team access is required to use the check-in (challenge brief).
+  if (choices.clinician_review !== true) return { ok: false, reason: "invalid" };
 
   if (!isDbConfigured()) return { ok: true };
   try {
@@ -314,7 +317,8 @@ export async function loadInProgress(): Promise<InProgress | null> {
     const ids = stepsFor(found.path).map((st) => st.item.id);
     const answered = ids.filter((i) => found.answers[i] !== undefined).length;
     // The full check-in opens with the conversation; until a question is answered, resume there.
-    if (found.path === "full" && answered === 0) return { path: found.path, answers: {}, answered, resumeHref: "/check/full/chat" };
+    if (found.path === "full" && answered === 0 && may.useAi(await persist.getConsents(id)))
+      return { path: found.path, answers: {}, answered, resumeHref: "/check/full/chat" };
     const next = ids.findIndex((i) => isAsked(i, found.answers) && found.answers[i] === undefined);
     const step = next === -1 ? ids.length : next + 1;
     return { path: found.path, answers: found.answers, answered, resumeHref: `/check/${found.path}/${step}` };
@@ -346,6 +350,8 @@ export async function saveContactPreferences(input: unknown): Promise<{ ok: true
     const id = await readSessionId();
     if (!id) return { ok: false, reason: "no_session" };
     await persist.saveContactPrefs(id, parsed.data);
+    // One consent per channel: the chosen one on, the others off (changeable later on "See or delete your data").
+    await persist.addConsents(id, "contact", Object.fromEntries(CHANNELS.map((c) => [channelPurpose(c), c === parsed.data.method])));
     return { ok: true };
   } catch (e) {
     console.error(e);
@@ -364,5 +370,33 @@ export async function recordFeeling(feeling: unknown): Promise<{ ok: boolean }> 
   } catch (e) {
     console.error(e);
     return { ok: false };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Physical health (optional, consented)
+// ---------------------------------------------------------------------------
+
+const HealthInput = z.object({
+  physicalHealth: z.boolean(),
+  gpSharing: z.boolean(),
+  conditions: z.array(z.enum(CONDITION_IDS)).max(CONDITION_IDS.length),
+  other: z.string().trim().max(200),
+});
+
+export async function savePhysicalHealth(input: unknown): Promise<{ ok: true } | Fail> {
+  const parsed = HealthInput.safeParse(input);
+  if (!parsed.success) return { ok: false, reason: "invalid" };
+  if (!isDbConfigured()) return { ok: true };
+  const d = parsed.data;
+  try {
+    const id = await readSessionId();
+    if (!id) return { ok: false, reason: "no_session" };
+    await persist.addConsents(id, "health", { physical_health: d.physicalHealth, gp_sharing: d.gpSharing });
+    await persist.savePhysicalHealth(id, d.physicalHealth, d.conditions, d.other || null);
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, reason: "error" };
   }
 }

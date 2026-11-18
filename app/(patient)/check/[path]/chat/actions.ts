@@ -10,6 +10,7 @@ import { SAFETY_CHECK } from "@/lib/chat/safety-check";
 import { loadRuleFile } from "@/lib/rules/load";
 import { runSafetyRules } from "@/lib/rules/safety";
 import type { TranscriptMessage } from "@/lib/ai/prompt";
+import { may } from "@/lib/consent";
 
 // The chat belongs to the full check-in. Without Supabase keys (tests, early
 // deploys) the browser keeps the transcript and sends it with each message.
@@ -21,7 +22,9 @@ async function fullSession() {
   const id = await readSessionId();
   if (!id) return null;
   const session = await persist.getSession(id);
-  return session && session.path === "full" ? session : null;
+  if (!session || session.path !== "full") return null;
+  // The AI only runs with the person's "AI help" consent; without it the full check-in is questions only.
+  return may.useAi(await persist.getConsents(id)) ? session : null;
 }
 
 /** Quick replies are not stored; the only ones that matter on reload are the check question's. */

@@ -80,6 +80,7 @@ export async function loadCase(sessionId: string) {
           callback_time: string | null; history_bpd: boolean; history_adhd: boolean; history_source: string | null;
           clinic_id: string | null; contact_method: string | null; contact_email: string | null;
           contact_times: string[] | null; contact_leave_message: boolean | null;
+          physical_conditions: string[] | null; physical_other: string | null; demo_emirate: string | null;
         }>(r, "session"),
       ),
       one<{ purpose: string; granted: boolean }>("consent_records", "purpose, granted, created_at"),

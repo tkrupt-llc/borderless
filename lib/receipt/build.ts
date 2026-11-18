@@ -68,16 +68,26 @@ export function buildReceipt(input: ReceiptInput): ReceiptView | null {
         : `Your clinician agreed the next step${level ? `: ${level}` : ""}.`,
     Boolean(outcome),
   );
-  const service = serviceById(booked?.serviceId);
+  // Referral status: referred -> booked -> first contact. Older referrals were stored as "booked" with a service.
+  const referred = last("referred") ?? (booked?.serviceId ? booked : undefined);
+  const service = serviceById(referred?.serviceId);
   add(
-    "booked",
-    service ? `Referred to ${service.name}` : booked ? "Booked" : "Booking",
+    "referred",
+    service ? `Referred to ${service.name}` : "Referral",
     service
       ? `${service.kind}, ${service.mode.toLowerCase()}. They usually get in touch within ${service.typicalWaitDays} working days. We only share your details with them if you agree.`
-      : booked
-        ? `Your appointment was booked ${formatWhen(booked.createdAt)}.`
-        : "We'll confirm here when your appointment is booked.",
-    Boolean(booked),
+      : referred
+        ? `Referred ${formatWhen(referred.createdAt)}.`
+        : "If you need a service, your clinician refers you and it shows here.",
+    Boolean(referred),
+  );
+  // A booking is a "booked" event without a service (a "booked" event with one is an older referral).
+  const bookedOnly = input.events.filter((e) => e.status === "booked" && !e.serviceId).at(-1);
+  add(
+    "booked",
+    bookedOnly ? "Booked" : "Booking",
+    bookedOnly ? `Your appointment was booked ${formatWhen(bookedOnly.createdAt)}.` : "We'll confirm here when your appointment is booked.",
+    Boolean(bookedOnly),
   );
   add(
     "contact",

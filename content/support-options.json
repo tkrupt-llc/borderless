@@ -1,0 +1,56 @@
+{
+  "status": "draft",
+  "source": "Support options in Abu Dhabi by stepped-care level (challenge brief). Kinds of support, not named providers: a pilot site adds its real services in content/directory/services.json. Cost notes are general; the psychiatrist and the licensed provider approve the final text.",
+  "region": "Abu Dhabi",
+  "options": [
+    {
+      "id": "self-help",
+      "step": 0,
+      "title": "Self-help",
+      "forWho": "When things are manageable and you'd like tools to use on your own.",
+      "cost": "Free in this app.",
+      "handOff": "No referral needed. Coping cards and guides are always here, and you can check in again any time."
+    },
+    {
+      "id": "community",
+      "step": 1,
+      "title": "Community and counselling",
+      "forWho": "Mild to moderate low mood, worry or stress, when talking to someone would help.",
+      "cost": "Varies. Some community services are low cost or free; check whether your insurance plan covers counselling.",
+      "handOff": "Your clinician suggests a service. With your agreement they refer you, and the service contacts you."
+    },
+    {
+      "id": "primary-care",
+      "step": 2,
+      "title": "Primary care (your family doctor)",
+      "forWho": "When physical health, medicines or sleep are part of the picture, or you'd like your GP involved.",
+      "cost": "Usually covered by health insurance in Abu Dhabi. Check your plan for any co-payment.",
+      "handOff": "With your consent, your clinician gives you a summary for your GP. Sending it directly through Malaffi is on the roadmap."
+    },
+    {
+      "id": "tele-mental-health",
+      "step": 3,
+      "title": "Tele-mental health",
+      "forWho": "When you'd prefer video or phone sessions, or can't easily travel.",
+      "cost": "Check your insurance plan. Some plans cover video sessions with licensed providers.",
+      "handOff": "Your clinician refers you. The provider contacts you to book a first session."
+    },
+    {
+      "id": "specialist",
+      "step": 4,
+      "title": "Specialist mental health care (psychiatrist)",
+      "forWho": "More severe or long-lasting difficulties, or when other support hasn't helped.",
+      "cost": "Usually covered by health insurance, sometimes with a referral. Check your plan.",
+      "handOff": "Your clinician makes the referral and tells you what to expect. You'll see each step on your timeline."
+    },
+    {
+      "id": "sakina",
+      "step": null,
+      "title": "800-SAKINA, 24/7 support line",
+      "forWho": "Anyone who wants to talk to someone right now.",
+      "cost": "Free to call.",
+      "handOff": "Call 800 725462 any time. No referral needed.",
+      "tel": "800725462"
+    }
+  ]
+}

@@ -75,8 +75,8 @@ export function AnswerList({
         return;
       }
       markSubmitted(path, finished);
-      // With clinician review on, ask how to reach the person before the result (design canvas flow).
-      router.push(finished.sentToClinician && path !== "safety" ? `/check/${path}/contact` : `/check/${path}/result`);
+      // With clinician review on: physical health (optional), then how to reach the person, then the result.
+      router.push(finished.sentToClinician && path !== "safety" ? `/check/${path}/health` : `/check/${path}/result`);
     });
   }
 

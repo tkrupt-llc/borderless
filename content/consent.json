@@ -1,13 +1,64 @@
 {
-  "version": "consent-v0.3-draft",
+  "version": "consent-v0.4-draft",
   "status": "draft",
-  "source": "Purposes from the tech spec (granular consent). Research ('ask only what is needed, and say why'): only clinician review is asked before the questions; the rest is asked on the result page, when it matters. GP sharing removed for the prototype (no GP connection); the database still accepts it if it returns. One-line explanations are DRAFT; the psychiatrist and the licensed provider approve the final text.",
+  "source": "Granular, revocable consent (challenge brief). Each purpose is asked where it matters (research: ask only what is needed, and say why), nothing is pre-ticked, and every purpose except care-team access can be changed later on 'See or delete your data'. Every change is appended to consent_records and written to the audit trail. One-line explanations are DRAFT; the psychiatrist and the licensed provider approve the final text.",
   "purposes": [
     {
       "id": "clinician_review",
       "askOn": "start",
-      "title": "A clinician reviews my check-in",
-      "explanation": "A licensed clinician reads your answers and chooses your next step. Without this, you still see your own results.",
+      "required": true,
+      "title": "My care team can see my answers",
+      "explanation": "A licensed clinician reads your answers and chooses your next step with you. This is needed to use the check-in.",
+      "default": false
+    },
+    {
+      "id": "ai_help",
+      "askOn": "start",
+      "paths": ["full"],
+      "title": "Use the AI assistant to help me answer",
+      "explanation": "It asks a few questions in a chat. It is not a therapist and never diagnoses. Without it, you answer the questions on their own.",
+      "default": false
+    },
+    {
+      "id": "contact_phone",
+      "askOn": "contact",
+      "title": "Phone calls",
+      "explanation": "Your care team may call you.",
+      "default": false
+    },
+    {
+      "id": "contact_sms",
+      "askOn": "contact",
+      "title": "SMS",
+      "explanation": "Your care team may text you.",
+      "default": false
+    },
+    {
+      "id": "contact_whatsapp",
+      "askOn": "contact",
+      "title": "WhatsApp",
+      "explanation": "Your care team may message you on WhatsApp.",
+      "default": false
+    },
+    {
+      "id": "contact_email",
+      "askOn": "contact",
+      "title": "Email",
+      "explanation": "Your care team may email you.",
+      "default": false
+    },
+    {
+      "id": "physical_health",
+      "askOn": "health",
+      "title": "Share my physical health with my care team",
+      "explanation": "Long-term conditions and medicines can affect mood and sleep, so your clinician can take them into account.",
+      "default": false
+    },
+    {
+      "id": "gp_sharing",
+      "askOn": "health",
+      "title": "Share a summary with my GP or primary care",
+      "explanation": "A short summary you or your clinician can download for your GP. Nothing is sent without this choice.",
       "default": false
     },
     {
@@ -20,7 +71,7 @@
     {
       "id": "service_improvement",
       "askOn": "result",
-      "title": "Help improve the service",
+      "title": "Anonymous service statistics",
       "explanation": "Your answers, with nothing that identifies you, help us check the service works fairly for everyone.",
       "default": false
     }
