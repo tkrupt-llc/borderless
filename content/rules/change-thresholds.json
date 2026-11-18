@@ -1,0 +1,7 @@
+{
+  "version": "change-thresholds-v0.1-draft",
+  "status": "draft",
+  "source": "One set of change thresholds used everywhere: 'not on track' on follow-ups and 'reliable improvement' on the service overview. DRAFT for the psychiatrist to approve.",
+  "reliableImprovement": { "PHQ9": 6, "GAD7": 4 },
+  "notOnTrack": { "PHQ9": 6, "GAD7": 4, "screenTurningPositive": true }
+}

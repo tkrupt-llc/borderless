@@ -1,4 +1,6 @@
 import "server-only";
+import { applyConsoleRules } from "@/lib/staff/supervision";
+import { isVisibleInQueue } from "@/lib/staff/safety-rules";
 import { applyFollowUps } from "@/lib/referral/persist";
 import { db } from "@/lib/db/server";
 import { buildSummary, type SummaryLine } from "@/lib/summary/build";
@@ -37,6 +39,8 @@ export async function loadQueue(): Promise<QueueTask[]> {
   };
   // Hand-off rules run on every queue refresh (no cron): stalled referrals come back as tasks.
   await applyFollowUps().catch((e) => console.error("referral follow-ups", e));
+  // Second escalation clock and supervisor triggers, same way.
+  await applyConsoleRules().catch((e) => console.error("console rules", e));
   const data = rows<Row>(
     await db()
       .from("tasks")
@@ -46,7 +50,10 @@ export async function loadQueue(): Promise<QueueTask[]> {
       .is("closed_at", null),
     "load queue",
   );
+  const now = new Date();
   return data
+    // Scheduled post-crisis check-ins stay out of the queue until shortly before they're due.
+    .filter((t) => isVisibleInQueue({ type: t.type, dueAt: t.due_at }, now))
     .map((t) => ({
       id: t.id,
       sessionId: t.session_id,
@@ -84,6 +91,7 @@ export async function loadCase(sessionId: string) {
           clinic_id: string | null; contact_method: string | null; contact_email: string | null;
           contact_times: string[] | null; contact_leave_message: boolean | null;
           physical_conditions: string[] | null; physical_other: string | null; demo_emirate: string | null;
+          follow_up_token: string | null; closed_at: string | null; closure_reason: string | null;
         }>(r, "session"),
       ),
       one<{ purpose: string; granted: boolean }>("consent_records", "purpose, granted, created_at"),
@@ -98,8 +106,8 @@ export async function loadCase(sessionId: string) {
         id: string; step: number | null; urgent: boolean; rule_ids: string[]; reasons: string[]; created_at: string;
         clinician_decisions: { action: string; new_step: number | null; reason: string | null; created_at: string }[];
       }>("triage_proposals", "id, step, urgent, rule_ids, reasons, created_at, clinician_decisions(action, new_step, reason, created_at)"),
-      one<{ id: string; type: string; priority: string; due_at: string; acknowledged_at: string | null; escalated_at: string | null; closed_at: string | null }>(
-        "tasks", "id, type, priority, due_at, acknowledged_at, escalated_at, closed_at, created_at"),
+      one<{ id: string; type: string; priority: string; due_at: string; acknowledged_at: string | null; escalated_at: string | null; closed_at: string | null; reason: string | null }>(
+        "tasks", "id, type, priority, due_at, acknowledged_at, escalated_at, closed_at, created_at, reason"),
       one<{ status: string; reason: string | null; service_id: string | null; created_at: string }>("receipt_events", "status, reason, service_id, created_at"),
       one<{ outcome: string; note: string | null; created_at: string }>("contact_attempts", "outcome, note, created_at"),
       one<{ draft: { lines: SummaryLine[] }; edited: { text: string } | null; review_started_at: string | null; signed_at: string | null }>(

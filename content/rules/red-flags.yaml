@@ -152,6 +152,16 @@ rules:
       - action: create_task
         tier: urgent
 
+  # --- Crisis page: "Alert my care team now" ---------------------------------
+  - id: RF-ALERT-CARE-TEAM
+    description: 'DRAFT: the person asked to alert their care team from the crisis page (opening the page alone stays urgent)'
+    when: { fact: flag.alert_care_team, op: "==", value: true }
+    then:
+      - action: takeover_session
+      - action: show_emergency_card
+      - action: create_task
+        tier: imminent
+
   # --- "Talk to someone": a message to the care team ------------------------
   - id: RF-MESSAGE-PHRASE
     description: 'DRAFT: a message to the care team contains a risk phrase (content/rules/phrases.json)'

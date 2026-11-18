@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { loadReceipt } from "../../actions";
 import { RESULT_KEY, SUBMITTED_AT_KEY, useStoredValue } from "@/lib/check/local-answers";
@@ -109,7 +110,7 @@ export function Receipt() {
       ) : (
         <p className="flex-1 px-5 pt-5 text-text-2">
           There is no check-in to show in this browser. If you sent one from another device, your care team still has
-          it.
+          it, and you can <Link href="/return">find it with your reference and return code</Link>.
         </p>
       )}
       {followUp && followUpToken && (

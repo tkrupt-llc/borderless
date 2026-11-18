@@ -8,6 +8,7 @@ import { LaterChoices } from "./later-choices";
 import { MyTrend } from "./my-trend";
 import { SafetyDone } from "./safety-done";
 import { caseRef } from "@/lib/case-ref";
+import { ReturnCodeNote } from "@/components/return-code-note";
 
 type StoredResult = {
   path: string;
@@ -113,6 +114,8 @@ export function ResultCard() {
           See your support options →
         </Link>
       </section>
+
+      <ReturnCodeNote />
 
       {/* A follow-up already carries the earlier choices; it shows the trend instead. */}
       {result.path === "followup" ? <MyTrend /> : <LaterChoices path={result.path} />}

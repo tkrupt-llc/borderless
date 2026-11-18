@@ -65,6 +65,9 @@ export default function StartPage() {
         <Link href="/home" className="inline-flex min-h-11 items-center self-start text-caption text-primary-dark underline underline-offset-2">
           Coming back? See your next step
         </Link>
+        <Link href="/return" className="inline-flex min-h-11 items-center self-start text-caption text-primary-dark underline underline-offset-2">
+          Have a reference and return code? Find your check-in
+        </Link>
       </div>
 
       {/* Trust signals (spec): reviewing psychiatrist, licensed partner, "not a therapist", data promise. */}

@@ -1,4 +1,4 @@
-import { FOLLOW_UP_DAYS, RELIABLE_WORSENING } from "@/lib/followup/trend";
+import { FOLLOW_UP_DAYS, RELIABLE_IMPROVEMENT as IMPROVEMENT } from "@/lib/followup/trend";
 import { groupCounts, rate, MIN_GROUP } from "./aggregate";
 
 /**
@@ -37,8 +37,8 @@ export function median(xs: number[]): number | null {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
-/** Reliable improvement: a drop at least as large as the reliable-change threshold (PHQ-9 6, GAD-7 5). */
-export const RELIABLE_IMPROVEMENT = RELIABLE_WORSENING;
+/** Reliable improvement: a drop at least as large as the threshold in content/rules/change-thresholds.json. */
+export const RELIABLE_IMPROVEMENT = IMPROVEMENT;
 
 export const FAIRNESS_DIMENSIONS = [
   { id: "age", label: "Age band" },

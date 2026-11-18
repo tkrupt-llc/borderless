@@ -157,6 +157,8 @@ export const TASK_LABELS: Record<string, string> = {
   patient_message: "Message from patient",
   handoff_stalled: "Hand-off stalled",
   handoff_check: "Urgent hand-off check",
+  supervisor_review: "Supervisor review",
+  post_crisis_checkin: "Post-crisis check-in",
 };
 
 const TIER_STYLE: Record<string, string> = {

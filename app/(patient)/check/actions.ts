@@ -205,7 +205,7 @@ export async function checkAnswers(input: unknown): Promise<CheckResult> {
 // ---------------------------------------------------------------------------
 
 export type FinishResult =
-  | { ok: true; sessionId: string | null; scores: Score[]; sentToClinician: boolean }
+  | { ok: true; sessionId: string | null; scores: Score[]; sentToClinician: boolean; returnCode?: string }
   | Fail;
 
 export async function finishCheckIn(input: unknown): Promise<FinishResult> {
@@ -228,7 +228,7 @@ export async function finishCheckIn(input: unknown): Promise<FinishResult> {
     if (path === "safety") {
       // The red flags were raised answer by answer; this only stores the screen.
       await persist.finishSafetyScreen(session.id, saved);
-      return { ok: true, sessionId: session.id, scores, sentToClinician: true };
+      return { ok: true, sessionId: session.id, scores, sentToClinician: true, returnCode: await persist.issueReturnCode(session.id) };
     }
     const consents = await persist.getConsents(session.id);
     const sentToClinician = consents.clinician_review === true;
@@ -248,7 +248,9 @@ export async function finishCheckIn(input: unknown): Promise<FinishResult> {
       const reasons = notOnTrack(earlier.filter((p) => p.sessionId === lastId), saved);
       if (reasons.length > 0) await persist.raiseNotOnTrack(session.id, reasons);
     }
-    return { ok: true, sessionId: session.id, scores, sentToClinician };
+    // Shown once: with the reference, it brings this check-in back after the browser forgets it.
+    const returnCode = await persist.issueReturnCode(session.id);
+    return { ok: true, sessionId: session.id, scores, sentToClinician, returnCode };
   } catch (e) {
     console.error(e);
     return { ok: false, reason: "error" };
@@ -463,6 +465,24 @@ export async function saveAboutYou(input: unknown): Promise<{ ok: true } | Fail>
     if (!id) return { ok: false, reason: "no_session" };
     if (!may.countInStats(await persist.getConsents(id))) return { ok: false, reason: "invalid" };
     await persist.saveAboutYou(id, answers);
+    return { ok: true };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, reason: "error" };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// "Coming back?": restore a check-in with its reference and return code
+// ---------------------------------------------------------------------------
+
+export async function restoreCheckIn(input: unknown): Promise<{ ok: true } | { ok: false; reason: "invalid" | "locked" | "error" }> {
+  const parsed = z.object({ reference: z.string().max(20), code: z.string().max(20) }).safeParse(input);
+  if (!parsed.success || !isDbConfigured()) return { ok: false, reason: "invalid" };
+  try {
+    const r = await persist.verifyReturnCode(parsed.data.reference, parsed.data.code);
+    if (!r.ok) return r;
+    await writeSessionId(r.sessionId);
     return { ok: true };
   } catch (e) {
     console.error(e);

@@ -4,6 +4,7 @@ import { PatientHeader } from "@/components/patient-header";
 import { ChevronRight } from "@/components/icons";
 import { Receipt } from "./receipt";
 import { HowDidThatFeel, PickedCard } from "./after-check-in";
+import { ReturnCodeNote } from "@/components/return-code-note";
 
 // The id is not read yet: until the database is wired, the timeline uses the
 // submit time saved in this tab. TODO(DB): load the receipt by id.
@@ -37,6 +38,7 @@ export default function ReceiptPage() {
           <ChevronRight />
         </Link>
         <HowDidThatFeel />
+        <ReturnCodeNote />
         <p className="text-small text-muted">If things get worse before then, tap &ldquo;I need help now&rdquo;.</p>
         <Link href="/my-data" className="inline-flex min-h-11 items-center self-start text-caption text-primary-dark underline underline-offset-2">
           See or delete your data

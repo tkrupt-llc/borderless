@@ -57,6 +57,7 @@ const RED_FLAG_CASES: Record<string, { facts: Facts; tier: string }> = {
   "RF-RED-CHILD-RISK": { facts: factsFromAnswers({ "RED_FLAG-6": 1 }), tier: "urgent" },
   "RF-SAFETY-CHECK": { facts: { "flag.safety_check_positive": true }, tier: "urgent" },
   "RF-HELP-NOW": { facts: { "flag.help_now": true }, tier: "urgent" },
+  "RF-ALERT-CARE-TEAM": { facts: { "flag.alert_care_team": true }, tier: "imminent" },
   "RF-MESSAGE-PHRASE": { facts: { "flag.message_risk_phrase": true }, tier: "urgent" },
 };
 

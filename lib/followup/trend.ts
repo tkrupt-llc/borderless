@@ -1,4 +1,5 @@
 import { score, type Score } from "@/lib/rules/scoring";
+import thresholds from "@/content/rules/change-thresholds.json";
 
 /**
  * Follow-up rules. Deterministic, never AI. Thresholds are DRAFTS for the
@@ -7,13 +8,14 @@ import { score, type Score } from "@/lib/rules/scoring";
  * - PHQ-2 and GAD-2 are the first two items of PHQ-9 and GAD-7, so a follow-up
  *   (which asks the full PHQ-9 and GAD-7) also yields them. That lets a quick
  *   check-in be compared with a later follow-up like for like.
- * - "Not on track" uses reliable-change sizes used in NHS Talking Therapies:
- *   PHQ-9 up by 6 or more, GAD-7 up by 5 or more. For the two-item screens,
- *   moving from negative to positive counts.
+ * - "Not on track" and "reliable improvement" share one set of thresholds,
+ *   content/rules/change-thresholds.json (DRAFT): PHQ-9 6 or more, GAD-7 4 or
+ *   more. For the two-item screens, moving from negative to positive counts.
  */
 
 export const FOLLOW_UP_DAYS = 28;
-export const RELIABLE_WORSENING: Record<string, number> = { PHQ9: 6, GAD7: 5 };
+export const RELIABLE_WORSENING: Record<string, number> = { PHQ9: thresholds.notOnTrack.PHQ9, GAD7: thresholds.notOnTrack.GAD7 };
+export const RELIABLE_IMPROVEMENT: Record<string, number> = thresholds.reliableImprovement;
 
 /** PHQ-2 / GAD-2 worked out from the first two PHQ-9 / GAD-7 answers. */
 export function derivedScreens(answers: Record<string, number>): Score[] {
@@ -34,7 +36,7 @@ export function notOnTrack(previous: Point[], now: Point[]): string[] {
     if (limit !== undefined && n.total - p.total >= limit) {
       reasons.push(`${n.instrument} rose from ${p.total} to ${n.total} (by ${limit} or more)`);
     }
-    if ((n.instrument === "PHQ2" || n.instrument === "GAD2") && p.band === "negative" && n.band === "positive") {
+    if (thresholds.notOnTrack.screenTurningPositive && (n.instrument === "PHQ2" || n.instrument === "GAD2") && p.band === "negative" && n.band === "positive") {
       reasons.push(`${n.instrument} moved from negative to positive (${p.total} to ${n.total})`);
     }
   }

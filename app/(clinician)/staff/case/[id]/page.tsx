@@ -1,5 +1,9 @@
 import { Suspense } from "react";
 import { ReplyBox } from "../../reply-box";
+import { headers } from "next/headers";
+import { CloseCaseForm } from "../../close-case-form";
+import { FollowUpLinkPanel } from "../../follow-up-link-panel";
+import { CLOSURE_REASONS } from "@/lib/staff/safety-rules";
 import { AdverseEventForm } from "../../adverse-event-form";
 import { allowedChannels, may, purposeById } from "@/lib/consent";
 import { conditionLabel } from "@/lib/physical-health";
@@ -72,7 +76,8 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   // Apply any due hand-off rules for this case first, so the panel is current.
   await applyFollowUps(id).catch((e) => console.error(e));
-  const [data, chain, handoff] = await Promise.all([loadCase(id), loadCaseTrend(id), latestReferral(id)]);
+  const [data, chain, handoff, h] = await Promise.all([loadCase(id), loadCaseTrend(id), latestReferral(id), headers()]);
+  const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000"}`;
   if (!data) notFound();
   const trend = chain && chain.sessions.length > 1 ? seriesFrom(chain.points) : [];
   const pathLabel = (p: string) =>
@@ -349,6 +354,41 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             {write && <ReplyBox sessionId={id} />}
           </Panel>
 
+          {session.follow_up_token && (
+            <Panel id="followup-link-h" title="Follow-up link">
+              <FollowUpLinkPanel
+                sessionId={id}
+                link={`${origin}/f/${session.follow_up_token}`}
+                sentCount={data.activity.filter((a) => a.action === "follow_up_link_sent").length}
+              />
+            </Panel>
+          )}
+
+          {write && (
+            <Panel id="close-h" title={session.closed_at ? "Case closed" : "Close case"}>
+              {session.closed_at ? (
+                <p className="text-caption">
+                  Closed {time(session.closed_at)}: {CLOSURE_REASONS[session.closure_reason as keyof typeof CLOSURE_REASONS] ?? session.closure_reason}.
+                </p>
+              ) : (
+                <CloseCaseForm
+                  sessionId={id}
+                  state={{
+                    summarySigned: Boolean(data.summary?.signed_at),
+                    steps: {
+                      level: data.decision !== null,
+                      contact: data.contacts.some((c) => c.outcome === "spoke"),
+                      handoff: !handoff || handoff.status === "closed",
+                    },
+                    openSafetyFlags: data.tasks.filter((t) => t.type === "red_flag" && !t.closed_at).length,
+                    urgentHandoffStalled: Boolean(handoff && handoff.urgent && handoff.stalled_at && handoff.status !== "closed"),
+                    hadCrisis: data.tasks.some((t) => t.priority === "urgent" || t.priority === "imminent"),
+                  }}
+                />
+              )}
+            </Panel>
+          )}
+
           <Panel id="activity-h" title="Activity">
             <ol className="flex flex-col gap-1.5 text-[0.875rem]">
               {activity.map(({ a, n }, i) => (
@@ -411,11 +451,14 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                       <span className="font-medium">{TASK_LABELS[t.type] ?? t.type}</span>
                       <Countdown dueAt={t.due_at} />
                     </span>
+                    {t.reason && <span className="text-text-2">{t.reason.slice(t.reason.indexOf(":") + 1).trim()}</span>}
                     {t.escalated_at && <strong className="font-semibold text-danger">Escalated to supervisor</strong>}
                     {write && (
                       <span className="flex flex-wrap gap-2">
                         {!t.acknowledged_at && <ActionButton action={acknowledgeTask.bind(null, t.id)}>Acknowledge</ActionButton>}
-                        <ActionButton action={closeTask.bind(null, t.id)}>Close task</ActionButton>
+                        <ActionButton action={closeTask.bind(null, t.id)}>
+                          {t.type === "supervisor_review" ? "Mark reviewed (supervisor)" : "Close task"}
+                        </ActionButton>
                       </span>
                     )}
                   </li>

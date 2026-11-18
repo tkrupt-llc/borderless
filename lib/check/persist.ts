@@ -1,4 +1,6 @@
 import "server-only";
+import { createHash, timingSafeEqual } from "node:crypto";
+import { afterFailure, isLocked, newReturnCode, normaliseCode, parseReference } from "@/lib/check/return-code";
 import { db } from "@/lib/db/server";
 import { bankItem } from "@/lib/item-bank";
 import type { RuleFile } from "@/lib/contracts/rules";
@@ -625,4 +627,61 @@ export async function saveAboutYou(sessionId: string, answers: Partial<Record<(t
 /** Turning anonymous statistics off deletes the "About you" answers. */
 export async function clearAboutYou(sessionId: string) {
   check(await db().from("sessions").update(Object.fromEntries(ABOUT_COLUMNS.map((c) => [c, null]))).eq("id", sessionId), "clear about you");
+}
+
+// ---------------------------------------------------------------------------
+// "Coming back?": reference + short return code
+// ---------------------------------------------------------------------------
+
+const hashCode = (sessionId: string, code: string) => createHash("sha256").update(`${sessionId}:${code}`).digest("hex");
+
+/** A new return code for this check-in; only its hash is stored. Shown to the person once. */
+export async function issueReturnCode(sessionId: string): Promise<string> {
+  const code = newReturnCode();
+  check(
+    await db().from("sessions").update({ return_code_hash: hashCode(sessionId, normaliseCode(code)!), return_failed_attempts: 0, return_locked_until: null }).eq("id", sessionId),
+    "save return code",
+  );
+  return code;
+}
+
+/**
+ * Finds the check-in for a reference and code. Wrong codes count towards a
+ * short lock; the reference alone never restores anything.
+ */
+export async function verifyReturnCode(reference: string, code: string): Promise<{ ok: true; sessionId: string } | { ok: false; reason: "invalid" | "locked" }> {
+  const hex = parseReference(reference);
+  const clean = normaliseCode(code);
+  if (!hex || !clean) return { ok: false, reason: "invalid" };
+  const candidates = check(
+    await db()
+      .from("sessions")
+      .select("id, return_code_hash, return_failed_attempts, return_locked_until")
+      .gte("id", `${hex}00-0000-0000-0000-000000000000`)
+      .lte("id", `${hex}ff-ffff-ffff-ffff-ffffffffffff`)
+      .not("return_code_hash", "is", null)
+      .limit(5),
+    "find by reference",
+  ) as { id: string; return_code_hash: string; return_failed_attempts: number; return_locked_until: string | null }[];
+  const now = new Date();
+  if (candidates.length && candidates.every((c) => isLocked(c.return_locked_until, now))) return { ok: false, reason: "locked" };
+  for (const c of candidates) {
+    if (isLocked(c.return_locked_until, now)) continue;
+    const expected = Buffer.from(c.return_code_hash, "hex");
+    const given = Buffer.from(hashCode(c.id, clean), "hex");
+    if (expected.length === given.length && timingSafeEqual(expected, given)) {
+      check(await db().from("sessions").update({ return_failed_attempts: 0, return_locked_until: null }).eq("id", c.id), "reset attempts");
+      await audit("returned_with_code", c.id, "session");
+      return { ok: true, sessionId: c.id };
+    }
+  }
+  // Count the failure against every candidate for this reference (usually just one).
+  for (const c of candidates) {
+    const next = afterFailure(c.return_failed_attempts, now);
+    check(
+      await db().from("sessions").update({ return_failed_attempts: next.failed, return_locked_until: next.lockedUntil }).eq("id", c.id),
+      "count failed attempt",
+    );
+  }
+  return { ok: false, reason: "invalid" };
 }

@@ -10,6 +10,10 @@ import { runSafetyRules } from "@/lib/rules/safety";
 const helpNowRules = () =>
   runSafetyRules({ redFlags: loadRuleFile("red-flags"), bpdAdhd: loadRuleFile("bpd-adhd") }, { "flag.help_now": true })
     .fired;
+/** "Alert my care team now": an imminent task (15 minutes), not the urgent one opening the page raises. */
+const alertRules = () =>
+  runSafetyRules({ redFlags: loadRuleFile("red-flags"), bpdAdhd: loadRuleFile("bpd-adhd") }, { "flag.alert_care_team": true })
+    .fired;
 
 /**
  * The crisis page was opened during a check-in: raise RF-HELP-NOW (urgent task)
@@ -41,7 +45,7 @@ const AlertInput = z.object({
 export type AlertResult = { ok: true } | { ok: false; reason: "invalid" | "not_connected" | "error" };
 
 /**
- * "Alert my care team now": saves a phone number and raises an urgent task.
+ * "Alert my care team now": saves a phone number and raises an imminent task (15 minutes).
  * Creates a crisis session if the person has none: asking for contact is an
  * explicit request for clinician contact, recorded as such in the consent log.
  */
@@ -58,9 +62,9 @@ export async function alertCareTeam(input: unknown): Promise<AlertResult> {
       await writeSessionId(id);
     }
     await persist.saveContact(id, parsed.data.phone, parsed.data.callbackTime || null);
-    // Already taken over: an urgent task exists, so the phone number joins that case
-    // instead of opening a second task for the same person.
-    if (!session?.taken_over) await persist.raiseRedFlags(id, helpNowRules(), "asked to alert the care team");
+    // Always imminent, even if the case already has an urgent task: the person asked
+    // for someone now. The rule fires once per case, so a second tap adds no duplicate.
+    await persist.raiseRedFlags(id, alertRules(), "asked to alert the care team");
     return { ok: true };
   } catch (e) {
     console.error(e);

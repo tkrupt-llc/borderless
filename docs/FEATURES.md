@@ -16,6 +16,8 @@ A person answers a few short, standard questions. Fixed safety rules check every
 4. [Every patient page](#4-every-patient-page)
 5. [The safety engine](#5-the-safety-engine)
 6. [Clinician console](#6-clinician-console)
+   - [Supervisor triggers](#supervisor-triggers)
+   - [Case closure](#case-closure)
 7. [Referral follow-through (hand-off)](#7-referral-follow-through-hand-off)
 8. [Consent](#8-consent)
 9. [Data, hosting and privacy](#9-data-hosting-and-privacy)
@@ -97,8 +99,8 @@ A **follow-up** about 4 weeks later repeats PHQ-9 and GAD-7 so change can be mea
 
 | Page | What it shows | Where it leads |
 |---|---|---|
-| `/` Landing | Headline, how it works (5 steps), reply-time targets, why it's safe, coping cards, clinician preview | Start a 2-minute check-in, live demo, care team sign-in, Privacy / Terms / Accessibility / Contact |
-| `/start` | Three options, emergency first | Crisis page, quick check, full check-in, "Coming back?" |
+| `/` Landing | Headline, how it works (5 steps), reply-time targets, why it's safe, coping cards, clinician preview | Start a 2-minute check-in, Full check-in (about 10 min), live demo, care team sign-in, Privacy / Terms / Accessibility / Contact |
+| `/start` | Three options, emergency first | Crisis page, quick check, full check-in, "Coming back?" (home, or find a check-in with a code) |
 | `/check/[path]/consent` | "What happens to your answers": four promises, care-team access (needed), AI help (full check-in only) | First question, or the AI chat |
 | `/check/full/chat` | AI assistant asks about what's going on. Every message is phrase-checked before and after the AI. | Questions, or the crisis page if unsafe |
 | `/check/[path]/1..n` | One question per page, section count, "Why am I asked this?", gentle note before suicide questions | Next question; crisis page on a red flag |
@@ -106,9 +108,9 @@ A **follow-up** about 4 weeks later repeats PHQ-9 and GAD-7 so change can be mea
 | ↳ Pause and finish later | Keeps the check-in for 7 days on this device | Home, with "Continue check-in" |
 | `/check/[path]/health` | Optional: share physical health with the care team; share a summary with the family doctor | Contact page |
 | `/check/[path]/contact` | Phone / SMS / WhatsApp / email, safe times, voicemail OK, discreet message preview | Result card |
-| `/check/[path]/result` | Each score in plain words, "screening score, not a diagnosis", what happens next; choices for follow-up and anonymous statistics; optional About you | Timeline, support options, full check-in offer |
+| `/check/[path]/result` | Each score in plain words, "screening score, not a diagnosis", what happens next; choices for follow-up and anonymous statistics; optional About you; **reference and return code** to keep | Timeline, support options, full check-in offer |
 | `/check/done/[id]` Timeline | Sent → reviewed → next step → referred → booked → first contact. Messages with the care team. Your next step card. Picked-for-you coping card. How did that feel? | Coping cards, guides, support options, data page |
-| `/help-now` | 998, 999 and 800-SAKINA first. No waiting, no AI. | Alert my care team now, breathing, optional safety questions |
+| `/help-now` | 998, 999 and 800-SAKINA first. No waiting, no AI. Opening it during a check-in raises an **urgent** task. | **Alert my care team now** (leave a number) raises an **imminent** task; breathing; optional safety questions |
 | `/talk` | Talk to someone (not urgent) | Request a call back; message the care team; 24/7 line |
 | `/coping`, `/coping/[id]` | 7 psychiatrist-approved cards plus "My reasons and next steps", colour-coded by what they help with | "This isn't helping" raises a task |
 | `/guides` | Self-help guides (sleep, worry, breathing) | |
@@ -116,7 +118,14 @@ A **follow-up** about 4 weeks later repeats PHQ-9 and GAD-7 so change can be mea
 | `/home` | Returning patient: one next step (paused check-in, follow-up due, or where things are) | |
 | `/f/[token]` | 4-week follow-up check-in and trend chart | |
 | `/my-data` | What we keep; Your choices (Turn on / Turn off); family doctor summary download; delete everything | |
+| `/return` "Coming back?" | Reference + return code | Restores the timeline on any device, after the browser has forgotten the check-in |
 | `/privacy`, `/terms`, `/accessibility`, `/contact` | Plain information pages, written to match how the app works | |
+
+### Coming back with a reference and return code
+- When a check-in is sent, the result card and timeline show **"Keep these to come back"**: the case **reference** (e.g. `BL-D11B41`, not secret) and a **return code** (e.g. `3QAD-GJN7`, secret, 8 characters without look-alike letters).
+- On **`/return`** ("Coming back?" on the start and home pages), the reference plus the code bring the timeline back on any device, even after the cookie has ended or Quick exit was used.
+- Only a hash of the code is stored. Five wrong codes lock that reference for 15 minutes. The reference alone never restores anything.
+- Lost code: "Talk to someone" and give the reference.
 
 ### Always available on patient pages
 - **I need help now:** the crisis page.
@@ -151,17 +160,22 @@ Checked on **every answer**, before scoring. Examples:
 
 A red flag stops the AI for that person permanently, shows the emergency card, and creates a task.
 
+**On the crisis page:** opening `/help-now` during a check-in raises an **urgent** task (RF-HELP-NOW). Tapping **"Alert my care team now"** and leaving a number raises an **imminent** task (RF-ALERT-CARE-TEAM), even if the urgent one already exists: the person asked for someone now.
+
 ### Reply-by clocks
 | Tier | Clock | Examples |
 |---|---|---|
-| Imminent | 15 minutes | "Yes" to the suicide question, high-risk C-SSRS |
-| Urgent | 4 hours | PHQ-9 item 9, I need help now, risky message |
+| Imminent | 15 minutes | "Yes" to the suicide question, high-risk C-SSRS, "Alert my care team now" |
+| Urgent | 4 hours | PHQ-9 item 9, opening "I need help now", risky message |
 | Elevated / routine | Next working day | Check-ins to review, call-backs, messages |
 
 Values are drafts for the psychiatrist and pilot site to confirm.
 
-### Escalation
-Every minute, the database marks tasks that are past their reply-by time and **not acknowledged** as escalated, logs each as a safety event, and moves them into the duty supervisor's Escalated view.
+### Escalation (two clocks)
+1. **Reply-by clock:** every minute, the database marks tasks that are past their reply-by time and **not acknowledged** as escalated, logs each as a safety event, and moves them into the duty supervisor's Escalated view.
+2. **Contact clock:** an **imminent** task that was acknowledged but has **no contact logged (call attempt or conversation) within 30 minutes** of acknowledging is escalated too. Checked on every queue refresh; logged as "Escalated: no contact within 30 minutes".
+
+Timings are in `content/rules/escalation.json` (DRAFT).
 
 ### Stepped-care routing
 The routing rules propose a step; a clinician accepts or overrides it with a reason.
@@ -193,7 +207,7 @@ The routing rules propose a step; a clinician accepts or overrides it with a rea
 | View | Contents |
 |---|---|
 | **Review queue** | Every open case, most urgent first, sorted by reply-by time |
-| **Follow-ups due** | 4-week follow-ups and "Not on track" cases (PHQ-9 up 6+, GAD-7 up 5+, or a screen turning positive) |
+| **Follow-ups due** | 4-week follow-ups and "Not on track" cases (PHQ-9 up 6+, GAD-7 up 4+, or a screen turning positive; DRAFT thresholds in `content/rules/change-thresholds.json`) |
 | **Escalated** | Cases that ran late or were handed up; worked by the duty supervisor |
 | **Service overview** | Numbers about how the service is doing |
 
@@ -206,7 +220,7 @@ Filters by urgency; each row shows reference, why it's here, path, scores and a 
 |---|---|
 | **Acknowledge** | "I'm on it." Stops automatic escalation and records response time. Doesn't close the task. |
 | **Escalate** | Hands the case to the duty supervisor now. |
-| **Close task** | The work is done; the case leaves the queue. |
+| **Close task** | The work is done. A **Supervisor review** task can only be closed by the duty supervisor ("Mark reviewed (supervisor)"). |
 
 ### Full case (`/staff/case/[id]`)
 | Panel | What the clinician does |
@@ -221,9 +235,34 @@ Filters by urgency; each row shows reference, why it's here, path, scores and a 
 | **Contact** | Number or email, preferred method, allowed channels, safe times, voicemail OK; **Log contact** |
 | **Refer / Hand-off** | Refer to a matched service; then manage the hand-off (see section 7) |
 | **Physical health** | Shared conditions; **Download family doctor summary (FHIR R4)**, only with consent |
-| **Safety reporting** | **Report adverse event** (type, severity, description) |
+| **Safety reporting** | **Report adverse event** (type, severity, description); also sends the case to the duty supervisor |
+| **Follow-up link** | The person's private follow-up link: **Copy link**, send it yourself, then **Log link sent** (SMS, WhatsApp, email, read out on a call, in person). Automatic sending is a pilot step. |
+| **Close case** | See [Case closure](#case-closure) |
 | **Consent and history** | Every choice and its state; add BPD / ADHD history |
 | **Activity** | The audit trail for the case |
+
+Each task shows why it exists when a rule created it (e.g. "Repeat crisis: 2 urgent or imminent alerts in 30 days").
+
+### Supervisor triggers
+These create a **Supervisor review** task that goes straight into the Escalated view (one per case per trigger):
+
+| Trigger | When |
+|---|---|
+| **Co-sign** | A clinician overrides the urgent pathway on a safety-flagged case (lowers urgency) |
+| **Repeat crisis** | 2 or more urgent or imminent alerts for the same person (a check-in and its follow-ups) within 30 days |
+| **Imminent and unreachable** | An imminent case with 2 or more unanswered call attempts and no conversation since |
+| **Adverse event** | Any adverse event reported on a case |
+
+Plus the two escalation clocks above. Only the duty supervisor can close a supervisor review.
+
+### Case closure
+**Close case** on the full case page. A case closes only when:
+- a **closure reason** is chosen: handed off to a service / self-help plan agreed / person declined / unreachable / person deleted their data;
+- the **summary is signed** (this can't be marked not needed);
+- every other step is **done or marked not needed**: level decided, spoke with the person, hand-off closed;
+- **no safety flag is open** (red-flag tasks closed) and **no urgent hand-off is stalled**.
+
+Closing closes every open task and is logged. If the case ever had an **urgent or imminent** alert, **check-ins at 7 and 30 days** are scheduled; they stay out of the queue until a day before they are due.
 
 ---
 
@@ -322,7 +361,7 @@ Two-step "Delete my data" on `/my-data` removes the check-in and everything link
 | Hand-offs stalled | Referrals that went back to the queue |
 | Follow-up on time | Follow-ups done within a week of the 4-week due date |
 | Waiting time | Median days from referral to booking |
-| Reliable improvement | PHQ-9 down 6+ or GAD-7 down 5+ at follow-up |
+| Reliable improvement | PHQ-9 down 6+ or GAD-7 down 4+ at follow-up (same DRAFT thresholds as "not on track") |
 | Crisis responses completed | Urgent and imminent alerts acknowledged within their clock |
 | Adverse events | Reported by clinicians |
 
@@ -352,6 +391,8 @@ Two-step "Delete my data" on `/my-data` removes the check-in and everything link
 | `content/rules/bpd-adhd.yaml` | BPD / ADHD safeguards |
 | `content/rules/phrases.json` | Risk phrases checked in messages |
 | `content/rules/referral-followup.json` | Hand-off timings |
+| `content/rules/change-thresholds.json` | Reliable improvement and "not on track" thresholds (one set) |
+| `content/rules/escalation.json` | Contact clock, supervisor triggers, post-crisis check-ins |
 | `content/item-bank/*` | Questionnaire items and answers |
 | `content/consent.json` | Consent purposes and wording |
 | `content/directory/services.json` | Referral services |
@@ -373,14 +414,14 @@ Two-step "Delete my data" on `/my-data` removes the check-in and everything link
 | Hosting | Vercel, deploys automatically on push to `main` |
 
 - Safety rules, scoring, routing, hand-off rules, consent and outcome measures are **pure functions**, so they are tested without a database and also run in the live demo.
-- The patient is identified only by an httpOnly cookie. It ends when the browser closes, or after 7 days if they pause. Quick exit deletes it.
+- The patient is identified only by an httpOnly cookie. It ends when the browser closes, or after 7 days if they pause. Quick exit deletes it. The reference and return code bring a check-in back after that.
 - Every staff and patient action that changes a case writes an audit event.
 
 ---
 
 ## 14. Testing
 
-- **258 automated tests** (Vitest): scoring bands, every red-flag rule, routing, phrases, guardrails, conditional questions, "Prefer not to say", receipt timeline, consent revocation, aggregate-only employer views, outcome measures, and every hand-off rule.
+- **282 automated tests** (Vitest): scoring bands, every red-flag rule (including "Alert my care team now" as imminent), routing, phrases, guardrails, conditional questions, "Prefer not to say", receipt timeline, consent revocation, aggregate-only employer views, outcome measures, every hand-off rule, the contact clock, the return code, case closure, change thresholds and supervisor triggers.
 - **Red-team script:** 30 prompts the AI must block or redirect.
 - **End-to-end checks** in a real browser for each feature, and **accessibility scans** (axe) of the main pages.
 
@@ -393,10 +434,10 @@ Run `npm test` before pushing.
 | Area | Status |
 |---|---|
 | Hosting | Australia and Groq today; UAE hosting is a pilot step |
-| Clinical sign-off | DRAFT: reply-by clocks, hand-off timings, "Prefer not to say" routing on safety questions, the message risk rule, the "Your safety comes first" heading, About you wording |
+| Clinical sign-off | DRAFT: reply-by clocks, the 30-minute contact clock, supervisor triggers, post-crisis check-in days, hand-off timings, change thresholds (PHQ-9 6, GAD-7 4), the message and "Alert my care team" rules, the "Your safety comes first" heading, About you wording |
 | Provider details | SEHA, Pura and SAKINA booking routes and costs to confirm |
 | Language | English only; Arabic planned (layout already right-to-left ready) |
-| Notifications | No SMS or email sending; alerts appear in the console |
+| Notifications | No SMS or email sending; alerts appear in the console. Clinicians copy and send the follow-up link themselves and log it; automatic sending is a pilot step |
 | Integration | Family doctor summary is a download; Malaffi is roadmap |
 | Evaluation | Full 60-vignette evaluation and a user test still to do |
 | Demo data | Outcome numbers are simulated |
@@ -418,6 +459,9 @@ Run `npm test` before pushing.
 | **Duty supervisor** | Senior clinician who picks up late or difficult cases |
 | **Care team** | The real clinicians who read check-ins and respond |
 | **Hand-off** | The referral to a service, followed until first contact |
+| **Return code** | A secret 8-character code that, with the reference, brings a check-in back on any device |
+| **Supervisor review** | A task only the duty supervisor can close (co-sign, repeat crisis, unreachable, adverse event) |
+| **Case closure** | Closing a case with a reason, a signed summary and every step done or marked not needed |
 | **Family doctor / GP** | The person's general practitioner (primary care) |
 | **FHIR R4** | Standard format for exchanging health records |
 | **Malaffi** | Abu Dhabi's health information exchange |

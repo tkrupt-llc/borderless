@@ -181,6 +181,7 @@ export function ReturningHome() {
           <Link href="/coping/my-reasons" className={chip}>My reasons and next steps</Link>
           <Link href="/talk" className={chip}>Talk to someone</Link>
           <Link href="/support-options" className={chip}>Your support options</Link>
+          <Link href="/return" className={chip}>Find my check-in with a code</Link>
         </div>
       </div>
     </div>

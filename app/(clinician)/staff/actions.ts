@@ -2,6 +2,9 @@
 
 import { z } from "zod";
 import { audit } from "@/lib/staff/audit";
+import { raiseSupervisorReview } from "@/lib/staff/supervision";
+import { canCloseCase, CLOSURE_REASONS, CLOSURE_STEPS, ESCALATION, needsCoSign, postCrisisCheckIns, type ClosureReason, type ClosureStep } from "@/lib/staff/safety-rules";
+import { latestReferral as latestReferralRow } from "@/lib/referral/persist";
 import * as referral from "@/lib/referral/persist";
 import { refresh } from "next/cache";
 import { db } from "@/lib/db/server";
@@ -21,6 +24,9 @@ function must(result: { error: { message: string } | null }, what: string) {
   if (result.error) throw new Error(`${what}: ${result.error.message}`);
 }
 
+/** An error whose message is shown to the clinician as-is (e.g. why a case can't close). */
+class UserError extends Error {}
+
 async function run(fn: (staff: Staff) => Promise<void>): Promise<Result> {
   const staff = await requireStaff();
   if (!canWrite(staff)) return { ok: false, error: "This account can view cases but not change them." };
@@ -29,6 +35,7 @@ async function run(fn: (staff: Staff) => Promise<void>): Promise<Result> {
     refresh();
     return { ok: true };
   } catch (e) {
+    if (e instanceof UserError) return { ok: false, error: e.message };
     console.error(e);
     return { ok: false, error: "That didn't save. Please try again." };
   }
@@ -83,9 +90,13 @@ export async function escalateCase(sessionId: string): Promise<Result> {
 export async function closeTask(taskId: string): Promise<Result> {
   return run(async (staff) => {
     const id = uuid.parse(taskId);
-    const { data, error } = await db().from("tasks").update({ closed_at: new Date().toISOString() }).eq("id", id).select("session_id");
+    const { data: task } = await db().from("tasks").select("type").eq("id", id).single();
+    // Supervisor reviews (co-sign, repeat crisis, unreachable, adverse event) are closed by a supervisor.
+    if (task?.type === "supervisor_review" && staff.role !== "supervisor") throw new UserError("Only the duty supervisor can close a supervisor review.");
+    const now = new Date().toISOString();
+    const { data, error } = await db().from("tasks").update({ closed_at: now, acknowledged_at: now }).eq("id", id).select("session_id");
     must({ error }, "close task");
-    if (data?.[0]) await audit(staff, "task_closed", "task", id, data[0].session_id);
+    if (data?.[0]) await audit(staff, task?.type === "supervisor_review" ? "supervisor_reviewed" : "task_closed", "task", id, data[0].session_id);
   });
 }
 
@@ -115,6 +126,15 @@ export async function decide(input: unknown): Promise<Result> {
     await addReceipt(d.sessionId, "reviewed");
     await addReceipt(d.sessionId, d.action === "accept" ? "accepted" : "re_routed", d.action === "override" ? d.reason : null);
     await audit(staff, `proposal_${d.action}`, "triage_proposal", d.proposalId, d.sessionId, { newStep: d.newStep, reason: d.reason });
+    // Lowering urgency on a safety-flagged case needs the duty supervisor's co-sign.
+    const [{ data: proposal }, { data: flags }] = await Promise.all([
+      db().from("triage_proposals").select("urgent").eq("id", d.proposalId).single(),
+      db().from("red_flag_events").select("id").eq("session_id", d.sessionId).limit(1),
+    ]);
+    if (needsCoSign({ hasRedFlag: (flags ?? []).length > 0, proposalUrgent: Boolean(proposal?.urgent), decision: d.action })) {
+      const why = "Co-sign: urgency lowered on a safety-flagged case (step " + d.newStep + "; reason: " + d.reason + ")";
+      await raiseSupervisorReview(d.sessionId, "co_sign", why, staff.role + ":" + staff.id);
+    }
   });
 }
 
@@ -330,5 +350,88 @@ export async function reportAdverseEvent(input: unknown): Promise<Result> {
       "adverse event",
     );
     await audit(staff, "adverse_event_reported", "adverse_event", d.sessionId ?? "service", d.sessionId, { category: d.category, severity: d.severity });
+    // Every adverse event on a case goes to the duty supervisor.
+    if (d.sessionId) {
+      const why = "Adverse event reported: " + d.category.replaceAll("_", " ") + " (" + d.severity + ")";
+      await raiseSupervisorReview(d.sessionId, "adverse_event_" + Date.now(), why, staff.role + ":" + staff.id);
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Case closure and follow-up link
+// ---------------------------------------------------------------------------
+
+const CloseInput = z.object({
+  sessionId: uuid,
+  reason: z.enum(Object.keys(CLOSURE_REASONS) as [ClosureReason, ...ClosureReason[]]),
+  notNeeded: z.array(z.enum(Object.keys(CLOSURE_STEPS) as [ClosureStep, ...ClosureStep[]])),
+});
+
+/**
+ * Closes a case: reason required; summary signed; every step done or marked not
+ * needed; never while a safety flag is open or an urgent hand-off is stalled.
+ * Cases that had a crisis get check-ins scheduled at 7 and 30 days.
+ */
+export async function closeCase(input: unknown): Promise<Result> {
+  const parsed = CloseInput.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Choose a closure reason." };
+  const d = parsed.data;
+  return run(async (staff) => {
+    const state = await closureState(d.sessionId);
+    const verdict = canCloseCase(state, d.reason, d.notNeeded);
+    if (!verdict.ok) throw new UserError(verdict.blockers.join(". ") + ".");
+    const now = new Date();
+    must(
+      await db().from("sessions").update({ closed_at: now.toISOString(), closure_reason: d.reason, closed_by: staff.id }).eq("id", d.sessionId),
+      "close case",
+    );
+    must(
+      await db().from("tasks").update({ closed_at: now.toISOString(), acknowledged_at: now.toISOString() }).eq("session_id", d.sessionId).is("closed_at", null),
+      "close tasks",
+    );
+    await audit(staff, "case_closed", "session", d.sessionId, d.sessionId, { reason: d.reason, not_needed: d.notNeeded });
+    const checkIns = postCrisisCheckIns(now, state.hadCrisis);
+    if (checkIns.length) {
+      must(
+        await db().from("tasks").insert(
+          checkIns.map((due, i) => ({
+            session_id: d.sessionId,
+            type: "post_crisis_checkin",
+            priority: "elevated",
+            due_at: due.toISOString(),
+            reason: "post_crisis: " + ESCALATION.postCrisisCheckInDays[i] + "-day check-in after a crisis",
+          })),
+        ),
+        "post-crisis check-ins",
+      );
+      await audit(staff, "post_crisis_checkins_scheduled", "session", d.sessionId, d.sessionId, { days: ESCALATION.postCrisisCheckInDays });
+    }
+  });
+}
+
+/** What the closure rules need to know about a case. */
+async function closureState(sessionId: string) {
+  const [data, handoff] = await Promise.all([loadCase(sessionId), latestReferralRow(sessionId)]);
+  if (!data) throw new UserError("Case not found.");
+  return {
+    summarySigned: Boolean(data.summary?.signed_at),
+    steps: {
+      level: data.decision !== null,
+      contact: data.contacts.some((c) => c.outcome === "spoke"),
+      handoff: !handoff || handoff.status === "closed",
+    },
+    openSafetyFlags: data.tasks.filter((t) => t.type === "red_flag" && !t.closed_at).length,
+    urgentHandoffStalled: Boolean(handoff && handoff.urgent && handoff.stalled_at && handoff.status !== "closed"),
+    hadCrisis: data.tasks.some((t) => t.priority === "urgent" || t.priority === "imminent"),
+  };
+}
+
+/** The clinician copied the follow-up link and sent it themselves (automatic sending is a pilot step). */
+export async function logFollowUpLinkSent(sessionId: string, how: string): Promise<Result> {
+  return run(async (staff) => {
+    const id = uuid.parse(sessionId);
+    const channel = z.enum(["phone", "sms", "whatsapp", "email", "in_person"]).parse(how);
+    await audit(staff, "follow_up_link_sent", "session", id, id, { channel });
   });
 }
