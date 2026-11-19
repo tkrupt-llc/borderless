@@ -192,7 +192,7 @@ The routing rules propose a step; a clinician accepts or overrides it with a rea
 - Runs only in the full check-in, and only with the person's "AI help" consent.
 - Asks questions and drafts a note for the clinician; extracted facts must quote the person's own message.
 - Output guardrails block diagnosis, medication advice, therapy instructions and reassurance such as "you're fine". Tested with a 30-prompt red-team set.
-- If the AI fails twice, the person continues with the questionnaire only.
+- If the AI fails twice, or the conversation reaches its limit, the chat says "Let's move to a few short questions. Your clinician will see everything you've written." and shows a **Move to the questions** button. No apology, no dead end.
 - Never scores, routes or decides.
 
 ### Extra safeguards
