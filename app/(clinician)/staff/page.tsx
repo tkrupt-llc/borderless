@@ -92,7 +92,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
           </h1>
           <p className="mt-1 text-[0.875rem] text-muted">Sorted by reply-by time</p>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex flex-col items-start gap-2 sm:items-end">
           <AutoRefresh />
           {!view.hidden && (
             <nav aria-label="Filter by urgency" className="flex flex-wrap gap-2">
@@ -155,7 +155,39 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
         </p>
       ) : (
         <div className="flex flex-wrap items-start gap-5">
-          <div className="min-w-0 flex-[1_1_520px] overflow-x-auto rounded-2xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)]">
+          {/* Phones: one card per case; tapping opens the full case. */}
+          <ul aria-label="Open cases" className="flex w-full flex-col gap-2.5 sm:hidden">
+            {shown.map((c) => {
+              const clinic = clinicById(c.clinicId);
+              return (
+                <li key={c.sessionId} className={justNow(c.top.createdAt, nowMs) ? "anim-highlight rounded-2xl" : undefined}>
+                  <Link
+                    href={`/staff/case/${c.sessionId}`}
+                    className={`flex flex-col gap-1.5 rounded-2xl border bg-surface px-4 py-3.5 text-ink no-underline hover:text-ink ${
+                      c.escalated ? "border-danger/40 shadow-[inset_3px_0_0_var(--danger)]" : "border-line-warm"
+                    }`}
+                  >
+                    <span className="flex items-start justify-between gap-3">
+                      <span className="text-[1rem] font-semibold tabular-nums">{caseRef(c.sessionId)}</span>
+                      <ReplyBy priority={c.top.priority} dueAt={c.top.dueAt} />
+                    </span>
+                    <span className="text-[0.875rem] text-text-2">{taskSummary(c.tasks.map((t) => TASK_LABELS[t.type] ?? t.type))}</span>
+                    <span className="flex flex-wrap gap-x-3 gap-y-0.5 text-[0.8125rem] text-muted">
+                      <span className={`font-semibold ${c.escalated ? "text-danger" : c.unacked > 0 ? "text-ink" : "text-muted"}`}>
+                        {c.escalated ? "Escalated" : c.unacked > 0 ? "New" : "Acknowledged"}
+                      </span>
+                      <span>{pathLabel(c.path)}</span>
+                      {scores.get(c.sessionId) && <span className="tabular-nums">{scores.get(c.sessionId)}</span>}
+                    </span>
+                    {clinic && <span className="text-[0.8125rem] text-blue">via {clinic.name}</span>}
+                    {!c.top.hasContact && <span className="text-[0.8125rem] text-muted">No contact details: timeline only</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="hidden min-w-0 flex-[1_1_520px] overflow-x-auto rounded-2xl sm:block border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)]">
             <table className="w-full min-w-[560px] border-collapse text-left text-[0.9375rem]">
               <thead className="text-[0.8125rem] text-muted">
                 <tr>
@@ -208,7 +240,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
           </div>
 
           {selected && (
-            <div className="flex min-w-0 flex-[1_1_340px] flex-col gap-3 xl:sticky xl:top-6">
+            <div className="hidden min-w-0 flex-[1_1_340px] flex-col gap-3 sm:flex xl:sticky xl:top-6">
               <CaseSummaryPanel key={selected.sessionId} sessionId={selected.sessionId} priority={selected.top.priority} write={write} />
               {selected.unacked > 0 && write && (
                 <div className="flex items-center justify-between gap-3 rounded-2xl border border-line-warm bg-surface px-5 py-3">
@@ -224,6 +256,13 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
       )}
     </StaffShell>
   );
+}
+
+/** "Red flag ×4 · Supervisor review": each task type once, with a count when it repeats. */
+function taskSummary(labels: string[]): string {
+  const counts = new Map<string, number>();
+  for (const l of labels) counts.set(l, (counts.get(l) ?? 0) + 1);
+  return [...counts].map(([l, n]) => (n > 1 ? `${l} ×${n}` : l)).join(" · ");
 }
 
 /** "reply in 11 min" for the imminent banner (the queue refreshes every few seconds). */

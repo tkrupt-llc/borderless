@@ -54,15 +54,15 @@ export function StaffShell({
   children: React.ReactNode;
 }) {
   const item = (on: boolean) =>
-    `flex min-h-10 items-center gap-3 rounded-lg px-3 text-[0.875rem] no-underline ${
+    `flex min-h-10 shrink-0 items-center gap-2.5 rounded-lg px-3 text-[0.875rem] whitespace-nowrap no-underline lg:gap-3 ${
       on ? "bg-sage font-semibold text-text-on-sage hover:text-text-on-sage" : "font-medium text-text-2 hover:bg-sage-soft hover:text-ink"
     }`;
   const count = "ms-auto rounded-full bg-surface px-2 py-0.5 text-[0.75rem] font-semibold text-text-2 tabular-nums ring-1 ring-line";
   const initials = staff.email.slice(0, 2).toUpperCase();
   return (
     <div className="flex min-h-dvh w-full flex-col font-sans text-[0.875rem] leading-normal lg:flex-row">
-      <aside className="flex shrink-0 flex-col gap-5 border-b border-line-warm bg-surface px-3 py-4 lg:sticky lg:top-0 lg:h-dvh lg:w-60 lg:border-e lg:border-b-0">
-        <div className="flex h-8 items-center gap-2 px-2">
+      <aside className="flex shrink-0 flex-col gap-2 border-b border-line-warm bg-surface px-3 pt-3 pb-2 lg:sticky lg:top-0 lg:h-dvh lg:w-60 lg:gap-5 lg:border-e lg:border-b-0 lg:py-4">
+        <div className="flex min-h-8 items-center gap-2 px-2">
           <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true">
             <path d="M32.3 9.7 A16 16 0 1 0 32.3 30.3" fill="none" stroke="var(--brand)" strokeWidth="5" strokeLinecap="round" />
             <circle cx="27" cy="20" r="3.6" fill="var(--clay)" />
@@ -71,21 +71,48 @@ export function StaffShell({
             <span className="text-[1rem] font-semibold tracking-[-0.01em] text-ink">borderless</span>
             <span className="text-[0.75rem] text-muted">Clinician console</span>
           </span>
+          {/* Phones: who is signed in and Sign out, in the same row as the logo. */}
+          <form action={signOut} className="ms-auto flex items-center gap-2 lg:hidden">
+            <span
+              title={`${staff.email} · ${staff.role}`}
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-brand text-[0.75rem] font-semibold text-white"
+            >
+              <span aria-hidden="true">{initials}</span>
+              <span className="sr-only">
+                Signed in as {staff.email}, {staff.role}
+              </span>
+            </span>
+            <button type="submit" className="min-h-10 cursor-pointer rounded-full border border-line bg-surface px-3.5 text-[0.8125rem] font-medium text-ink">
+              Sign out
+            </button>
+          </form>
         </div>
-        <nav aria-label="Console" className="flex flex-wrap gap-1 lg:flex-col lg:flex-nowrap">
+        {/* Phones: one row that scrolls sideways. Desktop: the side bar list. */}
+        <nav
+          aria-label="Console"
+          className="-mx-3 flex gap-1 overflow-x-auto px-3 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0"
+        >
           <p className="hidden px-3 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted uppercase lg:block">Work</p>
           <Link href="/staff" className={item(active === "queue")} aria-current={active === "queue" ? "page" : undefined}>
-            <InboxIcon />
-            <span>Review queue</span>
+            <span className="hidden lg:contents">
+              <InboxIcon />
+            </span>
+            <span className="lg:hidden">Queue</span>
+            <span className="hidden lg:inline">Review queue</span>
             {counts && <span className={count}>{counts.open}</span>}
           </Link>
           <Link href="/staff?view=followups" className={item(active === "followups")} aria-current={active === "followups" ? "page" : undefined}>
-            <RepeatIcon />
-            <span>Follow-ups due</span>
+            <span className="hidden lg:contents">
+              <RepeatIcon />
+            </span>
+            <span className="lg:hidden">Follow-ups</span>
+            <span className="hidden lg:inline">Follow-ups due</span>
             {counts?.followups ? <span className={count}>{counts.followups}</span> : null}
           </Link>
           <Link href="/staff?view=escalated" className={item(active === "escalated")} aria-current={active === "escalated" ? "page" : undefined}>
-            <AlertIcon />
+            <span className="hidden lg:contents">
+              <AlertIcon />
+            </span>
             <span>Escalated</span>
             {counts && counts.escalated > 0 && (
               <span className="ms-auto rounded-full bg-danger px-2 py-0.5 text-[0.75rem] font-semibold text-white tabular-nums">{counts.escalated}</span>
@@ -93,15 +120,18 @@ export function StaffShell({
           </Link>
           <p className="hidden px-3 pt-3 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted uppercase lg:block">Service</p>
           <Link href="/staff/insights" className={item(active === "insights")} aria-current={active === "insights" ? "page" : undefined}>
-            <ChartIcon />
-            <span>Service overview</span>
+            <span className="hidden lg:contents">
+              <ChartIcon />
+            </span>
+            <span className="lg:hidden">Overview</span>
+            <span className="hidden lg:inline">Service overview</span>
           </Link>
         </nav>
         <div className="mx-1 mt-auto hidden rounded-xl bg-sage-soft px-3.5 py-3 text-[0.8125rem] text-text-2 lg:block">
           <strong className="block text-ink">Duty supervisor</strong>
           Any case that misses its reply-by time goes to them automatically.
         </div>
-        <form action={signOut} className="mt-auto flex flex-col gap-3 border-t border-line-warm px-2 pt-4 lg:mt-0">
+        <form action={signOut} className="hidden flex-col gap-3 border-t border-line-warm px-2 pt-4 lg:flex">
           <span className="flex items-center gap-3">
             <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-brand text-[0.75rem] font-semibold text-white">
               {initials}
@@ -120,12 +150,12 @@ export function StaffShell({
         </form>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line-warm bg-surface px-5 py-2 lg:px-8">
-          <div className="ms-auto flex flex-wrap items-center gap-3">
+        <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line-warm bg-surface px-4 py-2 sm:px-5 lg:px-8">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:ms-auto sm:w-auto sm:gap-3">
           <OutOfHours />
           <ImminentAlert />
-          <form action="/staff/find" role="search" className="flex items-center gap-2">
-            <label className="flex h-9 items-center gap-2 rounded-md border border-line bg-bg px-3 text-muted focus-within:border-primary focus-within:bg-surface">
+          <form action="/staff/find" role="search" className="flex w-full items-center gap-2 sm:w-auto">
+            <label className="flex h-11 w-full items-center gap-2 sm:h-9 sm:w-auto rounded-md border border-line bg-bg px-3 text-muted focus-within:border-primary focus-within:bg-surface">
               <SearchIcon />
               <span className="sr-only">Find a case by reference</span>
               <input
@@ -133,7 +163,7 @@ export function StaffShell({
                 placeholder="Find case, e.g. BL-AF09B5"
                 autoComplete="off"
                 spellCheck={false}
-                className="w-52 bg-transparent text-[0.875rem] text-ink outline-none placeholder:text-muted"
+                className="w-full min-w-0 bg-transparent text-[1rem] sm:w-52 sm:text-[0.875rem] text-ink outline-none placeholder:text-muted"
               />
             </label>
           </form>
@@ -142,7 +172,7 @@ export function StaffShell({
         {bare ? (
           <main className="flex min-w-0 flex-1 flex-col">{children}</main>
         ) : (
-          <main className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-6 lg:px-8">{children}</main>
+          <main className="flex min-w-0 flex-1 flex-col gap-5 px-4 py-5 sm:px-5 sm:py-6 lg:px-8">{children}</main>
         )}
       </div>
     </div>

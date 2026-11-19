@@ -49,19 +49,21 @@ export function TrendChart({ series, color = "var(--primary)" }: { series: Trend
           </g>
         ))}
       </svg>
-      <table className="sr-only">
-        <caption>{series.title} over time (lower is better)</caption>
-        <tbody>
-          {points.map((p, i) => (
-            <tr key={p.at + i}>
-              <th scope="row">{day(p.at)}</th>
-              <td>
-                {p.total} out of {max}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="sr-only">
+        <table>
+          <caption>{series.title} over time (lower is better)</caption>
+          <tbody>
+            {points.map((p, i) => (
+              <tr key={p.at + i}>
+                <th scope="row">{day(p.at)}</th>
+                <td>
+                  {p.total} out of {max}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }

@@ -320,14 +320,16 @@ function DailyChart({ daily }: { daily: Insights["daily"] }) {
           ))}
         </div>
       </div>
-      <table className="sr-only">
-        <caption>Check-ins per day</caption>
-        <tbody>
-          {daily.map((d) => (
-            <tr key={d.label}><th scope="row">{d.label}</th><td>{d.value}</td></tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="sr-only">
+        <table>
+          <caption>Check-ins per day</caption>
+          <tbody>
+            {daily.map((d) => (
+              <tr key={d.label}><th scope="row">{d.label}</th><td>{d.value}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }

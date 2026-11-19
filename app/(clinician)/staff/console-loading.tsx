@@ -152,7 +152,7 @@ function InsightsBody({ org = false }: { org?: boolean }) {
 export function ConsoleLoading({ kind }: { kind: Kind }) {
   return (
     <div className="flex min-h-dvh w-full flex-col font-sans text-[0.875rem] leading-normal lg:flex-row">
-      <aside className="flex shrink-0 flex-col gap-5 border-b border-line-warm bg-surface px-3 py-4 lg:sticky lg:top-0 lg:h-dvh lg:w-60 lg:border-e lg:border-b-0">
+      <aside className="flex shrink-0 flex-col gap-2 border-b border-line-warm bg-surface px-3 pt-3 pb-2 lg:sticky lg:gap-5 lg:py-4 lg:top-0 lg:h-dvh lg:w-60 lg:border-e lg:border-b-0">
         <div className="flex h-8 items-center gap-2 px-2">
           <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true">
             <path d="M32.3 9.7 A16 16 0 1 0 32.3 30.3" fill="none" stroke="var(--brand)" strokeWidth="5" strokeLinecap="round" />
@@ -163,11 +163,11 @@ export function ConsoleLoading({ kind }: { kind: Kind }) {
             <span className="text-[0.75rem] text-muted">Clinician console</span>
           </span>
         </div>
-        <ul aria-hidden="true" className="flex flex-wrap gap-1 lg:flex-col lg:flex-nowrap">
+        <ul aria-hidden="true" className="-mx-3 flex gap-1 overflow-x-hidden px-3 pb-1 lg:mx-0 lg:flex-col lg:px-0 lg:pb-0">
           {NAV.map((n) => (
             <li
               key={n.label}
-              className={`flex min-h-10 items-center gap-3 rounded-lg px-3 text-[0.875rem] ${
+              className={`flex min-h-10 shrink-0 items-center gap-2.5 rounded-lg px-3 whitespace-nowrap lg:gap-3 text-[0.875rem] ${
                 (n.on as readonly string[]).includes(kind) ? "bg-sage font-semibold text-text-on-sage" : "font-medium text-text-2"
               }`}
             >
