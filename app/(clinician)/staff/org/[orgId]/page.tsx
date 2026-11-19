@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ConsoleLoading } from "../../console-loading";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/staff/auth";
 import { clinicById } from "@/lib/clinics";
@@ -11,7 +12,7 @@ import { StaffShell } from "../../staff-header";
 // an answer or a score.
 export default function OrgReportPage({ params }: { params: Promise<{ orgId: string }> }) {
   return (
-    <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+    <Suspense fallback={<ConsoleLoading kind="org" />}>
       <OrgReport params={params} />
     </Suspense>
   );

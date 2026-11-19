@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ConsoleLoading } from "./console-loading";
 import Link from "next/link";
 import { canWrite, requireStaff } from "@/lib/staff/auth";
 import { loadQueue, loadQueueScores, type QueueTask } from "@/lib/staff/data";
@@ -46,7 +47,7 @@ const justNow = (iso: string, nowMs: number) => nowMs - new Date(iso).getTime() 
 
 export default function QueuePage({ searchParams }: PageProps<"/staff">) {
   return (
-    <Suspense fallback={<p className="p-8 text-muted">Loading the queue…</p>}>
+    <Suspense fallback={<ConsoleLoading kind="queue" />}>
       <Queue searchParams={searchParams} />
     </Suspense>
   );

@@ -221,6 +221,8 @@ The routing rules propose a step; a clinician accepts or overrides it with a rea
 | **Escalated** | Cases that ran late or were handed up; worked by the duty supervisor |
 | **Service overview** | Numbers about how the service is doing |
 
+While a page loads, the console keeps its side bar and shows grey placeholders shaped like the queue, case or overview that's coming, so nothing jumps when the data arrives (no pulsing with reduced motion; screen readers hear "Loading the queue…").
+
 The top bar has **Turn on alerts** (sound and tab-title count for imminent cases) and **Find case** by reference (e.g. `BL-AF09B5`).
 
 ### Queue (`/staff`)

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ConsoleLoading } from "../console-loading";
 import { requireStaff } from "@/lib/staff/auth";
 import { loadInsights, type Insights } from "@/lib/staff/insights";
 import { loadQueue } from "@/lib/staff/data";
@@ -12,7 +13,7 @@ import Link from "next/link";
 
 export default function InsightsPage() {
   return (
-    <Suspense fallback={<p className="p-8 text-muted">Loading insights…</p>}>
+    <Suspense fallback={<ConsoleLoading kind="insights" />}>
       <InsightsView />
     </Suspense>
   );

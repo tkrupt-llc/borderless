@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ConsoleLoading } from "../../console-loading";
 import { ReplyBox } from "../../reply-box";
 import { headers } from "next/headers";
 import { CloseCaseForm } from "../../close-case-form";
@@ -68,7 +69,7 @@ const PATIENT_ANSWER: Record<string, string> = {
 
 export default function CasePage({ params }: PageProps<"/staff/case/[id]">) {
   return (
-    <Suspense fallback={<p className="p-8 text-muted">Loading the case…</p>}>
+    <Suspense fallback={<ConsoleLoading kind="case" />}>
       <Case params={params} />
     </Suspense>
   );
