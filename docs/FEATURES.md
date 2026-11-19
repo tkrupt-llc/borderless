@@ -440,7 +440,7 @@ Two-step "Delete my data" on `/my-data` removes the check-in and everything link
 
 ## 14. Testing
 
-- **317 automated tests** (Vitest): scoring bands, every red-flag rule (including "Alert my care team now" as imminent), routing, phrases, guardrails, conditional questions, "Prefer not to say", receipt timeline, consent revocation, aggregate-only employer views, outcome measures, every hand-off rule, the contact clock, the return code, case closure (including "Unreachable" and the crisis co-sign), change thresholds, supervisor triggers, discreet messages (no health words on any channel), reminder tasks, safe times, the welcome-back banner (shown with a cookie, hidden without, cleared by "Not me"), staffed hours, the urgent contact clock, closing a red-flag task, and four-eyes co-signs.
+- **318 automated tests** (Vitest): scoring bands, every red-flag rule (including "Alert my care team now" as imminent), routing, phrases, guardrails, conditional questions, "Prefer not to say", receipt timeline, consent revocation, aggregate-only employer views, outcome measures, every hand-off rule, the contact clock, the return code, case closure (including "Unreachable" and the crisis co-sign), change thresholds, supervisor triggers, discreet messages (no health words on any channel), reminder tasks, safe times, the welcome-back banner (shown with a cookie, hidden without, cleared by "Not me"), staffed hours, the urgent contact clock, closing a red-flag task, four-eyes co-signs, and medicines for mental health in the family doctor summary.
 - **Red-team script:** 30 prompts the AI must block or redirect.
 - **End-to-end checks** in a real browser for each feature, and **accessibility scans** (axe) of the main pages.
 
