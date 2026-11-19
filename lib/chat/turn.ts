@@ -30,7 +30,7 @@ export const MAX_MESSAGE_LENGTH = 1000;
 export const HANDOFF_MESSAGE =
   "Thank you. That gives your clinician a good picture. Next are some short questions, one at a time.";
 export const FALLBACK_MESSAGE =
-  "Sorry, I can't continue the conversation right now. Let's move on to some short questions instead. Your clinician will see everything you have written.";
+  "Let's move to a few short questions. Your clinician will see everything you've written.";
 
 export type OutMessage = { role: "assistant" | "system"; text: string; quickReplies: string[] };
 

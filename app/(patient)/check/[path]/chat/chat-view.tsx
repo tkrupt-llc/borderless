@@ -218,7 +218,7 @@ export function ChatView() {
           handedOff ? "bg-primary text-white" : "border-[1.5px] border-ink text-ink"
         } ${hasPatientMessage || handedOff ? "" : "invisible"}`}
       >
-        Continue to the questions
+        {handedOff ? "Move to the questions" : "Continue to the questions"}
       </button>
       {/* Scrolled into view after each message: the end of the chat, clear of the help bar on phones. */}
       <div ref={endRef} className="scroll-mb-28 lg:scroll-mb-6" />
