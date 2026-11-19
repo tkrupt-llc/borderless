@@ -44,3 +44,7 @@ supabase/.temp
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# demo-video recordings (scripts/record-demo)
+/scripts/record-demo/output/
+*.webm
