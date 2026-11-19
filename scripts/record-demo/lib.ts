@@ -20,7 +20,10 @@ export const OUT = path.resolve(process.cwd(), "scripts/record-demo/output");
 export const WEBM = path.join(OUT, "webm");
 const STATE = path.join(OUT, "state.json");
 
-export const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, video: { width: 780, height: 1688 } };
+// Playwright records video at the CSS viewport size and never upscales, so phone clips are recorded at
+// 390x844 and upscaled 2x (lanczos) to 780x1688 when converting to MP4 (see run-all.ts).
+export const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, video: { width: 390, height: 844 } };
+export const PHONE_OUTPUT = { width: 780, height: 1688 };
 export const DESKTOP = { viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1, video: { width: 1920, height: 1080 } };
 
 // ---------- state passed between clips (session ids, the clip-03 browser state) ----------
@@ -87,6 +90,7 @@ export async function newClip(
     storageState: opts.storageState,
     permissions: ["clipboard-read", "clipboard-write"],
     colorScheme: "light",
+    isMobile: kind === PHONE,
     locale: "en-GB",
     timezoneId: "Asia/Dubai",
   });

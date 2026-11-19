@@ -1,10 +1,11 @@
-// Clip 01: landing → Quick check → low-to-moderate answers → result. Desktop, about 30 s.
+// Clip 01: landing → Quick check → low-to-moderate answers → result. Phone size, about 30 s.
+import { writeFileSync } from "node:fs";
 import type { Browser } from "playwright";
-import { DESKTOP, click, finishClip, goto, newClip, pause, scroll, sessionIdOf, settle, startQuickCheck, answerQuickCheck, stepper, type, writeState } from "./lib";
+import { dumpSessionStorage, storagePath, PHONE, click, finishClip, goto, newClip, pause, scroll, sessionIdOf, settle, startQuickCheck, answerQuickCheck, stepper, type, writeState } from "./lib";
 
 export default async function clip01(browser: Browser) {
   const s = stepper("01-quick-check");
-  const { context, page } = await newClip(browser, DESKTOP);
+  const { context, page } = await newClip(browser, PHONE);
 
   await s.step("landing", () => goto(page, "/", 1500));
   await s.step("scroll the landing a little", async () => {
@@ -46,6 +47,8 @@ export default async function clip01(browser: Browser) {
   writeState((st) => {
     if (sid) st.sessions["01"] = sid;
   });
+  // Clip 04 comes back to this check-in with its reference and return code (kept in this tab's storage).
+  writeFileSync(storagePath("01-tab"), JSON.stringify(await dumpSessionStorage(page)));
   s.save();
   return finishClip(context, page, "01-quick-check");
 }

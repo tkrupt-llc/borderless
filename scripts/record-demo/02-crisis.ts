@@ -1,10 +1,10 @@
-// Clip 02: quick check → "Yes" to the safety question → crisis screen, held 3 s. Desktop, about 20 s.
+// Clip 02: quick check → "Yes" to the safety question → crisis screen, held 3 s. Phone size, about 20 s.
 import type { Browser } from "playwright";
-import { DESKTOP, click, finishClip, goto, newClip, pause, scroll, sessionIdOf, settle, startQuickCheck, answerQuickCheck, stepper, writeState } from "./lib";
+import { PHONE, click, finishClip, goto, newClip, pause, scroll, sessionIdOf, settle, startQuickCheck, answerQuickCheck, stepper, writeState } from "./lib";
 
 export default async function clip02(browser: Browser) {
   const s = stepper("02-crisis");
-  const { context, page } = await newClip(browser, DESKTOP);
+  const { context, page } = await newClip(browser, PHONE);
 
   await s.step("start", () => goto(page, "/start"));
   await s.step("choose Quick check", () => click(page, page.getByRole("link", { name: /Quick check/ })));

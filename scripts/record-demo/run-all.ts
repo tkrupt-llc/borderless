@@ -1,7 +1,7 @@
 /**
  * Records the six demo clips against the live site, in order, then converts them to MP4.
  *
- *   npm run record:demo            all clips, 01 → 06
+ *   npm run record:demo            all clips, in the order 01, 02, 03, 05, 04, 06
  *   npm run record:demo -- 03 04   only these clips (they reuse state saved by earlier clips)
  *
  * Env (from .env.local): DEMO_CLINICIAN_EMAIL, DEMO_CLINICIAN_PASSWORD. Optional: DEMO_BASE_URL,
@@ -11,7 +11,7 @@
 import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { OUT, WEBM, launch, readState } from "./lib";
+import { OUT, PHONE_OUTPUT, WEBM, launch, readState } from "./lib";
 import clip01 from "./01-quick-check";
 import clip02 from "./02-crisis";
 import clip03 from "./03-receipt-coping";
@@ -19,13 +19,15 @@ import clip04 from "./04-return";
 import clip05 from "./05-clinician";
 import clip06 from "./06-overview";
 
+// Recording order: 05 before 04, so the patient sees the clinician's reply when they come back.
+// phone: recorded at 390x844, upscaled 2x to 780x1688 when converting.
 const CLIPS = [
-  { id: "01", name: "01-quick-check", run: clip01, target: 30 },
-  { id: "02", name: "02-crisis", run: clip02, target: 20 },
-  { id: "03", name: "03-receipt-coping", run: clip03, target: 25 },
-  { id: "04", name: "04-return", run: clip04, target: 15 },
-  { id: "05", name: "05-clinician", run: clip05, target: 50 },
-  { id: "06", name: "06-overview", run: clip06, target: 25 },
+  { id: "01", name: "01-quick-check", run: clip01, target: 30, phone: true },
+  { id: "02", name: "02-crisis", run: clip02, target: 20, phone: true },
+  { id: "03", name: "03-receipt-coping", run: clip03, target: 25, phone: true },
+  { id: "05", name: "05-clinician", run: clip05, target: 45, phone: false },
+  { id: "04", name: "04-return", run: clip04, target: 25, phone: true },
+  { id: "06", name: "06-overview", run: clip06, target: 25, phone: false },
 ];
 
 const FFMPEG = process.env.FFMPEG ?? "ffmpeg";
@@ -57,7 +59,8 @@ async function main() {
   for (const clip of chosen) {
     const src = path.join(WEBM, `${clip.name}.webm`);
     const dst = path.join(MP4, `${clip.name}.mp4`);
-    execFileSync(FFMPEG, ["-y", "-loglevel", "error", "-i", src, "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-movflags", "+faststart", dst]);
+    const scale = clip.phone ? ["-vf", `scale=${PHONE_OUTPUT.width}:${PHONE_OUTPUT.height}:flags=lanczos`] : [];
+    execFileSync(FFMPEG, ["-y", "-loglevel", "error", "-i", src, ...scale, "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-movflags", "+faststart", dst]);
     copyFileSync(dst, path.join(PUBLIC, `${clip.name}.mp4`));
   }
 

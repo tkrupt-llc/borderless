@@ -1,15 +1,15 @@
 // Clip 03: a finished check-in → receipt (timeline) with the reply-by time → TIP, STOP and paced breathing cards.
 // The check-in itself is answered off camera (clip 01 already shows it); the clip opens on its result.
-// Desktop, about 25 s.
+// Phone size, about 25 s.
 import type { Browser } from "playwright";
 import { writeFileSync } from "node:fs";
-import { dumpSessionStorage, BASE_URL, DESKTOP, click, finishClip, goto, newClip, offCamera, pause, scroll, sessionIdOf, settle, startQuickCheck, answerQuickCheck, stepper, storagePath, writeState } from "./lib";
+import { dumpSessionStorage, BASE_URL, PHONE, click, finishClip, goto, newClip, offCamera, pause, scroll, sessionIdOf, settle, startQuickCheck, answerQuickCheck, stepper, storagePath, writeState } from "./lib";
 
 export default async function clip03(browser: Browser) {
   const s = stepper("03-receipt-coping");
 
   // Off camera: finish a quick check, keep the browser state (cookie + stored result with the return code).
-  const setup = await offCamera(browser, DESKTOP);
+  const setup = await offCamera(browser, PHONE);
   await setup.page.goto(BASE_URL + "/check/quick/consent");
   await startQuickCheck(setup.page, 300);
   await answerQuickCheck(setup.page, ["Several days", "Several days", "Not at all", "Several days", "No"], 300);
@@ -29,7 +29,7 @@ export default async function clip03(browser: Browser) {
     if (sid) st.sessions["03"] = sid;
   });
 
-  const { context, page } = await newClip(browser, DESKTOP, { storageState: storagePath("03"), sessionStorage: tabStorage });
+  const { context, page } = await newClip(browser, PHONE, { storageState: storagePath("03"), sessionStorage: tabStorage });
   await s.step("result", () => goto(page, new URL(resultUrl).pathname, 1200));
   await s.step("See your timeline", () => click(page, page.getByRole("link", { name: "See your timeline" })));
   await s.step("receipt with the reply-by time", async () => {
