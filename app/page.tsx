@@ -5,6 +5,7 @@ import { HeroChat } from "@/components/landing/hero-chat";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { TypedLine } from "@/components/landing/typed-line";
 import { ReturningBanner } from "@/components/landing/returning-banner";
+import { MobileMenu } from "@/components/landing/mobile-menu";
 import { BreathingIcon, GroundingIcon, StopIcon, WavesIcon } from "@/components/icons";
 import { CATEGORIES } from "@/lib/coping/categories";
 import en from "@/content/i18n/en.json";
@@ -86,11 +87,23 @@ export default function Landing() {
   return (
     <div className="relative z-0 overflow-x-clip text-[1.125rem] leading-[1.55] [--muted:#434e3d]">
       <ReturningBanner />
-      <header className={`${wrap} flex flex-wrap items-center justify-between gap-4 py-5`}>
+      {/* Phones (under 768px): one row, logo + Check in + menu. Desktop: the full nav, unchanged. */}
+      <header className={`${wrap} relative flex flex-nowrap items-center justify-between gap-4 py-5 md:flex-wrap`}>
         <Link href="/" aria-label="borderless home" className="no-underline">
-          <Logo size="lg" />
+          {/* Phones: a smaller logo under 400px (just the ring under 350px), so the logo,
+              Check in and the menu button fit in one row. 400px and up: unchanged. */}
+          <span className="hidden max-[349px]:inline">
+            <Logo compact />
+          </span>
+          <span className="max-[349px]:hidden min-[400px]:hidden">
+            <Logo />
+          </span>
+          <span className="hidden min-[400px]:contents">
+            <Logo size="lg" />
+          </span>
         </Link>
-        <nav aria-label="Main" className="flex flex-wrap items-center gap-x-7 gap-y-2 text-body">
+        <MobileMenu startHref="/start" />
+        <nav aria-label="Main" className="hidden flex-wrap items-center gap-x-7 gap-y-2 text-body md:flex">
           <Link href="/return" className="text-caption text-muted no-underline hover:text-ink hover:underline">
             Coming back?
           </Link>

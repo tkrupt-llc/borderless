@@ -99,7 +99,7 @@ A **follow-up** about 4 weeks later repeats PHQ-9 and GAD-7 so change can be mea
 
 | Page | What it shows | Where it leads |
 |---|---|---|
-| `/` Landing | Headline, how it works (5 steps), reply-time targets, why it's safe, coping cards, clinician preview. With a check-in in progress on this browser: a neutral **"Welcome back"** banner | Start a 2-minute check-in, Full check-in (about 10 min), "Coming back?" (header, under the main button, footer), live demo, care team sign-in, Privacy / Terms / Accessibility / Contact |
+| `/` Landing | Headline, how it works (5 steps), reply-time targets, why it's safe, coping cards, clinician preview. With a check-in in progress on this browser: a neutral **"Welcome back"** banner | Start a 2-minute check-in, Full check-in (about 10 min), "Coming back?" (header, under the main button, footer). On phones (under 768px) the header is one row: logo, **Check in** and a menu (Coming back?, How it works, Why it's safe, For clinicians), live demo, care team sign-in, Privacy / Terms / Accessibility / Contact |
 | `/start` | Three options, emergency first | Crisis page, quick check, full check-in, "Coming back?" (home, or find a check-in with a code) |
 | `/check/[path]/consent` | "What happens to your answers": four promises, care-team access (needed), AI help (full check-in only) | First question, or the AI chat |
 | `/check/full/chat` | AI assistant asks about what's going on. Every message is phrase-checked before and after the AI. | Questions, or the crisis page if unsafe |
