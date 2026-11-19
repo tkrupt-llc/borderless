@@ -1,4 +1,4 @@
-import { CONDITIONS } from "@/lib/physical-health";
+import { CONDITIONS, snomedFor } from "@/lib/physical-health";
 import { may } from "@/lib/consent";
 
 /**
@@ -66,7 +66,10 @@ export function buildGpBundle(input: GpSummaryInput) {
         resourceType: "Condition",
         clinicalStatus: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/condition-clinical", code: "active" }] },
         verificationStatus: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/condition-ver-status", code: "unconfirmed" }] },
-        code: { coding: [{ system: "http://snomed.info/sct", ...c.snomed }], text: c.label },
+        code: (() => {
+          const snomed = snomedFor(id);
+          return snomed ? { coding: [{ system: "http://snomed.info/sct", ...snomed }], text: c.label } : { text: c.label };
+        })(),
         subject: { reference: patientRef },
         note: [{ text: "Self-reported by the patient." }],
       });

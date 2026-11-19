@@ -106,7 +106,7 @@ A **follow-up** about 4 weeks later repeats PHQ-9 and GAD-7 so change can be mea
 | `/check/[path]/1..n` | One question per page, section count, "Why am I asked this?", gentle note before suicide questions | Next question; crisis page on a red flag |
 | ↳ Prefer not to say | On non-safety questions only. The questionnaire then gets no score. | Next question |
 | ↳ Pause and finish later | Keeps the check-in for 7 days on this device | Home, with "Continue check-in" |
-| `/check/[path]/health` | Optional: share physical health with the care team; share a summary with the family doctor | Contact page |
+| `/check/[path]/health` | Optional: share physical health with the care team (diabetes, heart condition, chronic pain, pregnancy or a baby in the last year, medicines taken long term, **medicines for mental health**, anything else); share a summary with the family doctor | Contact page |
 | `/check/[path]/contact` | Phone / SMS / WhatsApp / email, safe times, voicemail OK, discreet message preview. With nothing chosen: "Without contact details, check back with your reference and code to see replies." | Result card |
 | `/check/[path]/result` | Each score in plain words, "screening score, not a diagnosis", what happens next; choices for follow-up and anonymous statistics; optional About you; **reference and return code** to keep | Timeline, support options, full check-in offer |
 | `/check/done/[id]` Timeline | Sent → reviewed → next step → referred → booked → first contact. Messages with the care team. Your next step card. Picked-for-you coping card. How did that feel? | Coping cards, guides, support options, data page |
@@ -244,7 +244,7 @@ Filters by urgency; each row shows reference, why it's here, path, scores and a 
 | **Open tasks** | Acknowledge, close |
 | **Contact** | Number or email, preferred method, allowed channels, safe times, voicemail OK; **Log contact**, with a warning (never a block) outside the person's safe times; **Send new return code** |
 | **Refer / Hand-off** | Refer to a matched service; then manage the hand-off (see section 7) |
-| **Physical health** | Shared conditions; **Download family doctor summary (FHIR R4)**, only with consent |
+| **Physical health and medicines** | Shared conditions and medicines, including medicines for mental health; **Download family doctor summary (FHIR R4)**, only with consent |
 | **Safety reporting** | **Report adverse event** (type, severity, description); also sends the case to the duty supervisor |
 | **Follow-up link** | The person's private follow-up link: **Copy link**, send it yourself, then **Log link sent** (SMS, WhatsApp, email, read out on a call, in person). Automatic sending is a pilot step. |
 | **Close case** | See [Case closure](#case-closure) |
@@ -358,7 +358,7 @@ Answers and scores; the chat (only with AI help); contact details and preference
 A pilot would move hosting to the UAE before any real data is used. Do not describe the prototype as UAE-only processing.
 
 ### Family doctor summary
-- A FHIR R4 `collection` bundle: Patient (case reference only), Observations (scores, LOINC codes, "screening score, not a diagnosis"), Conditions (self-reported, SNOMED codes, only with physical-health consent), ServiceRequest (proposed step).
+- A FHIR R4 `collection` bundle: Patient (case reference only), Observations (scores, LOINC codes, "screening score, not a diagnosis"), Conditions (self-reported, SNOMED codes, only with physical-health consent; "medicines for mental health" is sent as text only until a SNOMED code is signed off), ServiceRequest (proposed step).
 - Download only. Sending it through **Malaffi** (Abu Dhabi health information exchange) is on the roadmap, via a licensed partner.
 
 ### Deleting data

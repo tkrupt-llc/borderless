@@ -666,7 +666,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
           )}
 
           {/* --- Consent and history ---------------------------------------- */}
-          <Panel id="health-h" title="Physical health">
+          <Panel id="health-h" title="Physical health and medicines">
             {!may.sharePhysicalHealth(data.consents) ? (
               <p className="text-caption text-muted">Not shared. The person did not choose to share physical health.</p>
             ) : (session.physical_conditions?.length ?? 0) > 0 || session.physical_other ? (

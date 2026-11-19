@@ -59,6 +59,19 @@ describe("consent revocation", () => {
     expect(conditions({ ...both, physical_health: false })).toHaveLength(0);
   });
 
+  it("mental health medicines go into the GP summary as text, without an unconfirmed code", () => {
+    const consents = latestConsents([row("gp_sharing", true, 1), row("physical_health", true, 1)]);
+    const bundle = buildGpBundle({
+      ref: "BL-ABC123", createdAt: "2026-11-19T09:00:00Z", scores: [], physicalConditions: ["mental_health_meds", "long_term_meds"],
+      physicalOther: null, proposedStep: null, consents,
+    });
+    const conds = bundle.entry.map((e) => e.resource as { resourceType: string; code?: { text?: string; coding?: unknown[] } }).filter((r) => r.resourceType === "Condition");
+    expect(conds).toHaveLength(2);
+    const mh = conds.find((c) => c.code?.text?.startsWith("Taking medicines for mental health"));
+    expect(mh?.code?.coding).toBeUndefined();
+    expect(conds.find((c) => c.code?.text === "Taking medicines long term")?.code?.coding).toHaveLength(1);
+  });
+
   it("revoking a contact channel removes it from the channels the care team may use", () => {
     const c = latestConsents([row("contact_phone", true, 1), row("contact_sms", true, 1), row("contact_phone", false, 3)]);
     expect(allowedChannels(c)).toEqual(["sms"]);

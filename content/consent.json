@@ -51,7 +51,7 @@
       "id": "physical_health",
       "askOn": "health",
       "title": "Share my physical health with my care team",
-      "explanation": "Long-term conditions and medicines can affect mood and sleep, so your clinician can take them into account.",
+      "explanation": "Long-term conditions and medicines, including any for mental health, can affect mood and sleep, so your clinician can take them into account.",
       "default": false
     },
     {
