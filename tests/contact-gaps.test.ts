@@ -96,8 +96,9 @@ describe("4. Closure: unreachable and declined", () => {
     const crisis = { ...base, hadCrisis: true, contactAttempts: [day(0), day(3), day(5)], closingMessageSent: true };
     expect(canCloseCase(crisis, "declined", ["contact"]).ok).toBe(false);
     expect(canCloseCase(crisis, "unreachable", ["contact"]).ok).toBe(false);
-    expect(canCloseCase({ ...crisis, bySupervisor: true }, "declined", ["contact"]).ok).toBe(true);
-    expect(canCloseCase({ ...crisis, bySupervisor: true }, "unreachable", ["contact"]).ok).toBe(true);
+    const cosigned = { ...crisis, bySupervisor: true, coSignRequestedBy: "clinician-1", currentUserId: "supervisor-1" };
+    expect(canCloseCase(cosigned, "declined", ["contact"]).ok).toBe(true);
+    expect(canCloseCase(cosigned, "unreachable", ["contact"]).ok).toBe(true);
   });
 
   it("other reasons on a crisis case don't need the supervisor", () => {

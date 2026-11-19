@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { audit } from "@/lib/staff/audit";
 import { raiseSupervisorReview } from "@/lib/staff/supervision";
-import { canCloseCase, CLOSURE_REASONS, CLOSURE_STEPS, ESCALATION, needsCoSign, postCrisisCheckIns, type ClosureReason, type ClosureStep } from "@/lib/staff/safety-rules";
+import { canCloseCase, canCloseRedFlag, CLOSURE_REASONS, CLOSURE_STEPS, coSignAllowed, ESCALATION, needsCoSign, postCrisisCheckIns, type ClosureReason, type ClosureStep } from "@/lib/staff/safety-rules";
 import { latestReferral as latestReferralRow } from "@/lib/referral/persist";
 import { closureStateFrom } from "@/lib/staff/closure";
 import * as persist from "@/lib/check/persist";
@@ -92,12 +92,23 @@ export async function escalateCase(sessionId: string): Promise<Result> {
   });
 }
 
-export async function closeTask(taskId: string): Promise<Result> {
+export async function closeTask(taskId: string, signOffReason?: string): Promise<Result> {
   return run(async (staff) => {
     const id = uuid.parse(taskId);
-    const { data: task } = await db().from("tasks").select("type").eq("id", id).single();
-    // Supervisor reviews (co-sign, repeat crisis, unreachable, adverse event) are closed by a supervisor.
-    if (task?.type === "supervisor_review" && staff.role !== "supervisor") throw new UserError("Only the duty supervisor can close a supervisor review.");
+    const { data: task } = await db().from("tasks").select("type, session_id, reason, requested_by").eq("id", id).single();
+    // Supervisor reviews (co-sign, repeat crisis, unreachable, adverse event) are closed by a supervisor,
+    // and a co-sign by someone other than the person who asked for it.
+    if (task?.type === "supervisor_review") {
+      if (staff.role !== "supervisor") throw new UserError("Only the duty supervisor can close a supervisor review.");
+      if (task.requested_by && !coSignAllowed(staff.id, task.requested_by)) throw new UserError("The co-sign must come from a different person from the one who asked for it.");
+    }
+    // A red-flag task closes after a logged conversation, or with the supervisor's sign-off and a reason.
+    if (task?.type === "red_flag") {
+      const { data: spoke } = await db().from("contact_attempts").select("id").eq("session_id", task.session_id).eq("outcome", "spoke").limit(1);
+      const check = canCloseRedFlag({ spokeLogged: (spoke ?? []).length > 0, isSupervisor: staff.role === "supervisor", reason: signOffReason });
+      if (!check.ok) throw new UserError(check.error!);
+      if (!(spoke ?? []).length) await audit(staff, "red_flag_signed_off", "task", id, task.session_id, { reason: signOffReason!.trim() });
+    }
     const now = new Date().toISOString();
     const { data, error } = await db().from("tasks").update({ closed_at: now, acknowledged_at: now }).eq("id", id).select("session_id");
     must({ error }, "close task");
@@ -138,7 +149,7 @@ export async function decide(input: unknown): Promise<Result> {
     ]);
     if (needsCoSign({ hasRedFlag: (flags ?? []).length > 0, proposalUrgent: Boolean(proposal?.urgent), decision: d.action })) {
       const why = "Co-sign: urgency lowered on a safety-flagged case (step " + d.newStep + "; reason: " + d.reason + ")";
-      await raiseSupervisorReview(d.sessionId, "co_sign", why, staff.role + ":" + staff.id);
+      await raiseSupervisorReview(d.sessionId, "co_sign", why, staff.role + ":" + staff.id, staff.id);
     }
   });
 }
@@ -383,7 +394,7 @@ export async function closeCase(input: unknown): Promise<Result> {
   if (!parsed.success) return { ok: false, error: "Choose a closure reason." };
   const d = parsed.data;
   return run(async (staff) => {
-    const state = await closureState(d.sessionId, staff.role === "supervisor");
+    const state = await closureState(d.sessionId, staff.role === "supervisor", staff.id);
     const verdict = canCloseCase(state, d.reason, d.notNeeded);
     if (!verdict.ok) throw new UserError(verdict.blockers.join(". ") + ".");
     const now = new Date();
@@ -416,10 +427,22 @@ export async function closeCase(input: unknown): Promise<Result> {
 }
 
 /** What the closure rules need to know about a case. */
-async function closureState(sessionId: string, bySupervisor: boolean) {
+async function closureState(sessionId: string, bySupervisor: boolean, currentUserId: string) {
   const [data, handoff] = await Promise.all([loadCase(sessionId), latestReferralRow(sessionId)]);
   if (!data) throw new UserError("Case not found.");
-  return closureStateFrom(data, handoff, bySupervisor);
+  return closureStateFrom(data, handoff, bySupervisor, currentUserId);
+}
+
+/**
+ * "Request supervisor co-sign": a crisis case closed as declined or unreachable
+ * needs the duty supervisor, and a different person from whoever asked.
+ */
+export async function requestClosureCoSign(sessionId: string, reason: string): Promise<Result> {
+  return run(async (staff) => {
+    const id = uuid.parse(sessionId);
+    const r = z.enum(["declined", "unreachable"]).parse(reason);
+    await raiseSupervisorReview(id, "closure_cosign", "Co-sign closing as " + r + " (requested by a clinician)", staff.role + ":" + staff.id, staff.id);
+  });
 }
 
 /** The clinician copied the follow-up link and sent it themselves (automatic sending is a pilot step). */

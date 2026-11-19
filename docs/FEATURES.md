@@ -4,7 +4,7 @@ Borderless is a non-diagnostic mental health intake, triage and follow-up protot
 
 A person answers a few short, standard questions. Fixed safety rules check every answer. A licensed clinician reads every check-in and decides the next step. The person always sees when they will hear back, and the service follows through until they have actually been seen.
 
-> **Status:** working prototype with synthetic demo data. Clinical rules marked DRAFT need psychiatrist sign-off. Data is processed outside the UAE (see [Data and hosting](#9-data-hosting-and-privacy)).
+> **Status:** working prototype. Clinical rules marked DRAFT need psychiatrist sign-off. Data is processed outside the UAE (see [Data and hosting](#9-data-hosting-and-privacy)).
 
 ---
 
@@ -164,7 +164,9 @@ Checked on **every answer**, before scoring. Examples:
 
 A red flag stops the AI for that person permanently, shows the emergency card, and creates a task.
 
-**On the crisis page:** opening `/help-now` during a check-in raises an **urgent** task (RF-HELP-NOW). Tapping **"Alert my care team now"** and leaving a number raises an **imminent** task (RF-ALERT-CARE-TEAM), even if the urgent one already exists: the person asked for someone now.
+**On the crisis page:** opening `/help-now` during a check-in raises an **urgent** task (RF-HELP-NOW). Tapping **"Alert my care team now"** raises an **imminent** task (RF-ALERT-CARE-TEAM), even if the urgent one already exists: the person asked for someone now. The phone number is **optional**: without one, the task is flagged "No contact details".
+
+**Staffed hours** (`content/rules/staffing.json`, UAE time, DRAFT): outside them, "Alert my care team now" still raises the imminent task, but tells the person **"Our team is offline until [time]. Please call 800-SAKINA (800 725462) or 999 now."** The task is flagged "Out of hours", and the console top bar shows **"Out of hours · team back [time]"**.
 
 ### Reply-by clocks
 | Tier | Clock | Examples |
@@ -177,7 +179,11 @@ Values are drafts for the psychiatrist and pilot site to confirm.
 
 ### Escalation (two clocks)
 1. **Reply-by clock:** every minute, the database marks tasks that are past their reply-by time and **not acknowledged** as escalated, logs each as a safety event, and moves them into the duty supervisor's Escalated view.
-2. **Contact clock:** an **imminent** task that was acknowledged but has **no contact logged (call attempt or conversation) within 30 minutes** of acknowledging is escalated too. Checked on every queue refresh; logged as "Escalated: no contact within 30 minutes".
+2. **Contact clock:** an acknowledged task with **no contact logged (call attempt or conversation)** in time is escalated too:
+   - **imminent:** within **30 minutes** of acknowledging;
+   - **urgent:** by its own **reply-by time** (4 hours).
+
+   Checked on every queue refresh and logged.
 
 Timings are in `content/rules/escalation.json` (DRAFT).
 
@@ -224,7 +230,7 @@ Filters by urgency; each row shows reference, why it's here, path, scores and a 
 |---|---|
 | **Acknowledge** | "I'm on it." Stops automatic escalation and records response time. Doesn't close the task. |
 | **Escalate** | Hands the case to the duty supervisor now. |
-| **Close task** | The work is done. A **Supervisor review** task can only be closed by the duty supervisor ("Mark reviewed (supervisor)"). |
+| **Close task** | The work is done. A **red-flag** task closes only after a **logged conversation** with the person, or with the **duty supervisor's sign-off and a reason**. A **Supervisor review** task can only be closed by the duty supervisor ("Mark reviewed (supervisor)"), and a co-sign must come from **a different person** from whoever asked for it. |
 
 ### Full case (`/staff/case/[id]`)
 | Panel | What the clinician does |
@@ -261,7 +267,7 @@ These create a **Supervisor review** task that goes straight into the Escalated 
 | **Imminent and unreachable** | An imminent case with 2 or more unanswered call attempts and no conversation since |
 | **Adverse event** | Any adverse event reported on a case |
 
-Plus the two escalation clocks above. Only the duty supervisor can close a supervisor review.
+Plus the two escalation clocks above. Only the duty supervisor can close a supervisor review, and **never their own request**: a co-sign (a lowered urgency, or a closure) must come from a different user from the clinician who made the override or requested the closure.
 
 ### Case closure
 **Close case** on the full case page. A case closes only when:
@@ -270,7 +276,7 @@ Plus the two escalation clocks above. Only the duty supervisor can close a super
 - every other step is **done or marked not needed**: level decided, spoke with the person, hand-off closed;
 - **no safety flag is open** (red-flag tasks closed) and **no urgent hand-off is stalled**;
 - for **Unreachable**: **3 logged contact attempts over at least 5 days**, plus a **closing message** copied, sent and logged;
-- for a case that ever had an **urgent or imminent** alert, closing as **Declined** or **Unreachable** needs the **duty supervisor** (they close it themselves, as the co-sign).
+- for a case that ever had an **urgent or imminent** alert, closing as **Declined** or **Unreachable** takes two people: a clinician taps **Request supervisor co-sign**, then the **duty supervisor** (a different user) closes the case.
 
 Closing closes every open task and is logged. If the case ever had an **urgent or imminent** alert, **check-ins at 7 and 30 days** are scheduled; they stay out of the queue until a day before they are due.
 
@@ -375,10 +381,10 @@ Two-step "Delete my data" on `/my-data` removes the check-in and everything link
 | Crisis responses completed | Urgent and imminent alerts acknowledged within their clock |
 | Adverse events | Reported by clinicians |
 
-- **Fairness:** who reached first contact, by age, gender, nationality, language and emirate, from the optional About you answers. Groups under 10 are hidden.
-- **Employer and university views** (`/staff/org/[id]`): check-ins from their page, by type, and share referred. Totals only; under 10 people shows "fewer than 10" and nothing else.
+- **Only what's been entered:** a measure, fairness group or panel with nothing behind it is hidden, rather than shown as "–" or 0.
+- **Fairness:** who reached first contact, by age, gender, nationality, language and emirate, from the optional About you answers (opt-in only). Groups under 10 are hidden.
+- **Employer and university views** (`/staff/org/[id]`): check-ins from their page, by type, and share referred. Totals only; under 10 people shows "fewer than 10" and nothing else. Listed only for organisations that check-ins actually came from.
 - **Operations:** check-ins per day, red flags by rule, response times per tier, accept / override rate, AI safety (replies blocked, fallbacks).
-- **Synthetic data:** the demo numbers come from simulated journeys, labelled on the page. Seed or reset them with `npm run seed:outcomes`; it only replaces rows it created.
 
 ---
 
@@ -402,6 +408,7 @@ Two-step "Delete my data" on `/my-data` removes the check-in and everything link
 | `content/rules/phrases.json` | Risk phrases checked in messages |
 | `content/rules/referral-followup.json` | Hand-off timings |
 | `content/rules/change-thresholds.json` | Reliable improvement and "not on track" thresholds (one set) |
+| `content/rules/staffing.json` | Staffed hours (UAE time) |
 | `content/rules/escalation.json` | Contact clock, supervisor triggers, post-crisis check-ins, the "Unreachable" closure rule (3 attempts, 5 days) |
 | `content/item-bank/*` | Questionnaire items and answers |
 | `content/consent.json` | Consent purposes and wording |
@@ -431,7 +438,7 @@ Two-step "Delete my data" on `/my-data` removes the check-in and everything link
 
 ## 14. Testing
 
-- **303 automated tests** (Vitest): scoring bands, every red-flag rule (including "Alert my care team now" as imminent), routing, phrases, guardrails, conditional questions, "Prefer not to say", receipt timeline, consent revocation, aggregate-only employer views, outcome measures, every hand-off rule, the contact clock, the return code, case closure (including "Unreachable" and the crisis co-sign), change thresholds, supervisor triggers, discreet messages (no health words on any channel), reminder tasks, safe times, and the welcome-back banner (shown with a cookie, hidden without, cleared by "Not me").
+- **317 automated tests** (Vitest): scoring bands, every red-flag rule (including "Alert my care team now" as imminent), routing, phrases, guardrails, conditional questions, "Prefer not to say", receipt timeline, consent revocation, aggregate-only employer views, outcome measures, every hand-off rule, the contact clock, the return code, case closure (including "Unreachable" and the crisis co-sign), change thresholds, supervisor triggers, discreet messages (no health words on any channel), reminder tasks, safe times, the welcome-back banner (shown with a cookie, hidden without, cleared by "Not me"), staffed hours, the urgent contact clock, closing a red-flag task, and four-eyes co-signs.
 - **Red-team script:** 30 prompts the AI must block or redirect.
 - **End-to-end checks** in a real browser for each feature, and **accessibility scans** (axe) of the main pages.
 
@@ -444,13 +451,18 @@ Run `npm test` before pushing.
 | Area | Status |
 |---|---|
 | Hosting | Australia and Groq today; UAE hosting is a pilot step |
-| Clinical sign-off | DRAFT: reply-by clocks, the 30-minute contact clock, supervisor triggers, post-crisis check-in days, the "Unreachable" rule (3 attempts, 5 days), hand-off timings, change thresholds (PHQ-9 6, GAD-7 4), the message and "Alert my care team" rules, the "Your safety comes first" heading, About you wording, the discreet message wording |
+| Clinical sign-off | DRAFT: reply-by clocks, the 30-minute contact clock, the urgent contact clock, red-flag sign-off, supervisor triggers, post-crisis check-in days, the "Unreachable" rule (3 attempts, 5 days), hand-off timings, change thresholds (PHQ-9 6, GAD-7 4), the message and "Alert my care team" rules, the "Your safety comes first" heading, About you wording, the discreet message wording |
 | Provider details | SEHA, Pura and SAKINA booking routes and costs to confirm |
 | Language | English only; Arabic planned (layout already right-to-left ready) |
 | Notifications | **All patient messages are sent manually by staff**: replies, follow-up links, reminders, closing messages and new return codes are copied as discreet messages, sent by hand and logged. **Automatic sending is a pilot step.** Alerts for staff appear in the console |
 | Integration | Family doctor summary is a download; Malaffi is roadmap |
 | Evaluation | Full 60-vignette evaluation and a user test still to do |
-| Demo data | Outcome numbers are simulated |
+| Supervisor escalation | No escalation above the duty supervisor yet (e.g. if the supervisor doesn't act) |
+| Case ownership | No case ownership or handover between clinicians or shifts yet |
+| Working days | "Next working day" skips Saturday and Sunday but doesn't yet follow the UAE public-holiday calendar |
+| Repeat crisis | Detected only across linked check-ins (a check-in and its follow-ups), since there are no accounts |
+| Fairness | Fairness numbers are opt-in only (About you), so they describe the people who chose to answer |
+| Staffed hours | Draft hours in `content/rules/staffing.json`; the pilot site sets real ones |
 
 ---
 

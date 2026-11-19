@@ -12,18 +12,44 @@ const DAY = 86_400_000;
 
 // --- Second escalation clock --------------------------------------------------
 
-export type TaskLite = { priority: string; createdAt: string; acknowledgedAt: string | null; escalatedAt: string | null; closedAt: string | null };
+export type TaskLite = { priority: string; createdAt: string; dueAt?: string; acknowledgedAt: string | null; escalatedAt: string | null; closedAt: string | null };
 export type ContactLite = { outcome: "called_no_answer" | "spoke"; createdAt: string };
 
 /**
- * An imminent task someone acknowledged, but no contact (call attempt or
- * conversation) was logged within N minutes of acknowledging it: escalate.
+ * Acknowledged, but no contact (call attempt or conversation) logged since:
+ *  - imminent: within N minutes of acknowledging (30);
+ *  - urgent: by the task's own reply-by time (4 hours).
+ * Either way the task escalates to the duty supervisor.
  */
 export function contactOverdue(task: TaskLite, contacts: ContactLite[], now: Date, cfg: EscalationConfig = ESCALATION): boolean {
-  if (task.priority !== "imminent" || !task.acknowledgedAt || task.escalatedAt || task.closedAt) return false;
+  if (!task.acknowledgedAt || task.escalatedAt || task.closedAt) return false;
   const ack = new Date(task.acknowledgedAt).getTime();
-  if (now.getTime() - ack < cfg.imminentContactMinutes * MIN) return false;
+  let deadline: number;
+  if (task.priority === "imminent") deadline = ack + cfg.imminentContactMinutes * MIN;
+  else if (task.priority === "urgent" && task.dueAt) deadline = new Date(task.dueAt).getTime();
+  else return false;
+  if (now.getTime() < deadline) return false;
   return !contacts.some((c) => new Date(c.createdAt).getTime() >= ack);
+}
+
+// --- Closing a red-flag task ----------------------------------------------------------
+
+/**
+ * A red-flag task closes only after a logged conversation with the person,
+ * or with the duty supervisor's sign-off and a reason.
+ */
+export function canCloseRedFlag(input: { spokeLogged: boolean; isSupervisor: boolean; reason: string | null | undefined }): { ok: boolean; error?: string } {
+  if (input.spokeLogged) return { ok: true };
+  if (!input.isSupervisor) return { ok: false, error: "Log a conversation with the person first, or ask the duty supervisor to sign it off." };
+  if (!input.reason || input.reason.trim().length < 5) return { ok: false, error: "Supervisor sign-off needs a reason." };
+  return { ok: true };
+}
+
+// --- Four eyes -------------------------------------------------------------------------
+
+/** A co-sign must come from someone other than the person who asked for it. */
+export function coSignAllowed(signerId: string, requesterId: string | null | undefined): boolean {
+  return Boolean(requesterId) && signerId !== requesterId;
 }
 
 // --- Supervisor triggers --------------------------------------------------------
@@ -93,6 +119,10 @@ export type ClosureState = {
   closingMessageSent: boolean;
   /** The person closing is the duty supervisor (co-signs a crisis case closed as declined or unreachable). */
   bySupervisor: boolean;
+  /** Who asked for the supervisor's co-sign on closing (a clinician), if anyone. */
+  coSignRequestedBy?: string | null;
+  /** The person trying to close. */
+  currentUserId?: string;
 };
 
 /**
@@ -115,8 +145,12 @@ export function canCloseCase(state: ClosureState, reason: string | null, notNeed
     }
     if (!state.closingMessageSent) blockers.push("Unreachable needs a closing message sent and logged");
   }
-  if (state.hadCrisis && (reason === "declined" || reason === "unreachable") && !state.bySupervisor) {
-    blockers.push("This case had a crisis: closing it as declined or unreachable needs the duty supervisor's co-sign");
+  if (state.hadCrisis && (reason === "declined" || reason === "unreachable")) {
+    if (!state.bySupervisor) {
+      blockers.push("This case had a crisis: closing it as declined or unreachable needs the duty supervisor's co-sign (request it below)");
+    } else if (!coSignAllowed(state.currentUserId ?? "", state.coSignRequestedBy)) {
+      blockers.push("The co-sign must come from a different person: a clinician requests closure, then a supervisor closes it");
+    }
   }
   if (state.openSafetyFlags > 0) blockers.push("A safety flag is still open: close the red-flag task first");
   if (state.urgentHandoffStalled) blockers.push("An urgent hand-off is stalled: resolve it first");

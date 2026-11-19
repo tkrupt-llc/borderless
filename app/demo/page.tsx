@@ -16,7 +16,7 @@ export default function DemoPage() {
   return (
     <>
       <div role="note" className="sticky top-0 z-20 flex flex-wrap items-center justify-center gap-x-2 bg-ink px-4 py-2.5 text-center text-[0.9375rem] text-white">
-        <strong className="font-semibold">Demo: practice data only.</strong>
+        <strong className="font-semibold">Demo: nothing you enter here is saved.</strong>
         <span>
           If you need help now, call{" "}
           <a href="tel:999" className="font-semibold text-white underline underline-offset-2 hover:text-white">

@@ -1,0 +1,15 @@
+{
+  "version": "staffing-v0.1-draft",
+  "status": "draft",
+  "source": "Staffed hours for the care team, in UAE time (Asia/Dubai). Outside them, 'Alert my care team now' still raises the imminent task, but tells the person the team is offline and to call 800-SAKINA or 999. DRAFT: the pilot site sets real hours.",
+  "timezone": "Asia/Dubai",
+  "hours": {
+    "mon": [8, 20],
+    "tue": [8, 20],
+    "wed": [8, 20],
+    "thu": [8, 20],
+    "fri": [8, 20],
+    "sat": [9, 17],
+    "sun": [9, 17]
+  }
+}

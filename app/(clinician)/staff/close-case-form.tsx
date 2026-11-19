@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { closeCase } from "./actions";
+import { closeCase, requestClosureCoSign } from "./actions";
 import { canCloseCase, CLOSURE_REASONS, CLOSURE_STEPS, type ClosureReason, type ClosureState, type ClosureStep } from "@/lib/staff/safety-rules";
 
 /**
@@ -71,6 +71,24 @@ export function CloseCaseForm({ sessionId, state }: { sessionId: string; state: 
         {pending ? "Closing…" : "Close case"}
       </button>
       {!verdict.ok && reason && <p className="text-[0.8125rem] text-text-2">To close: {verdict.blockers.join("; ")}.</p>}
+      {state.hadCrisis && (reason === "declined" || reason === "unreachable") && !state.bySupervisor && !state.coSignRequestedBy && (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() =>
+            start(async () => {
+              const r = await requestClosureCoSign(sessionId, reason).catch(() => ({ ok: false as const, error: "That didn't save." }));
+              setMsg(r.ok ? "Co-sign requested. The duty supervisor (a different person) closes the case." : "error" in r ? r.error : "That didn't save.");
+            })
+          }
+          className="min-h-10 cursor-pointer self-start rounded-full border border-line bg-surface px-4 text-[0.875rem] font-medium"
+        >
+          Request supervisor co-sign
+        </button>
+      )}
+      {state.coSignRequestedBy && !state.bySupervisor && (
+        <p className="text-[0.8125rem] text-text-2">Supervisor co-sign requested. Waiting for the duty supervisor.</p>
+      )}
       <p role="status" className="text-[0.8125rem] text-text-2">
         {msg}
       </p>

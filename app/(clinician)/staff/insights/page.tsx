@@ -43,7 +43,31 @@ function Panel({ id, title, note, children }: { id: string; title: string; note?
 async function InsightsView() {
   const staff = await requireStaff();
   const [data, queue, out] = await Promise.all([loadInsights(), loadQueue(), loadOutcomes()]);
-  const orgs = clinics.clinics.filter((c) => "kind" in c && c.kind !== "clinic");
+  // Only organisations that real check-ins came from.
+  const orgs = clinics.clinics.filter((c) => "kind" in c && c.kind !== "clinic" && (out.orgCounts[c.id] ?? 0) > 0);
+  // Outcome tiles: only measures with something entered behind them.
+  const tiles = [
+    {
+      label: "Screen to first contact",
+      value: out.screenToFirstContactHours === null ? "" : duration(out.screenToFirstContactHours * 60),
+      sub: `median · ${plural(out.screenToFirstContactN, "person", "people")}`,
+      has: out.screenToFirstContactN > 0,
+      lead: true,
+    },
+    { label: "Successful hand-off", value: pct(out.handOff.done, out.handOff.of), sub: `${out.handOff.done} of ${out.handOff.of} referred reached the service`, has: out.handOff.of > 0 },
+    { label: "Hand-offs stalled", value: String(out.stalled.n), sub: `of ${out.stalled.of} referred · back to the queue`, has: out.stalled.of > 0 },
+    { label: "Follow-up on time", value: pct(out.followUpOnTime.done, out.followUpOnTime.of), sub: `${out.followUpOnTime.done} of ${out.followUpOnTime.of} within a week of due`, has: out.followUpOnTime.of > 0 },
+    { label: "Waiting time", value: out.waitDays === null ? "" : `${out.waitDays.toFixed(1)} days`, sub: `median referral to booking · ${out.waitN}`, has: out.waitN > 0 },
+    { label: "Reliable improvement", value: pct(out.reliableImprovement.done, out.reliableImprovement.of), sub: `${out.reliableImprovement.done} of ${out.reliableImprovement.of} with a follow-up`, has: out.reliableImprovement.of > 0 },
+    { label: "Crisis responses completed", value: pct(out.crisis.done, out.crisis.of), sub: `${out.crisis.done} of ${out.crisis.of} urgent alerts on time`, has: out.crisis.of > 0 },
+    { label: "Adverse events", value: String(out.adverse.total), sub: plural(out.adverse.severe, "severe", "severe"), has: out.adverse.total > 0 },
+  ].filter((t) => t.has);
+  // Fairness: only the groups people actually answered ("Not given" alone means nothing was entered).
+  const fairness = out.fairness
+    .map((f) => ({ ...f, groups: f.groups.filter((g) => g.group !== "Not given") }))
+    .filter((f) => f.groups.length > 0);
+  const aiUsed = data.safetyChecks + data.aiBlocked + data.aiFallback > 0;
+  const decided = data.accepted + data.overridden > 0;
   return (
     <StaffShell staff={staff} active="insights" counts={{ open: queue.length, escalated: queue.filter((t) => t.escalatedAt).length }}>
       <div>
@@ -55,34 +79,20 @@ async function InsightsView() {
 
       {/* Outcomes (challenge brief): screen-to-first-contact first. */}
       <section aria-labelledby="outcomes-h" className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="outcomes-h" className="text-[1.0625rem] font-semibold">
-            Outcomes
-          </h2>
-          <span className="rounded-md border border-[#e3c27a] bg-[#fbefd2] px-2 py-0.5 text-[0.75rem] font-semibold text-[#5c3a00]">
-            Synthetic demo data · {out.simulated} simulated journeys
-          </span>
-        </div>
+        <h2 id="outcomes-h" className="text-[1.0625rem] font-semibold">
+          Outcomes
+        </h2>
         <p className="text-[0.8125rem] text-muted">
-          Last {out.days} days · {out.counted} people who agreed to anonymous statistics ({out.excludedNoConsent} not counted) ·
-          groups under {out.minGroup} are not shown
+          Last {out.days} days · {plural(out.counted, "person", "people")} who agreed to anonymous statistics · groups under {out.minGroup} are
+          not shown
         </p>
+        {tiles.length === 0 ? (
+          <p className="rounded-xl border border-line-warm bg-surface px-5 py-4 text-[0.875rem] text-muted">
+            Outcome measures appear here once people who agreed to anonymous statistics are contacted, referred or followed up.
+          </p>
+        ) : (
         <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-line-warm bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.05)] sm:grid-cols-4">
-          {[
-            {
-              label: "Screen to first contact",
-              value: out.screenToFirstContactHours === null ? "–" : duration(out.screenToFirstContactHours * 60),
-              sub: `median · ${plural(out.screenToFirstContactN, "person", "people")}`,
-              lead: true,
-            },
-            { label: "Successful hand-off", value: pct(out.handOff.done, out.handOff.of), sub: `${out.handOff.done} of ${out.handOff.of} referred reached the service` },
-            { label: "Hand-offs stalled", value: String(out.stalled.n), sub: `of ${out.stalled.of} referred · back to the queue` },
-            { label: "Follow-up on time", value: pct(out.followUpOnTime.done, out.followUpOnTime.of), sub: `${out.followUpOnTime.done} of ${out.followUpOnTime.of} within a week of due` },
-            { label: "Waiting time", value: out.waitDays === null ? "–" : `${out.waitDays.toFixed(1)} days`, sub: `median referral to booking · ${out.waitN}` },
-            { label: "Reliable improvement", value: pct(out.reliableImprovement.done, out.reliableImprovement.of), sub: `${out.reliableImprovement.done} of ${out.reliableImprovement.of} with a follow-up` },
-            { label: "Crisis responses completed", value: pct(out.crisis.done, out.crisis.of), sub: `${out.crisis.done} of ${out.crisis.of} urgent alerts on time` },
-            { label: "Adverse events", value: String(out.adverse.total), sub: plural(out.adverse.severe, "severe", "severe") },
-          ].map((s) => (
+          {tiles.map((s) => (
             <div
               key={s.label}
               className={`flex flex-col gap-0.5 border-line-warm px-5 py-3 not-first:border-s max-sm:border-t sm:nth-[n+5]:border-t ${s.lead ? "bg-sky" : ""}`}
@@ -93,10 +103,12 @@ async function InsightsView() {
             </div>
           ))}
         </dl>
+        )}
 
+        {fairness.length > 0 && (
         <Panel id="fair-h" title="Fairness" note={`Who reached first contact, by group · groups under ${out.minGroup} not shown`}>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {out.fairness.map((f) => (
+            {fairness.map((f) => (
               <table key={f.dim} className="w-full border-collapse text-left text-[0.8125rem]">
                 <caption className="pb-1 text-left text-[0.75rem] font-semibold tracking-[0.04em] text-muted uppercase">{f.label}</caption>
                 <thead className="sr-only">
@@ -125,6 +137,7 @@ async function InsightsView() {
             ))}
           </div>
         </Panel>
+        )}
 
         <div className="grid gap-5 xl:grid-cols-2">
           <Panel id="adverse-h" title="Adverse events" note="Reported by clinicians">
@@ -133,6 +146,7 @@ async function InsightsView() {
             </p>
             <AdverseEventForm />
           </Panel>
+          {orgs.length > 0 && (
           <Panel id="orgs-h" title="Employer and university views" note={`Aggregates only · minimum group ${out.minGroup}`}>
             <p className="text-[0.875rem] text-text-2">
               Organisations that link to the check-in see totals only, never a person, an answer or a score.
@@ -147,6 +161,7 @@ async function InsightsView() {
               ))}
             </ul>
           </Panel>
+          )}
         </div>
       </section>
 
@@ -172,13 +187,11 @@ async function InsightsView() {
           <DailyChart daily={data.daily} />
         </Panel>
 
-        <Panel id="flags-h" title="Red flags by rule" note="Fixed rules, not AI">
-          {data.flagsByRule.length === 0 ? (
-            <p className="text-[0.875rem] text-muted">No red flags in this period.</p>
-          ) : (
+        {data.flagsByRule.length > 0 && (
+          <Panel id="flags-h" title="Red flags by rule" note="Fixed rules, not AI">
             <RuleBars rows={data.flagsByRule} />
-          )}
-        </Panel>
+          </Panel>
+        )}
       </div>
 
       <Panel id="resp-h" title="Response times" note="From the task being raised to a clinician acknowledging it">
@@ -192,7 +205,7 @@ async function InsightsView() {
               </tr>
             </thead>
             <tbody>
-              {data.response.map((r) => (
+              {data.response.filter((r) => r.raised > 0).map((r) => (
                 <tr key={r.id} className="border-t border-line-warm">
                   <td className="py-2.5 pe-4"><PriorityBadge priority={r.id === "routine" ? "normal" : r.id} /></td>
                   <td className="py-2.5 pe-4 text-text-2">{r.target}</td>
@@ -211,6 +224,7 @@ async function InsightsView() {
       </Panel>
 
       <div className="grid gap-5 lg:grid-cols-2">
+        {(decided || data.referrals.length > 0) && (
         <Panel id="dec-h" title="Clinician decisions" note="On the proposed care level">
           <dl className="grid grid-cols-3 gap-4">
             {[
@@ -225,11 +239,10 @@ async function InsightsView() {
             ))}
           </dl>
           <p className="text-[0.8125rem] text-muted">Every override needs a reason, which is logged on the case.</p>
+          {data.referrals.length > 0 && (
           <div className="border-t border-line-warm pt-3">
             <p className="text-[0.75rem] font-medium text-muted">Referrals by service</p>
-            {data.referrals.length === 0 ? (
-              <p className="text-[0.875rem] text-muted">None yet.</p>
-            ) : (
+            {data.referrals.length === 0 ? null : (
               <ul className="mt-1 flex flex-col gap-1 text-[0.875rem]">
                 {data.referrals.map(([id, n]) => (
                   <li key={id} className="flex justify-between gap-3">
@@ -240,8 +253,12 @@ async function InsightsView() {
               </ul>
             )}
           </div>
+          )}
         </Panel>
 
+        )}
+
+        {aiUsed && (
         <Panel id="ai-h" title="AI safety" note="Full check-in chat">
           <dl className="grid grid-cols-3 gap-4">
             {[
@@ -260,6 +277,7 @@ async function InsightsView() {
             person got the questionnaire instead.
           </p>
         </Panel>
+        )}
       </div>
     </StaffShell>
   );

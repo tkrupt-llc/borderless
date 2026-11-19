@@ -15,7 +15,7 @@ function rows<T>(result: { data: unknown; error: { message: string } | null }, w
 }
 
 type SessionRow = {
-  id: string; path: string; parent_session_id: string | null; created_at: string; clinic_id: string | null; is_simulated: boolean;
+  id: string; path: string; parent_session_id: string | null; created_at: string; clinic_id: string | null;
   demo_age_band: string | null; demo_gender: string | null; demo_nationality: string | null; demo_language_variety: string | null; demo_emirate: string | null;
 };
 
@@ -24,7 +24,7 @@ async function loadRows(now: Date) {
   const sessions = rows<SessionRow>(
     await db()
       .from("sessions")
-      .select("id, path, parent_session_id, created_at, clinic_id, is_simulated, demo_age_band, demo_gender, demo_nationality, demo_language_variety, demo_emirate")
+      .select("id, path, parent_session_id, created_at, clinic_id, demo_age_band, demo_gender, demo_nationality, demo_language_variety, demo_emirate")
       .gte("created_at", since)
       .limit(10000),
     "sessions",
@@ -63,7 +63,10 @@ export async function loadOutcomes(now = new Date()) {
     adverse: r.adverse,
     stalledReferrals: r.stalled.map((s) => ({ sessionId: s.session_id })),
   });
-  return { ...outcomes, days: OUTCOME_DAYS, simulated: r.sessions.filter((s) => s.is_simulated).length };
+  // Check-ins per organisation that people came from (counted with consent only).
+  const orgCounts: Record<string, number> = {};
+  for (const s of r.sessions) if (s.clinic_id && r.statsConsent(s.id)) orgCounts[s.clinic_id] = (orgCounts[s.clinic_id] ?? 0) + 1;
+  return { ...outcomes, days: OUTCOME_DAYS, orgCounts };
 }
 
 /** The employer or university view: aggregates only, minimum group size 10. */

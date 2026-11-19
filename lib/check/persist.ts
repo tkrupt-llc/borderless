@@ -686,12 +686,17 @@ export async function verifyReturnCode(reference: string, code: string): Promise
   return { ok: false, reason: "invalid" };
 }
 
-/** "Alert my care team now" without a number: mark the imminent task so the clinician knows they can't call. */
-export async function flagNoContact(sessionId: string) {
+/** "Alert my care team now" without a number, or out of hours: say so on the imminent task. */
+export async function flagAlertTask(sessionId: string, flags: { noContact: boolean; outOfHours: boolean }) {
+  const parts = [
+    flags.outOfHours ? "Out of hours: raised while the team was offline; the person was told to call 800-SAKINA or 999." : "",
+    flags.noContact ? "No contact details given: they can't be called. Check the case and their timeline." : "",
+  ].filter(Boolean);
+  const key = flags.outOfHours ? "out_of_hours" : "no_contact";
   check(
     await db()
       .from("tasks")
-      .update({ reason: "no_contact: No contact details given: they can't be called. Check the case and their timeline." })
+      .update({ reason: `${key}: ${parts.join(" ")}` })
       .eq("session_id", sessionId)
       .eq("type", "red_flag")
       .eq("priority", "imminent")

@@ -6,6 +6,7 @@ import { readSessionId, writeSessionId } from "@/lib/db/patient-session";
 import * as persist from "@/lib/check/persist";
 import { loadRuleFile } from "@/lib/rules/load";
 import { runSafetyRules } from "@/lib/rules/safety";
+import { formatOpening, isStaffed, nextStaffed } from "@/lib/staffing";
 
 const helpNowRules = () =>
   runSafetyRules({ redFlags: loadRuleFile("red-flags"), bpdAdhd: loadRuleFile("bpd-adhd") }, { "flag.help_now": true })
@@ -40,7 +41,9 @@ const AlertInput = z.object({
   discreet: z.boolean(),
 });
 
-export type AlertResult = { ok: true; noContact: boolean } | { ok: false; reason: "invalid" | "not_connected" | "error" };
+export type AlertResult =
+  | { ok: true; noContact: boolean; outOfHours: boolean; opensAt: string | null }
+  | { ok: false; reason: "invalid" | "not_connected" | "error" };
 
 /**
  * "Alert my care team now": saves a phone number and raises an imminent task (15 minutes).
@@ -64,9 +67,12 @@ export async function alertCareTeam(input: unknown): Promise<AlertResult> {
     // Always imminent, even if the case already has an urgent task: the person asked
     // for someone now. The rule fires once per case, so a second tap adds no duplicate.
     await persist.raiseRedFlags(id, alertRules(), "asked to alert the care team");
-    // No number: the imminent task says so, so the clinician knows they can't call.
-    if (!phone) await persist.flagNoContact(id);
-    return { ok: true, noContact: !phone };
+    // Outside staffed hours the imminent task is still raised, and both the person and the console are told.
+    const now = new Date();
+    const staffed = isStaffed(now);
+    // No number, or out of hours: the imminent task says so.
+    if (!phone || !staffed) await persist.flagAlertTask(id, { noContact: !phone, outOfHours: !staffed });
+    return { ok: true, noContact: !phone, outOfHours: !staffed, opensAt: staffed ? null : formatOpening(nextStaffed(now)) };
   } catch (e) {
     console.error(e);
     return { ok: false, reason: "error" };

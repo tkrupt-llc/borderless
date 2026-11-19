@@ -6,6 +6,7 @@ import { FollowUpLinkPanel } from "../../follow-up-link-panel";
 import { CLOSURE_REASONS } from "@/lib/staff/safety-rules";
 import { closureStateFrom } from "@/lib/staff/closure";
 import { DiscreetMessage, SendNewReturnCode } from "../../discreet-message";
+import { CloseRedFlag } from "../../close-red-flag";
 import { discreetMessage, type Channel, type MessageKind } from "@/lib/contact/messages";
 import { AdverseEventForm } from "../../adverse-event-form";
 import { allowedChannels, may, purposeById } from "@/lib/consent";
@@ -404,7 +405,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 </div>
                 <CloseCaseForm
                   sessionId={id}
-                  state={closureStateFrom(data, handoff, staff.role === "supervisor")}
+                  state={closureStateFrom(data, handoff, staff.role === "supervisor", staff.id)}
                 />
                 </div>
               )}
@@ -488,9 +489,13 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                     {write && (
                       <span className="flex flex-wrap gap-2">
                         {!t.acknowledged_at && <ActionButton action={acknowledgeTask.bind(null, t.id)}>Acknowledge</ActionButton>}
-                        <ActionButton action={closeTask.bind(null, t.id)}>
-                          {t.type === "supervisor_review" ? "Mark reviewed (supervisor)" : "Close task"}
-                        </ActionButton>
+                        {t.type === "red_flag" ? (
+                          <CloseRedFlag taskId={t.id} spokeLogged={data.contacts.some((c) => c.outcome === "spoke")} isSupervisor={staff.role === "supervisor"} />
+                        ) : (
+                          <ActionButton action={closeTask.bind(null, t.id)}>
+                            {t.type === "supervisor_review" ? "Mark reviewed (supervisor)" : "Close task"}
+                          </ActionButton>
+                        )}
                       </span>
                     )}
                   </li>

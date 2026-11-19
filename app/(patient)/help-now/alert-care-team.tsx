@@ -36,10 +36,20 @@ export function AlertCareTeam() {
   if (result?.ok) {
     return (
       <p role="status" className="rounded-2xl bg-sage px-4 py-3.5 text-text-on-sage">
+        {result.outOfHours ? (
+          <>
+            <strong className="font-semibold text-ink">Our team is offline until {result.opensAt}.</strong> Please call
+            800-SAKINA (800 725462) or 999 now. We&apos;ve still told the team, and they&apos;ll see it as soon as they&apos;re
+            back.
+          </>
+        ) : (
+          <>
         <strong className="font-semibold text-ink">Your care team has been told.</strong>{" "}
         {result.noContact
           ? "Without a phone number they can't call you, so please keep this page open. If you are in danger now, call 998 or 999."
           : "A clinician will call you. If you are in danger now, call 998 or 999."}
+          </>
+        )}
       </p>
     );
   }

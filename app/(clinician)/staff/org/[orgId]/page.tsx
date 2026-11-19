@@ -31,7 +31,7 @@ async function OrgReport({ params }: { params: Promise<{ orgId: string }> }) {
           {org.name} <em className="text-blue">view</em>
         </h1>
         <p className="text-[0.8125rem] text-muted">
-          What a {org.kind} sees · last {report.days} days · aggregates only, groups under {MIN_GROUP} not shown · synthetic demo data
+          What a {org.kind} sees · last {report.days} days · aggregates only, groups under {MIN_GROUP} not shown
         </p>
       </div>
 

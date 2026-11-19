@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Staff } from "@/lib/staff/auth";
 import { signOut } from "./login/actions";
 import { ImminentAlert } from "./imminent-alert";
+import { OutOfHours } from "./out-of-hours";
 
 const icon = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true } as const;
 const InboxIcon = () => (
@@ -121,6 +122,7 @@ export function StaffShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line-warm bg-surface px-5 py-2 lg:px-8">
           <div className="ms-auto flex flex-wrap items-center gap-3">
+          <OutOfHours />
           <ImminentAlert />
           <form action="/staff/find" role="search" className="flex items-center gap-2">
             <label className="flex h-9 items-center gap-2 rounded-md border border-line bg-bg px-3 text-muted focus-within:border-primary focus-within:bg-surface">

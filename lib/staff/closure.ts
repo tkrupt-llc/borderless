@@ -3,7 +3,8 @@ import type { ReferralRow } from "@/lib/referral/persist";
 import type { ClosureState } from "@/lib/staff/safety-rules";
 
 /** Everything the closure rules need, from a loaded case. Used by the page and by the server action. */
-export function closureStateFrom(data: NonNullable<CaseData>, handoff: ReferralRow | null, bySupervisor: boolean): ClosureState {
+export function closureStateFrom(data: NonNullable<CaseData>, handoff: ReferralRow | null, bySupervisor: boolean, currentUserId?: string): ClosureState {
+  const request = data.tasks.find((t) => t.type === "supervisor_review" && t.reason?.startsWith("closure_cosign:"));
   return {
     summarySigned: Boolean(data.summary?.signed_at),
     steps: {
@@ -17,5 +18,7 @@ export function closureStateFrom(data: NonNullable<CaseData>, handoff: ReferralR
     contactAttempts: data.contacts.map((c) => c.created_at),
     closingMessageSent: data.activity.some((a) => a.action === "patient_notified_closing"),
     bySupervisor,
+    coSignRequestedBy: request?.requested_by ?? null,
+    currentUserId,
   };
 }

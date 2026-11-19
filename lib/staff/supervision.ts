@@ -22,7 +22,7 @@ async function audit(action: string, sessionId: string, objectId: string, metada
  * A task for the duty supervisor, already in the Escalated view. One per case
  * per trigger key, so repeated runs never duplicate it.
  */
-export async function raiseSupervisorReview(sessionId: string, key: string, reason: string, actor = "system") {
+export async function raiseSupervisorReview(sessionId: string, key: string, reason: string, actor = "system", requestedBy: string | null = null) {
   const existing = must(
     await db().from("tasks").select("id").eq("session_id", sessionId).eq("type", "supervisor_review").like("reason", `${key}:%`).limit(1),
     "read supervisor tasks",
@@ -32,7 +32,7 @@ export async function raiseSupervisorReview(sessionId: string, key: string, reas
   const created = must(
     await db()
       .from("tasks")
-      .insert({ session_id: sessionId, type: "supervisor_review", priority: "urgent", due_at: dueAt("urgent", now).toISOString(), escalated_at: now.toISOString(), reason: `${key}: ${reason}` })
+      .insert({ session_id: sessionId, type: "supervisor_review", priority: "urgent", due_at: dueAt("urgent", now).toISOString(), escalated_at: now.toISOString(), reason: `${key}: ${reason}`, requested_by: requestedBy })
       .select("id")
       .single(),
     "supervisor task",
@@ -49,30 +49,30 @@ export async function applyConsoleRules(now = new Date()): Promise<void> {
   await checkSupervisorTriggers(now);
 }
 
-/** Second clock: an acknowledged imminent task with no contact logged in time is escalated. */
+/** Second clock: an acknowledged imminent (30 min) or urgent (reply-by time) task with no contact logged is escalated. */
 async function escalateUncontacted(now: Date) {
   const tasks = must(
     await db()
       .from("tasks")
-      .select("id, session_id, priority, created_at, acknowledged_at, escalated_at, closed_at")
-      .eq("priority", "imminent")
+      .select("id, session_id, priority, created_at, due_at, acknowledged_at, escalated_at, closed_at")
+      .in("priority", ["imminent", "urgent"])
       .not("acknowledged_at", "is", null)
       .is("escalated_at", null)
       .is("closed_at", null)
       .limit(500),
     "acknowledged imminent tasks",
-  ) as { id: string; session_id: string; priority: string; created_at: string; acknowledged_at: string; escalated_at: null; closed_at: null }[];
+  ) as { id: string; session_id: string; priority: string; created_at: string; due_at: string; acknowledged_at: string; escalated_at: null; closed_at: null }[];
   if (!tasks.length) return;
   const contacts = await contactsFor(tasks.map((t) => t.session_id));
   for (const t of tasks) {
-    const task = { priority: t.priority, createdAt: t.created_at, acknowledgedAt: t.acknowledged_at, escalatedAt: null, closedAt: null };
+    const task = { priority: t.priority, createdAt: t.created_at, dueAt: t.due_at, acknowledgedAt: t.acknowledged_at, escalatedAt: null, closedAt: null };
     if (!contactOverdue(task, contacts.get(t.session_id) ?? [], now)) continue;
     const changed = must(
       await db().from("tasks").update({ escalated_at: now.toISOString() }).eq("id", t.id).is("escalated_at", null).select("id"),
       "escalate uncontacted",
     ) as { id: string }[];
     if (changed.length) {
-      await audit("contact_overdue_escalated", t.session_id, t.id, { minutes: ESCALATION.imminentContactMinutes, safety_event: true });
+      await audit("contact_overdue_escalated", t.session_id, t.id, { priority: t.priority, safety_event: true });
     }
   }
 }

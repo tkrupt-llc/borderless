@@ -160,7 +160,7 @@ export default function Landing() {
           </div>
           <HowItWorks />
           <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line pt-8">
-            <p className="text-text-2">See a check-in and the clinician console side by side, with practice data.</p>
+            <p className="text-text-2">See a check-in and the clinician console side by side. Nothing you enter there is saved.</p>
             <Link href="/demo" className={outlineBtn}>
               Try the live demo
             </Link>
