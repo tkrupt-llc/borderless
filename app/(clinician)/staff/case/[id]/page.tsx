@@ -4,6 +4,9 @@ import { headers } from "next/headers";
 import { CloseCaseForm } from "../../close-case-form";
 import { FollowUpLinkPanel } from "../../follow-up-link-panel";
 import { CLOSURE_REASONS } from "@/lib/staff/safety-rules";
+import { closureStateFrom } from "@/lib/staff/closure";
+import { DiscreetMessage, SendNewReturnCode } from "../../discreet-message";
+import { discreetMessage, type Channel, type MessageKind } from "@/lib/contact/messages";
 import { AdverseEventForm } from "../../adverse-event-form";
 import { allowedChannels, may, purposeById } from "@/lib/consent";
 import { conditionLabel } from "@/lib/physical-health";
@@ -79,6 +82,20 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
   const [data, chain, handoff, h] = await Promise.all([loadCase(id), loadCaseTrend(id), latestReferral(id), headers()]);
   const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000"}`;
   if (!data) notFound();
+  // Discreet messages staff copy and send themselves, one per channel the person shared and allows.
+  const sendChannels = allowedChannels(data.consents).filter((c) =>
+    c === "email" ? Boolean(data.session.contact_email) : Boolean(data.session.contact_phone),
+  ) as Channel[];
+  const messagesFor = (kind: MessageKind) =>
+    Object.fromEntries(
+      sendChannels.map((c) => [
+        c,
+        discreetMessage(kind, c, caseRef(id), kind === "followup" && data.session.follow_up_token ? `${origin}/f/${data.session.follow_up_token}` : `${origin}/return`),
+      ]),
+    ) as Partial<Record<Channel, string>>;
+  const sentCount = (kind: MessageKind) => data.activity.filter((a) => a.action === `patient_notified_${kind}`).length;
+  const preferred = (data.session.contact_method ?? null) as Channel | null;
+  const noContact = !data.session.contact_phone && !data.session.contact_email;
   const trend = chain && chain.sessions.length > 1 ? seriesFrom(chain.points) : [];
   const pathLabel = (p: string) =>
     p === "contact" ? "Call-back only" : p === "followup" ? "Follow-up check-in" : `${p[0].toUpperCase()}${p.slice(1)} check-in`;
@@ -132,6 +149,9 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
             {topTier && <PriorityBadge priority={topTier} />}
             {openTasks.some((t) => t.escalated_at) && (
               <span className="rounded-md border border-danger px-2 py-0.5 text-[0.8125rem] font-semibold text-danger">Escalated</span>
+            )}
+            {noContact && (
+              <span className="rounded-lg border border-line bg-sage-mist px-2 py-0.5 text-[0.8125rem] font-semibold text-text-2">No contact details: timeline only</span>
             )}
             {data.activity.some((a) => a.action === "deletion_requested") && (
               <span className="rounded-lg border border-line bg-sky px-2 py-0.5 text-[0.8125rem] font-semibold text-blue">Deletion requested</span>
@@ -352,6 +372,12 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
               </ol>
             )}
             {write && <ReplyBox sessionId={id} />}
+            {write && data.teamMessages.some((m) => !m.from_patient) && (
+              <div className="flex flex-col gap-2 border-t border-line-warm pt-3">
+                <span className="text-[0.875rem] font-semibold">Let them know there&apos;s a reply</span>
+                <DiscreetMessage sessionId={id} kind="reply" messages={messagesFor("reply")} defaultChannel={preferred} sentCount={sentCount("reply")} />
+              </div>
+            )}
           </Panel>
 
           {session.follow_up_token && (
@@ -371,20 +397,16 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                   Closed {time(session.closed_at)}: {CLOSURE_REASONS[session.closure_reason as keyof typeof CLOSURE_REASONS] ?? session.closure_reason}.
                 </p>
               ) : (
+                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <span className="text-[0.875rem] font-semibold">Closing message (needed to close as Unreachable)</span>
+                  <DiscreetMessage sessionId={id} kind="closing" messages={messagesFor("closing")} defaultChannel={preferred} sentCount={sentCount("closing")} />
+                </div>
                 <CloseCaseForm
                   sessionId={id}
-                  state={{
-                    summarySigned: Boolean(data.summary?.signed_at),
-                    steps: {
-                      level: data.decision !== null,
-                      contact: data.contacts.some((c) => c.outcome === "spoke"),
-                      handoff: !handoff || handoff.status === "closed",
-                    },
-                    openSafetyFlags: data.tasks.filter((t) => t.type === "red_flag" && !t.closed_at).length,
-                    urgentHandoffStalled: Boolean(handoff && handoff.urgent && handoff.stalled_at && handoff.status !== "closed"),
-                    hadCrisis: data.tasks.some((t) => t.priority === "urgent" || t.priority === "imminent"),
-                  }}
+                  state={closureStateFrom(data, handoff, staff.role === "supervisor")}
                 />
+                </div>
               )}
             </Panel>
           )}
@@ -452,6 +474,16 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                       <Countdown dueAt={t.due_at} />
                     </span>
                     {t.reason && <span className="text-text-2">{t.reason.slice(t.reason.indexOf(":") + 1).trim()}</span>}
+                    {write && t.type === "send_reminder" && t.reason && (
+                      <DiscreetMessage
+                        sessionId={id}
+                        kind={t.reason.split(":")[0]}
+                        messages={messagesFor(t.reason.split(":")[0] as MessageKind)}
+                        defaultChannel={preferred}
+                        taskId={t.id}
+                        sentCount={sentCount(t.reason.split(":")[0] as MessageKind)}
+                      />
+                    )}
                     {t.escalated_at && <strong className="font-semibold text-danger">Escalated to supervisor</strong>}
                     {write && (
                       <span className="flex flex-wrap gap-2">
@@ -505,7 +537,13 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
                 ))}
               </ul>
             )}
-            {write && session.contact_phone && <ContactForm sessionId={id} />}
+            {write && session.contact_phone && <ContactForm sessionId={id} safeTimes={session.contact_times} />}
+            {write && (
+              <div className="flex flex-col gap-1.5 border-t border-line-warm pt-3">
+                <span className="text-[0.875rem] font-semibold">Lost their return code?</span>
+                <SendNewReturnCode sessionId={id} channels={sendChannels} origin={origin} />
+              </div>
+            )}
           </Panel>
 
           {/* --- Referral: services for the decided step ------------------ */}

@@ -15,7 +15,8 @@ function Arrow() {
 
 /**
  * Top bar of every patient page (research: "a way out of everything"):
- * Back, the logo as a link to the home page, and Quick exit.
+ * Back, Home, "Coming back?" (find a check-in with a reference and code),
+ * the logo as a link to the home page, and Quick exit on the far side.
  * Back follows the browser history; backHref is where it goes when there is
  * no history (e.g. the previous question), otherwise the home page.
  */
@@ -37,6 +38,12 @@ export function PatientHeader({ backHref }: { backHref?: string }) {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+          </svg>
+        </Link>
+        <Link href="/return" aria-label="Coming back? Find your check-in" title="Coming back? Find your check-in" className={backClass}>
+          <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+            <circle cx="7.5" cy="11" r="3.5" fill="none" stroke="currentColor" strokeWidth="2" />
+            <path d="M11 11h8M16 11v3M19 11v2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </Link>
         <Link href="/" aria-label="borderless home page" className="ms-1 no-underline">

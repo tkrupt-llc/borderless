@@ -4,6 +4,7 @@ import { HillsHero } from "@/components/hills";
 import { HeroChat } from "@/components/landing/hero-chat";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { TypedLine } from "@/components/landing/typed-line";
+import { ReturningBanner } from "@/components/landing/returning-banner";
 import { BreathingIcon, GroundingIcon, StopIcon, WavesIcon } from "@/components/icons";
 import { CATEGORIES } from "@/lib/coping/categories";
 import en from "@/content/i18n/en.json";
@@ -84,11 +85,15 @@ export default function Landing() {
   // Landing only: muted text one step darker (well above 4.5:1 on every background here).
   return (
     <div className="relative z-0 overflow-x-clip text-[1.125rem] leading-[1.55] [--muted:#434e3d]">
+      <ReturningBanner />
       <header className={`${wrap} flex flex-wrap items-center justify-between gap-4 py-5`}>
         <Link href="/" aria-label="borderless home" className="no-underline">
           <Logo size="lg" />
         </Link>
         <nav aria-label="Main" className="flex flex-wrap items-center gap-x-7 gap-y-2 text-body">
+          <Link href="/return" className="text-caption text-muted no-underline hover:text-ink hover:underline">
+            Coming back?
+          </Link>
           <a href="#how" className="text-ink no-underline">How it works</a>
           <a href="#safe" className="text-ink no-underline">Why it&apos;s safe</a>
           <a href="#clinicians" className="text-ink no-underline">For clinicians</a>
@@ -128,6 +133,9 @@ export default function Landing() {
               <a href="#how" className="inline-flex min-h-11 items-center self-start font-medium text-primary-dark underline underline-offset-2">
                 See how it works
               </a>
+              <p className="-mt-3 text-caption text-muted">
+                Already checked in? <Link href="/return">Find your check-in</Link>
+              </p>
               <p className="text-body text-text-2">
                 No account needed · Not for emergencies: call{" "}
                 <a href="tel:999" className="font-semibold text-ink">999</a> or{" "}
@@ -367,6 +375,7 @@ export default function Landing() {
                 <Link href="/talk" className="text-ink no-underline hover:underline">Talk to someone</Link>
                 <Link href="/coping" className="text-ink no-underline hover:underline">Coping cards</Link>
                 <Link href="/help-now" className="text-ink no-underline hover:underline">Crisis support</Link>
+                <Link href="/return" className="text-ink no-underline hover:underline">Coming back?</Link>
               </div>
               <div className="flex flex-col gap-2">
                 <strong>For clinicians</strong>

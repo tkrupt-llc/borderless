@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db/server";
-import { dueAt } from "@/lib/rules/tiers";
-import { dueActions, FOLLOW_UP_CONFIG, stageStartedAt, type FollowUpAction, type Referral, type ReferralStatus } from "./followup";
+import { dueAt, nextWorkingDay } from "@/lib/rules/tiers";
+import { dueActions, FOLLOW_UP_CONFIG, reminderTaskFor, stageStartedAt, type FollowUpAction, type Referral, type ReferralStatus } from "./followup";
 
 // Referral follow-through: storage, the rules applied to it, and every change
 // written to the audit trail. Callers check who may act (staff or the patient's cookie).
@@ -167,6 +167,24 @@ export async function applyFollowUps(sessionId?: string, now = new Date()): Prom
   return applied;
 }
 
+async function createReminderTask(row: ReferralRow, kind: "reminder_booking" | "reminder_attended") {
+  const open = must(
+    await db().from("tasks").select("id").eq("session_id", row.session_id).eq("type", "send_reminder").like("reason", `${kind}:%`).is("closed_at", null).limit(1),
+    "read reminder task",
+  ) as { id: string }[];
+  if (open.length) return;
+  must(
+    await db().from("tasks").insert({
+      session_id: row.session_id,
+      type: "send_reminder",
+      priority: "normal",
+      due_at: nextWorkingDay(new Date()).toISOString(),
+      reason: kind === "reminder_booking" ? "reminder_booking: Remind them to book (copy the discreet message and log it)" : "reminder_attended: Ask how the appointment went (copy the discreet message and log it)",
+    }),
+    "reminder task",
+  );
+}
+
 const COLUMN: Record<FollowUpAction, keyof ReferralRow> = {
   remind: "reminder_at",
   stall: "stalled_at",
@@ -183,6 +201,10 @@ async function apply(row: ReferralRow, action: FollowUpAction, now: Date): Promi
   if (changed.length === 0) return false;
   if (action === "stall") await requeue(row, "handoff_stalled");
   if (action === "urgent_requeue") await requeue(row, "handoff_check");
+  // The patient's card shows these, but nothing is sent automatically: a low-priority
+  // task asks staff to send a discreet reminder themselves and log it.
+  const reminder = reminderTaskFor(action);
+  if (reminder) await createReminderTask(row, reminder);
   await audit("system", `referral_${action}`, row, { rule: action, config: FOLLOW_UP_CONFIG, stage_started: stageStartedAt(toReferral(row)) });
   return true;
 }

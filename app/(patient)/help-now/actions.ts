@@ -34,15 +34,13 @@ export async function helpNowOpened(): Promise<void> {
 }
 
 const AlertInput = z.object({
-  phone: z
-    .string()
-    .trim()
-    .regex(/^\+?[0-9 ()-]{7,20}$/, "phone"),
+  // Optional: someone may need to alert the team without being able to take a call.
+  phone: z.union([z.literal(""), z.string().trim().regex(/^\+?[0-9 ()-]{7,20}$/, "phone")]),
   callbackTime: z.string().trim().max(80).optional(),
   discreet: z.boolean(),
 });
 
-export type AlertResult = { ok: true } | { ok: false; reason: "invalid" | "not_connected" | "error" };
+export type AlertResult = { ok: true; noContact: boolean } | { ok: false; reason: "invalid" | "not_connected" | "error" };
 
 /**
  * "Alert my care team now": saves a phone number and raises an imminent task (15 minutes).
@@ -61,11 +59,14 @@ export async function alertCareTeam(input: unknown): Promise<AlertResult> {
       id = await persist.createSession("crisis", parsed.data.discreet, { clinician_review: true });
       await writeSessionId(id);
     }
-    await persist.saveContact(id, parsed.data.phone, parsed.data.callbackTime || null);
+    const phone = parsed.data.phone.trim();
+    if (phone) await persist.saveContact(id, phone, parsed.data.callbackTime || null);
     // Always imminent, even if the case already has an urgent task: the person asked
     // for someone now. The rule fires once per case, so a second tap adds no duplicate.
     await persist.raiseRedFlags(id, alertRules(), "asked to alert the care team");
-    return { ok: true };
+    // No number: the imminent task says so, so the clinician knows they can't call.
+    if (!phone) await persist.flagNoContact(id);
+    return { ok: true, noContact: !phone };
   } catch (e) {
     console.error(e);
     return { ok: false, reason: "error" };

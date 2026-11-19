@@ -114,6 +114,9 @@ describe("7. Case closure", () => {
     openSafetyFlags: 0,
     urgentHandoffStalled: false,
     hadCrisis: false,
+    contactAttempts: [],
+    closingMessageSent: false,
+    bySupervisor: false,
   };
 
   it("closes when everything is done and a reason is given", () => {
@@ -133,8 +136,8 @@ describe("7. Case closure", () => {
 
   it("allows a step to be marked not needed instead of done", () => {
     const state = { ...ready, steps: { level: true, contact: false, handoff: true } };
-    expect(canCloseCase(state, "unreachable", []).ok).toBe(false);
-    expect(canCloseCase(state, "unreachable", ["contact"]).ok).toBe(true);
+    expect(canCloseCase(state, "self_help_plan", []).ok).toBe(false);
+    expect(canCloseCase(state, "self_help_plan", ["contact"]).ok).toBe(true);
   });
 
   it("is blocked while a safety flag is open", () => {

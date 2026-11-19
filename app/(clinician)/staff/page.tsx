@@ -189,6 +189,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
                         <span className={`block text-[0.75rem] font-semibold ${c.escalated ? "text-danger" : c.unacked > 0 ? "text-ink" : "text-muted"}`}>
                           {c.escalated ? "Escalated" : c.unacked > 0 ? "New" : "Acknowledged"}
                         </span>
+                        {!c.top.hasContact && <span className="block text-[0.75rem] text-muted">No contact details: timeline only</span>}
                       </td>
                       <td className="px-4 py-3.5 whitespace-nowrap">
                         {pathLabel(c.path)}

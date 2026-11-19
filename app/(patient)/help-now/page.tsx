@@ -100,6 +100,9 @@ export default function HelpNowPage() {
         <Link href="/coping" className="inline-flex min-h-11 items-center self-start text-caption text-primary-dark underline underline-offset-2">
           All coping cards
         </Link>
+        <p className="pt-2 text-small text-muted">
+          Already checked in? <Link href="/return">Coming back? Find your check-in</Link>
+        </p>
 
       </div>
     </>

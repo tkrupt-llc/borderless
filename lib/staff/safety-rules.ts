@@ -87,6 +87,12 @@ export type ClosureState = {
   urgentHandoffStalled: boolean;
   /** The case ever had an urgent or imminent alert. */
   hadCrisis: boolean;
+  /** When each contact attempt (call, no answer or spoke) was logged. */
+  contactAttempts: string[];
+  /** A discreet closing message was sent and logged. */
+  closingMessageSent: boolean;
+  /** The person closing is the duty supervisor (co-signs a crisis case closed as declined or unreachable). */
+  bySupervisor: boolean;
 };
 
 /**
@@ -100,6 +106,17 @@ export function canCloseCase(state: ClosureState, reason: string | null, notNeed
   if (!state.summarySigned) blockers.push("Sign the summary");
   for (const step of Object.keys(CLOSURE_STEPS) as ClosureStep[]) {
     if (!state.steps[step] && !notNeeded.includes(step)) blockers.push(`${CLOSURE_STEPS[step]}: do it or mark it not needed`);
+  }
+  if (reason === "unreachable") {
+    const times = state.contactAttempts.map((t) => new Date(t).getTime()).sort((a, b) => a - b);
+    const spanDays = times.length ? (times[times.length - 1] - times[0]) / 86_400_000 : 0;
+    if (times.length < ESCALATION.unreachableMinAttempts || spanDays < ESCALATION.unreachableMinDays) {
+      blockers.push(`Unreachable needs ${ESCALATION.unreachableMinAttempts} logged attempts over at least ${ESCALATION.unreachableMinDays} days (${times.length} so far)`);
+    }
+    if (!state.closingMessageSent) blockers.push("Unreachable needs a closing message sent and logged");
+  }
+  if (state.hadCrisis && (reason === "declined" || reason === "unreachable") && !state.bySupervisor) {
+    blockers.push("This case had a crisis: closing it as declined or unreachable needs the duty supervisor's co-sign");
   }
   if (state.openSafetyFlags > 0) blockers.push("A safety flag is still open: close the red-flag task first");
   if (state.urgentHandoffStalled) blockers.push("An urgent hand-off is stalled: resolve it first");

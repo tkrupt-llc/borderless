@@ -36,8 +36,10 @@ export function AlertCareTeam() {
   if (result?.ok) {
     return (
       <p role="status" className="rounded-2xl bg-sage px-4 py-3.5 text-text-on-sage">
-        <strong className="font-semibold text-ink">Your care team has been told.</strong> A clinician will call you.
-        If you are in danger now, call 998 or 999.
+        <strong className="font-semibold text-ink">Your care team has been told.</strong>{" "}
+        {result.noContact
+          ? "Without a phone number they can't call you, so please keep this page open. If you are in danger now, call 998 or 999."
+          : "A clinician will call you. If you are in danger now, call 998 or 999."}
       </p>
     );
   }
@@ -68,12 +70,13 @@ export function AlertCareTeam() {
       {open && (
         <form onSubmit={submit} className="flex flex-col gap-3 rounded-2xl bg-surface px-4 py-4">
           <label className="flex flex-col gap-1">
-            <span className="font-semibold">Your phone number</span>
+            <span className="font-semibold">
+              Your phone number <span className="font-normal text-muted">(so they can call you)</span>
+            </span>
             <input
               name="phone"
               type="tel"
               autoComplete="tel"
-              required
               inputMode="tel"
               className="min-h-12 rounded-xl border-[1.5px] border-line bg-bg px-3 text-body"
             />

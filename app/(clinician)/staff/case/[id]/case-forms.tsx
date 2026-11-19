@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { outsideSafeTimes } from "@/lib/contact/messages";
 import { useRouter } from "next/navigation";
 import { decide, deleteCaseData, logContact, saveSummary, signSummary, startReview } from "../../actions";
 import { ActionButton } from "../../ui";
@@ -121,10 +122,17 @@ export function SummaryEditor({ sessionId, initialText }: { sessionId: string; i
   );
 }
 
-export function ContactForm({ sessionId }: { sessionId: string }) {
+export function ContactForm({ sessionId, safeTimes }: { sessionId: string; safeTimes?: string[] | null }) {
   const [note, setNote] = useState("");
+  // Checked once when the page opens: a warning, never a block.
+  const [outside] = useState(() => outsideSafeTimes(safeTimes, new Date()));
   return (
     <div className="flex flex-col gap-2">
+      {outside && (
+        <p role="note" className="rounded-lg border border-[#e3c27a] bg-[#fbefd2] px-3 py-2 text-[0.8125rem] text-[#5c3a00]">
+          It&apos;s outside the times they said are safe to contact them. You can still log contact.
+        </p>
+      )}
       <label className="flex flex-col gap-1 text-caption">
         <span className="font-semibold">Note (optional)</span>
         <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} className={`${field} min-h-9`} />

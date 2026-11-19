@@ -92,3 +92,13 @@ export function patientCard(r: Referral, now: Date, cfg: FollowUpConfig = FOLLOW
   if (r.helpRequestedAt) return { kind: "help_requested" };
   return { kind: "ask_booked", reminder: Boolean(r.reminderAt) || now.getTime() - ms(r.referredAt) >= cfg.reminderAfterDays * D };
 }
+
+/**
+ * Which rules also ask staff to send a reminder themselves (nothing is sent
+ * automatically): the 3-day booking reminder and "Did you see them?".
+ */
+export function reminderTaskFor(action: FollowUpAction): "reminder_booking" | "reminder_attended" | null {
+  if (action === "remind") return "reminder_booking";
+  if (action === "ask_attendance") return "reminder_attended";
+  return null;
+}

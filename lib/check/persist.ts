@@ -685,3 +685,18 @@ export async function verifyReturnCode(reference: string, code: string): Promise
   }
   return { ok: false, reason: "invalid" };
 }
+
+/** "Alert my care team now" without a number: mark the imminent task so the clinician knows they can't call. */
+export async function flagNoContact(sessionId: string) {
+  check(
+    await db()
+      .from("tasks")
+      .update({ reason: "no_contact: No contact details given: they can't be called. Check the case and their timeline." })
+      .eq("session_id", sessionId)
+      .eq("type", "red_flag")
+      .eq("priority", "imminent")
+      .is("closed_at", null)
+      .is("reason", null),
+    "flag no contact",
+  );
+}

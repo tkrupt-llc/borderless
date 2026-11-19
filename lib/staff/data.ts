@@ -26,6 +26,8 @@ export type QueueTask = {
   ruleId: string | null;
   path: string;
   hasPhone: boolean;
+  /** A phone number or email was shared; without either the person can only read replies on their timeline. */
+  hasContact: boolean;
   clinicId: string | null;
 };
 
@@ -35,7 +37,7 @@ export async function loadQueue(): Promise<QueueTask[]> {
     id: string; session_id: string; type: string; priority: string; due_at: string; created_at: string;
     acknowledged_at: string | null; escalated_at: string | null;
     red_flag_events: { rule_id: string } | null;
-    sessions: { path: string; contact_phone: string | null; clinic_id: string | null } | null;
+    sessions: { path: string; contact_phone: string | null; contact_email: string | null; clinic_id: string | null } | null;
   };
   // Hand-off rules run on every queue refresh (no cron): stalled referrals come back as tasks.
   await applyFollowUps().catch((e) => console.error("referral follow-ups", e));
@@ -45,7 +47,7 @@ export async function loadQueue(): Promise<QueueTask[]> {
     await db()
       .from("tasks")
       .select(
-        "id, session_id, type, priority, due_at, created_at, acknowledged_at, escalated_at, red_flag_events(rule_id), sessions(path, contact_phone, clinic_id)",
+        "id, session_id, type, priority, due_at, created_at, acknowledged_at, escalated_at, red_flag_events(rule_id), sessions(path, contact_phone, contact_email, clinic_id)",
       )
       .is("closed_at", null),
     "load queue",
@@ -66,6 +68,7 @@ export async function loadQueue(): Promise<QueueTask[]> {
       ruleId: t.red_flag_events?.rule_id ?? null,
       path: t.sessions?.path ?? "",
       hasPhone: Boolean(t.sessions?.contact_phone),
+      hasContact: Boolean(t.sessions?.contact_phone || t.sessions?.contact_email),
       clinicId: t.sessions?.clinic_id ?? null,
     }))
     .sort(

@@ -5,6 +5,11 @@ import { audit } from "@/lib/staff/audit";
 import { raiseSupervisorReview } from "@/lib/staff/supervision";
 import { canCloseCase, CLOSURE_REASONS, CLOSURE_STEPS, ESCALATION, needsCoSign, postCrisisCheckIns, type ClosureReason, type ClosureStep } from "@/lib/staff/safety-rules";
 import { latestReferral as latestReferralRow } from "@/lib/referral/persist";
+import { closureStateFrom } from "@/lib/staff/closure";
+import * as persist from "@/lib/check/persist";
+import { allowedChannels } from "@/lib/consent";
+import { newCodeMessage } from "@/lib/contact/messages";
+import { caseRef } from "@/lib/case-ref";
 import * as referral from "@/lib/referral/persist";
 import { refresh } from "next/cache";
 import { db } from "@/lib/db/server";
@@ -378,7 +383,7 @@ export async function closeCase(input: unknown): Promise<Result> {
   if (!parsed.success) return { ok: false, error: "Choose a closure reason." };
   const d = parsed.data;
   return run(async (staff) => {
-    const state = await closureState(d.sessionId);
+    const state = await closureState(d.sessionId, staff.role === "supervisor");
     const verdict = canCloseCase(state, d.reason, d.notNeeded);
     if (!verdict.ok) throw new UserError(verdict.blockers.join(". ") + ".");
     const now = new Date();
@@ -411,20 +416,10 @@ export async function closeCase(input: unknown): Promise<Result> {
 }
 
 /** What the closure rules need to know about a case. */
-async function closureState(sessionId: string) {
+async function closureState(sessionId: string, bySupervisor: boolean) {
   const [data, handoff] = await Promise.all([loadCase(sessionId), latestReferralRow(sessionId)]);
   if (!data) throw new UserError("Case not found.");
-  return {
-    summarySigned: Boolean(data.summary?.signed_at),
-    steps: {
-      level: data.decision !== null,
-      contact: data.contacts.some((c) => c.outcome === "spoke"),
-      handoff: !handoff || handoff.status === "closed",
-    },
-    openSafetyFlags: data.tasks.filter((t) => t.type === "red_flag" && !t.closed_at).length,
-    urgentHandoffStalled: Boolean(handoff && handoff.urgent && handoff.stalled_at && handoff.status !== "closed"),
-    hadCrisis: data.tasks.some((t) => t.priority === "urgent" || t.priority === "imminent"),
-  };
+  return closureStateFrom(data, handoff, bySupervisor);
 }
 
 /** The clinician copied the follow-up link and sent it themselves (automatic sending is a pilot step). */
@@ -434,4 +429,61 @@ export async function logFollowUpLinkSent(sessionId: string, how: string): Promi
     const channel = z.enum(["phone", "sms", "whatsapp", "email", "in_person"]).parse(how);
     await audit(staff, "follow_up_link_sent", "session", id, id, { channel });
   });
+}
+
+// ---------------------------------------------------------------------------
+// Discreet messages staff send themselves, and a new return code
+// ---------------------------------------------------------------------------
+
+const MESSAGE_KINDS = ["reply", "followup", "reminder_booking", "reminder_attended", "closing"] as const;
+const SEND_CHANNELS = ["sms", "whatsapp", "email", "phone", "in_person"] as const;
+
+/**
+ * "Log message sent": the clinician copied a discreet message and sent it
+ * themselves. A "Send reminder" task it answers is closed. Every patient
+ * message is sent manually in the prototype; automatic sending is a pilot step.
+ */
+export async function logPatientNotification(sessionId: string, kind: string, channel: string, taskId?: string): Promise<Result> {
+  return run(async (staff) => {
+    const id = uuid.parse(sessionId);
+    const k = z.enum(MESSAGE_KINDS).parse(kind);
+    const ch = z.enum(SEND_CHANNELS).parse(channel);
+    if (taskId) {
+      const now = new Date().toISOString();
+      must(
+        await db().from("tasks").update({ acknowledged_at: now, closed_at: now }).eq("id", uuid.parse(taskId)).eq("session_id", id).eq("type", "send_reminder"),
+        "close reminder task",
+      );
+    }
+    await audit(staff, "patient_notified_" + k, "session", id, id, { channel: ch });
+  });
+}
+
+/**
+ * "Send new return code": only through a channel the person shared and still
+ * allows. The old code stops working. The code is never shown on screen: the
+ * message containing it is returned once, straight to the clipboard.
+ */
+export async function sendNewReturnCode(sessionId: string, channel: string, origin: string): Promise<{ ok: true; message: string } | { ok: false; error: string }> {
+  const staff = await requireStaff();
+  if (!canWrite(staff)) return { ok: false, error: "This account can view cases but not change them." };
+  try {
+    const id = uuid.parse(sessionId);
+    const ch = z.enum(["sms", "whatsapp", "email"]).parse(channel);
+    const [consents, session] = await Promise.all([
+      persist.getConsents(id),
+      db().from("sessions").select("contact_phone, contact_email").eq("id", id).single(),
+    ]);
+    const allowed = allowedChannels(consents);
+    const hasAddress = ch === "email" ? Boolean(session.data?.contact_email) : Boolean(session.data?.contact_phone);
+    if (!allowed.includes(ch) || !hasAddress) return { ok: false, error: "The person hasn't shared and allowed this channel." };
+    const code = await persist.issueReturnCode(id);
+    await audit(staff, "return_code_reissued", "session", id, id, { channel: ch });
+    const base = z.url().parse(origin);
+    const message = newCodeMessage(ch, caseRef(id), base + "/return", code);
+    return { ok: true, message };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, error: "That didn't work. Please try again." };
+  }
 }

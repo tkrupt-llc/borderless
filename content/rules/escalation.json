@@ -6,6 +6,11 @@
   "repeatCrisisWindowDays": 30,
   "repeatCrisisCount": 2,
   "unreachableAttempts": 2,
-  "postCrisisCheckInDays": [7, 30],
-  "scheduledTaskShowHoursBefore": 24
+  "postCrisisCheckInDays": [
+    7,
+    30
+  ],
+  "scheduledTaskShowHoursBefore": 24,
+  "unreachableMinAttempts": 3,
+  "unreachableMinDays": 5
 }

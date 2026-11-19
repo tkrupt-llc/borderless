@@ -143,6 +143,11 @@ export function ContactForm() {
         <Link href={resultHref} className="flex min-h-11 items-center justify-center text-caption">
           Not now
         </Link>
+        {!method && (
+          <p className="rounded-xl bg-sky px-3.5 py-2.5 text-caption text-blue-ink">
+            Without contact details, check back with your reference and code to see replies.
+          </p>
+        )}
         <p role="status" className="min-h-6 text-caption text-danger">
           {error}
         </p>
