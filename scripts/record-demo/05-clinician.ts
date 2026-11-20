@@ -1,26 +1,24 @@
-// Clip 05: sign in → queue by urgency with clocks → open the clip-01 case → AI summary → quick reply
-// "I'll call you today" → Send reply → accept the next step → refer to SEHA primary care → hand-off status.
-// Recorded before clip 04, so the patient sees this reply when they come back. Desktop, about 45 s.
-// Credentials come from .env.local (DEMO_CLINICIAN_EMAIL / DEMO_CLINICIAN_PASSWORD) and are never logged.
+// Clip 05 (as the guest, demo cases only): Continue as guest → reset the demo cases → queue by urgency
+// with clocks → open a demo full check-in → AI summary → quick reply "I'll call you today" → Send reply →
+// accept the next step → refer to SEHA primary care → hand-off status. Desktop, about 45 s.
+// No email or password is typed: the guest button signs in on the server.
 import type { Browser } from "playwright";
-import { DESKTOP, click, finishClip, goto, newClip, pause, readState, scroll, settle, staffCredentials, stepper, storagePath, type } from "./lib";
-
-const caseRef = (id: string) => `BL-${id.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+import { DESKTOP, click, finishClip, goto, newClip, pause, scroll, settle, stepper, storagePath } from "./lib";
 
 export default async function clip05(browser: Browser) {
   const s = stepper("05-clinician");
-  const sid = readState().sessions["01"];
-  if (!sid) throw new Error("Run clip 01 first");
-  const ref = caseRef(sid);
-  const { email, password } = staffCredentials();
   const { context, page } = await newClip(browser, DESKTOP);
 
-  await s.step("sign in", async () => {
+  await s.step("Continue as guest", async () => {
     await goto(page, "/staff/login", 800);
-    await type(page, page.getByLabel(/email/i), email);
-    await type(page, page.getByLabel(/password/i), password);
-    await pause(page, 400);
-    await click(page, page.getByRole("button", { name: /sign in/i }));
+    await click(page, page.getByRole("button", { name: "Continue as guest" }));
+    await page.getByRole("heading", { name: /Review queue/ }).waitFor({ timeout: 90_000 });
+    await settle(page, 800);
+  });
+  await s.step("reset the demo cases (same start every recording)", async () => {
+    await click(page, page.getByRole("button", { name: "Reset demo data" }));
+    await page.waitForTimeout(4000);
+    await page.reload({ waitUntil: "domcontentloaded" });
     await page.getByRole("heading", { name: /Review queue/ }).waitFor({ timeout: 90_000 });
     await settle(page, 1800);
   });
@@ -34,16 +32,12 @@ export default async function clip05(browser: Browser) {
     }
     await pause(page, 600);
   });
-  await s.step(`open the case from clip 01 (${ref})`, async () => {
-    const link = page.locator("main tbody").getByRole("link", { name: ref });
-    if (await link.count()) {
-      await click(page, link); // selects the row; the case summary opens beside the queue
-      await pause(page, 2500);
-      const open = page.getByRole("link", { name: /Assign next step|Open full case/ }).first();
-      if (await open.isVisible().catch(() => false)) await click(page, open);
-    }
-    if (!page.url().includes(`/staff/case/${sid}`)) await goto(page, `/staff/case/${sid}`);
-    await page.waitForURL(new RegExp(`/staff/case/${sid}`), { timeout: 90_000 });
+  await s.step("open the demo full check-in (PHQ-9 7, GAD-7 6)", async () => {
+    const row = page.locator("main tbody tr:visible").filter({ hasText: "PHQ-9 7 · GAD-7 6" }).first();
+    await click(page, row.getByRole("link").first()); // selects the row; the summary opens beside the queue
+    await pause(page, 2500);
+    await click(page, page.getByRole("link", { name: /Assign next step|Open full case/ }).first());
+    await page.waitForURL(/\/staff\/case\//, { timeout: 90_000 });
     await settle(page, 1500);
   });
   await s.step("AI summary", async () => {

@@ -18,6 +18,7 @@ import clip03 from "./03-receipt-coping";
 import clip04 from "./04-return";
 import clip05 from "./05-clinician";
 import clip06 from "./06-overview";
+import clip07 from "./07-full-checkin";
 
 // Recording order: 05 before 04, so the patient sees the clinician's reply when they come back.
 // phone: recorded at 390x844, upscaled 2x to 780x1688 when converting.
@@ -25,6 +26,7 @@ const CLIPS = [
   { id: "01", name: "01-quick-check", run: clip01, target: 30, phone: true },
   { id: "02", name: "02-crisis", run: clip02, target: 20, phone: true },
   { id: "03", name: "03-receipt-coping", run: clip03, target: 25, phone: true },
+  { id: "07", name: "07-full-checkin", run: clip07, target: 25, phone: true },
   { id: "05", name: "05-clinician", run: clip05, target: 45, phone: false },
   { id: "04", name: "04-return", run: clip04, target: 25, phone: true },
   { id: "06", name: "06-overview", run: clip06, target: 25, phone: false },
