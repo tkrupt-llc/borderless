@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { alertCareTeam, helpNowOpened, type AlertResult } from "./actions";
-import { isDiscreet } from "@/lib/discreet";
 
 // The call buttons above never wait on this: everything here is optional and after them.
 export function AlertCareTeam() {
@@ -24,7 +23,6 @@ export function AlertCareTeam() {
           await alertCareTeam({
             phone: String(form.get("phone") ?? ""),
             callbackTime: String(form.get("callbackTime") ?? ""),
-            discreet: isDiscreet(),
           }),
         );
       } catch {

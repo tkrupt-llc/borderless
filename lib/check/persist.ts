@@ -41,10 +41,10 @@ async function audit(action: string, sessionId: string, objectType: string, meta
   );
 }
 
-export async function createSession(path: Path, discreetMode: boolean, choices: ConsentChoices): Promise<string> {
+export async function createSession(path: Path, choices: ConsentChoices): Promise<string> {
   const clinic = clinicById(await readClinicId());
   const session = check(
-    await db().from("sessions").insert({ path, discreet_mode: discreetMode, clinic_id: clinic?.id ?? null }).select("id").single(),
+    await db().from("sessions").insert({ path, clinic_id: clinic?.id ?? null }).select("id").single(),
     "create session",
   ) as { id: string };
 

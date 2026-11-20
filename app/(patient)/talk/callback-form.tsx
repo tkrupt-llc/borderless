@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { requestCallback, type CallbackResult } from "./actions";
 import { CLINICIAN_CHOICES, LANGUAGES } from "./options";
-import { isDiscreet } from "@/lib/discreet";
 import { formatWhen } from "@/lib/receipt/build";
 
 const input = "min-h-12 rounded-xl border-[1.5px] border-line bg-surface px-3 text-body";
@@ -24,7 +23,6 @@ export function CallbackForm() {
             language: String(form.get("language") ?? ""),
             clinician: String(form.get("clinician") ?? ""),
             callbackTime: String(form.get("callbackTime") ?? ""),
-            discreet: isDiscreet(),
           }),
         );
       } catch {

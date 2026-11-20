@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { startCheckIn } from "../../actions";
 import { clearAnswers } from "@/lib/check/local-answers";
-import { isDiscreet } from "@/lib/discreet";
 import { purposesFor } from "@/lib/consent";
 import en from "@/content/i18n/en.json";
 
@@ -26,7 +25,7 @@ export function ConsentForm() {
     startTransition(async () => {
       let result;
       try {
-        result = await startCheckIn({ path, discreet: isDiscreet(), consents: choices });
+        result = await startCheckIn({ path, consents: choices });
       } catch {
         result = { ok: false as const };
       }

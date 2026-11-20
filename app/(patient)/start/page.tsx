@@ -4,7 +4,6 @@ import { ClinicNote } from "@/components/clinic-note";
 import Link from "next/link";
 import { HillsBanner } from "@/components/hills";
 import { PatientHeader } from "@/components/patient-header";
-import { DiscreetToggle } from "@/components/discreet-toggle";
 import en from "@/content/i18n/en.json";
 
 const card = "flex min-h-11 items-center gap-3.5 rounded-[18px] px-[18px] py-4 no-underline";
@@ -96,7 +95,6 @@ export default function StartPage() {
             See or delete your data
           </Link>
         </section>
-        <DiscreetToggle />
       </div>
     </>
   );

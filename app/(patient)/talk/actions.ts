@@ -15,7 +15,6 @@ const Input = z.object({
   language: z.enum(LANGUAGES),
   clinician: z.enum(CLINICIAN_CHOICES),
   callbackTime: z.string().trim().max(80),
-  discreet: z.boolean(),
 });
 
 export type CallbackResult =
@@ -36,7 +35,7 @@ export async function requestCallback(input: unknown): Promise<CallbackResult> {
   try {
     let id = await readSessionId();
     if (!id || !(await persist.getSession(id))) {
-      id = await persist.createSession("contact", d.discreet, { clinician_review: true });
+      id = await persist.createSession("contact", { clinician_review: true });
       await writeSessionId(id);
     }
     await persist.saveContact(id, d.phone, d.callbackTime || null, {
@@ -51,7 +50,7 @@ export async function requestCallback(input: unknown): Promise<CallbackResult> {
   }
 }
 
-const MessageInput = z.object({ body: z.string().trim().min(2).max(1000), discreet: z.boolean() });
+const MessageInput = z.object({ body: z.string().trim().min(2).max(1000) });
 
 export type MessageResult =
   | { ok: true; flagged: boolean; ref: string | null }
@@ -66,14 +65,14 @@ export type MessageResult =
 export async function sendCareTeamMessage(input: unknown): Promise<MessageResult> {
   const parsed = MessageInput.safeParse(input);
   if (!parsed.success) return { ok: false, reason: "invalid", flagged: false };
-  const { body, discreet } = parsed.data;
+  const { body } = parsed.data;
   const flagged = checkPhrases(body).matched.length > 0;
   if (!isDbConfigured()) return { ok: false, reason: "not_connected", flagged };
   try {
     let id = await readSessionId();
     const session = id ? await persist.getSession(id) : null;
     if (!id || !session) {
-      id = await persist.createSession("contact", discreet, { clinician_review: true });
+      id = await persist.createSession("contact", { clinician_review: true });
       await writeSessionId(id);
     }
     await persist.savePatientMessage(id, body, !flagged);

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { CallbackForm } from "./callback-form";
 import { sendCareTeamMessage } from "./actions";
-import { isDiscreet } from "@/lib/discreet";
 import { PhoneIcon } from "@/components/icons";
 import en from "@/content/i18n/en.json";
 
@@ -27,7 +26,7 @@ export function TalkOptions() {
   function send() {
     setError("");
     start(async () => {
-      const r = await sendCareTeamMessage({ body: msg, discreet: isDiscreet() }).catch(() => ({
+      const r = await sendCareTeamMessage({ body: msg }).catch(() => ({
         ok: false as const,
         reason: "error" as const,
         flagged: false,

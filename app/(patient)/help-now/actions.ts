@@ -38,7 +38,6 @@ const AlertInput = z.object({
   // Optional: someone may need to alert the team without being able to take a call.
   phone: z.union([z.literal(""), z.string().trim().regex(/^\+?[0-9 ()-]{7,20}$/, "phone")]),
   callbackTime: z.string().trim().max(80).optional(),
-  discreet: z.boolean(),
 });
 
 export type AlertResult =
@@ -59,7 +58,7 @@ export async function alertCareTeam(input: unknown): Promise<AlertResult> {
     let id = await readSessionId();
     const session = id ? await persist.getSession(id) : null;
     if (!id || !session) {
-      id = await persist.createSession("crisis", parsed.data.discreet, { clinician_review: true });
+      id = await persist.createSession("crisis", { clinician_review: true });
       await writeSessionId(id);
     }
     const phone = parsed.data.phone.trim();

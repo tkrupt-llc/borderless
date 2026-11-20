@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
-import { DiscreetTitle } from "@/components/discreet-title";
 import { NavTracker } from "@/components/back-button";
 import "./globals.css";
 
@@ -18,8 +17,7 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-// The tab never says "mental health". In discreet mode (components/discreet-title)
-// the title switches to the fully neutral "Wellbeing check" from content/i18n.
+// The tab never says "mental health": the title is just the product name.
 export const metadata: Metadata = {
   title: "Borderless",
   description: "Borderless",
@@ -29,7 +27,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" dir="ltr" className={`${fraunces.variable} ${inter.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        <DiscreetTitle />
         {/* Reads the URL, so it sits behind Suspense and never blocks the page. */}
         <Suspense>
           <NavTracker />

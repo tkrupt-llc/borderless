@@ -58,9 +58,9 @@ describe("finishCheckIn server action", () => {
 
 describe("startCheckIn server action", () => {
   it("accepts a known path and refuses an unknown one", async () => {
-    expect(await startCheckIn({ path: "quick", discreet: false, consents: { clinician_review: true } })).toEqual({
+    expect(await startCheckIn({ path: "quick", consents: { clinician_review: true } })).toEqual({
       ok: true,
     });
-    expect(await startCheckIn({ path: "x", discreet: false, consents: {} })).toEqual({ ok: false, reason: "invalid" });
+    expect(await startCheckIn({ path: "x", consents: {} })).toEqual({ ok: false, reason: "invalid" });
   });
 });

@@ -34,7 +34,6 @@ type Fail = { ok: false; reason: "invalid" | "no_session" | "error" };
 
 const StartInput = z.object({
   path: z.string(),
-  discreet: z.boolean(),
   consents: z.record(z.string(), z.boolean()),
 });
 
@@ -52,7 +51,7 @@ export async function startCheckIn(input: unknown): Promise<{ ok: true } | Fail>
 
   if (!isDbConfigured()) return { ok: true };
   try {
-    const id = await persist.createSession(path, parsed.data.discreet, choices);
+    const id = await persist.createSession(path, choices);
     await writeSessionId(id);
     return { ok: true };
   } catch (e) {
@@ -290,7 +289,7 @@ export async function startSafetyScreen(): Promise<{ ok: true } | Fail> {
   try {
     const id = await readSessionId();
     if (id && (await persist.getSession(id))) return { ok: true };
-    const created = await persist.createSession("crisis", false, { clinician_review: true });
+    const created = await persist.createSession("crisis", { clinician_review: true });
     await writeSessionId(created);
     // Same as opening the crisis page during a check-in: RF-HELP-NOW, so a
     // clinician follows up even if every safety answer is "no".
