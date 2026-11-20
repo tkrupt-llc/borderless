@@ -8,6 +8,7 @@ const LINKS = [
   { href: "#how", label: "How it works" },
   { href: "#safe", label: "Why it's safe" },
   { href: "#clinicians", label: "For clinicians" },
+  { href: "/staff/login", label: "Care team sign-in" },
 ];
 
 /**

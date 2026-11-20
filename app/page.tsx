@@ -109,7 +109,14 @@ export default function Landing() {
           </Link>
           <a href="#how" className="text-ink no-underline">How it works</a>
           <a href="#safe" className="text-ink no-underline">Why it&apos;s safe</a>
-          <a href="#clinicians" className="text-ink no-underline">For clinicians</a>
+          {/* Replaces the "For clinicians" scroll link so the header stays one row; easy to find for
+              clinicians and judges (the sign-in page also has "Continue as guest"). */}
+          <Link
+            href="/staff/login"
+            className="tap inline-flex min-h-11 items-center rounded-full border-[1.5px] border-ink px-[20px] py-3 font-medium text-ink no-underline hover:text-ink"
+          >
+            Care team sign-in
+          </Link>
           <Link
             href="/start"
             className="tap inline-flex min-h-11 items-center rounded-full bg-primary px-[22px] py-3 font-medium text-white no-underline hover:text-white"
