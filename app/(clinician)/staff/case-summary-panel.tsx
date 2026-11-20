@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { loadCase, loadCaseTrend } from "@/lib/staff/data";
+import type { Scope } from "@/lib/staff/scope";
 import { caseRef } from "@/lib/case-ref";
 import { clinicById } from "@/lib/clinics";
 import { summaryToText } from "@/lib/summary/build";
 import { seriesFrom, TrendChart } from "@/components/trend-chart";
 import { escalateCase } from "./actions";
-import { PriorityBadge } from "./staff-header";
+import { PriorityBadge, TASK_LABELS } from "./staff-header";
 import { ActionButton } from "./ui";
 
 const BAND: Record<string, string> = {
@@ -21,8 +22,18 @@ const pathLabel = (p: string) =>
  * own words, scores, the rule that fired, the AI-drafted note (lavender), the
  * trend, and the next actions. The full case page is one click away.
  */
-export async function CaseSummaryPanel({ sessionId, priority, write }: { sessionId: string; priority: string; write: boolean }) {
-  const [data, chain] = await Promise.all([loadCase(sessionId), loadCaseTrend(sessionId)]);
+export async function CaseSummaryPanel({
+  sessionId,
+  priority,
+  write,
+  scope,
+}: {
+  sessionId: string;
+  priority: string;
+  write: boolean;
+  scope: Scope;
+}) {
+  const [data, chain] = await Promise.all([loadCase(sessionId, scope), loadCaseTrend(sessionId, scope)]);
   if (!data) return null;
   const { session, proposal, summary } = data;
   const words = data.messages.find((m) => m.role === "patient")?.text ?? data.redFlags.find((r) => r.quote)?.quote ?? null;
@@ -31,6 +42,7 @@ export async function CaseSummaryPanel({ sessionId, priority, write }: { session
   const trend = chain && chain.sessions.length > 1 ? seriesFrom(chain.points)[0] : null;
   const escalated = data.tasks.some((t) => !t.closed_at && t.escalated_at);
   const clinic = clinicById(session.clinic_id);
+  const openRequest = data.tasks.find((t) => !t.closed_at && t.type !== "red_flag" && t.type !== "care_request");
   const row = "flex flex-col gap-0.5 border-b border-line-warm py-2.5";
   const key = "text-[0.8125rem] text-muted";
 
@@ -73,8 +85,21 @@ export async function CaseSummaryPanel({ sessionId, priority, write }: { session
               </li>
             ))}
           </ul>
-        ) : proposal ? (
-          <span>{proposal.reasons.join("; ") || "Routing rules"}</span>
+        ) : proposal && proposal.reasons.length > 0 ? (
+          // Routine and elevated: the routing rule IDs with their reasons, as on the full case.
+          <ul className="flex flex-col gap-0.5">
+            {proposal.reasons.map((reason, i) => (
+              <li key={proposal.rule_ids[i] ?? i}>
+                {proposal.rule_ids[i] && <strong className="font-semibold">{proposal.rule_ids[i]}</strong>}{" "}
+                <span className="text-text-2">({reason})</span>
+              </li>
+            ))}
+          </ul>
+        ) : openRequest ? (
+          // No rule: the person asked (a call back, a message, a coping card that isn't helping).
+          <span>
+            No rule: the person asked · <strong className="font-semibold">{TASK_LABELS[openRequest.type] ?? openRequest.type}</strong>
+          </span>
         ) : (
           <span className="text-muted">No rule fired.</span>
         )}

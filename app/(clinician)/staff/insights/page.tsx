@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { ConsoleLoading } from "../console-loading";
 import { requireStaff } from "@/lib/staff/auth";
+import { scopeOf } from "@/lib/staff/scope";
 import { loadInsights, type Insights } from "@/lib/staff/insights";
 import { loadQueue } from "@/lib/staff/data";
 import { PriorityBadge, StaffShell } from "../staff-header";
@@ -43,7 +44,7 @@ function Panel({ id, title, note, children }: { id: string; title: string; note?
 
 async function InsightsView() {
   const staff = await requireStaff();
-  const [data, queue, out] = await Promise.all([loadInsights(), loadQueue(), loadOutcomes()]);
+  const [data, queue, out] = await Promise.all([loadInsights(scopeOf(staff)), loadQueue(scopeOf(staff)), loadOutcomes(scopeOf(staff))]);
   // Only organisations that real check-ins came from.
   const orgs = clinics.clinics.filter((c) => "kind" in c && c.kind !== "clinic" && (out.orgCounts[c.id] ?? 0) > 0);
   // Outcome tiles: only measures with something entered behind them.

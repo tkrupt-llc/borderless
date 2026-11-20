@@ -4,8 +4,10 @@ import { isVisibleInQueue } from "@/lib/staff/safety-rules";
 import { applyFollowUps } from "@/lib/referral/persist";
 import { db } from "@/lib/db/server";
 import { buildSummary, type SummaryLine } from "@/lib/summary/build";
+import type { Scope } from "@/lib/staff/scope";
 
-// Reads for the clinician console. Callers must have passed requireStaff().
+// Reads for the clinician console. Callers must have passed requireStaff(), and pass its scope
+// (lib/staff/scope.ts): the guest sees demo cases only, real staff never see them.
 
 function rows<T>(result: { data: unknown; error: { message: string } | null }, what: string): T[] {
   if (result.error) throw new Error(`${what}: ${result.error.message}`);
@@ -32,7 +34,7 @@ export type QueueTask = {
 };
 
 /** Open tasks, most urgent first, then by time left. */
-export async function loadQueue(): Promise<QueueTask[]> {
+export async function loadQueue(scope: Scope): Promise<QueueTask[]> {
   type Row = {
     id: string; session_id: string; type: string; priority: string; due_at: string; created_at: string;
     acknowledged_at: string | null; escalated_at: string | null;
@@ -47,8 +49,9 @@ export async function loadQueue(): Promise<QueueTask[]> {
     await db()
       .from("tasks")
       .select(
-        "id, session_id, type, priority, due_at, created_at, acknowledged_at, escalated_at, red_flag_events(rule_id), sessions(path, contact_phone, contact_email, clinic_id)",
+        "id, session_id, type, priority, due_at, created_at, acknowledged_at, escalated_at, red_flag_events(rule_id), sessions!inner(path, contact_phone, contact_email, clinic_id, is_demo)",
       )
+      .eq("sessions.is_demo", scope.demo)
       .is("closed_at", null),
     "load queue",
   );
@@ -79,7 +82,7 @@ export async function loadQueue(): Promise<QueueTask[]> {
 
 export type CaseData = Awaited<ReturnType<typeof loadCase>>;
 
-export async function loadCase(sessionId: string) {
+export async function loadCase(sessionId: string, scope: Scope) {
   const one = async <T>(table: string, cols: string, order = "created_at") =>
     rows<T>(await db().from(table).select(cols).eq("session_id", sessionId).order(order, { ascending: true }), table);
 
@@ -94,7 +97,7 @@ export async function loadCase(sessionId: string) {
           clinic_id: string | null; contact_method: string | null; contact_email: string | null;
           contact_times: string[] | null; contact_leave_message: boolean | null;
           physical_conditions: string[] | null; physical_other: string | null; demo_emirate: string | null;
-          follow_up_token: string | null; closed_at: string | null; closure_reason: string | null;
+          follow_up_token: string | null; closed_at: string | null; closure_reason: string | null; is_demo: boolean;
         }>(r, "session"),
       ),
       one<{ purpose: string; granted: boolean }>("consent_records", "purpose, granted, created_at"),
@@ -121,7 +124,8 @@ export async function loadCase(sessionId: string) {
       one<{ body: string; from_patient: boolean; created_at: string }>("patient_messages", "body, from_patient, created_at"),
     ]);
   const session = sessionRows[0];
-  if (!session) return null;
+  // Out of scope is the same as not found.
+  if (!session || session.is_demo !== scope.demo) return null;
 
   // The proposal the clinician decides on: an urgent one wins, else the latest.
   const proposal = proposals.find((p) => p.urgent) ?? proposals.at(-1) ?? null;
@@ -162,12 +166,13 @@ export async function loadCase(sessionId: string) {
  * Finds a case from its reference (BL- plus the first 6 hex characters of the
  * session id), using a range on the id. Returns the ids that match.
  */
-export async function findCase(ref: string): Promise<string[]> {
+export async function findCase(ref: string, scope: Scope): Promise<string[]> {
   const hex = /^(?:BL-?)?([0-9a-f]{6})$/i.exec(ref.trim())?.[1]?.toLowerCase();
   if (!hex) return [];
   const result = await db()
     .from("sessions")
     .select("id")
+    .eq("is_demo", scope.demo)
     .gte("id", `${hex}00-0000-0000-0000-000000000000`)
     .lte("id", `${hex}ff-ffff-ffff-ffff-ffffffffffff`)
     .limit(5);
@@ -175,15 +180,15 @@ export async function findCase(ref: string): Promise<string[]> {
 }
 
 /** The person's chain of check-ins (first one plus follow-ups) with every score, oldest first. */
-export async function loadCaseTrend(sessionId: string) {
+export async function loadCaseTrend(sessionId: string, scope: Scope) {
   const self = rows<{ id: string; parent_session_id: string | null }>(
-    await db().from("sessions").select("id, parent_session_id").eq("id", sessionId),
+    await db().from("sessions").select("id, parent_session_id").eq("id", sessionId).eq("is_demo", scope.demo),
     "session chain",
   )[0];
   if (!self) return null;
   const rootId = self.parent_session_id ?? self.id;
   const sessions = rows<{ id: string; path: string; created_at: string }>(
-    await db().from("sessions").select("id, path, created_at").or(`id.eq.${rootId},parent_session_id.eq.${rootId}`).order("created_at"),
+    await db().from("sessions").select("id, path, created_at").eq("is_demo", scope.demo).or(`id.eq.${rootId},parent_session_id.eq.${rootId}`).order("created_at"),
     "chain sessions",
   );
   if (sessions.length < 2) return { rootId, sessions, points: [] };
@@ -195,11 +200,12 @@ export async function loadCaseTrend(sessionId: string) {
 }
 
 /** Open, not yet acknowledged imminent tasks: what the console alert watches. */
-export async function loadImminentAlerts(): Promise<{ id: string; sessionId: string; createdAt: string }[]> {
+export async function loadImminentAlerts(scope: Scope): Promise<{ id: string; sessionId: string; createdAt: string }[]> {
   return rows<{ id: string; session_id: string; created_at: string }>(
     await db()
       .from("tasks")
-      .select("id, session_id, created_at")
+      .select("id, session_id, created_at, sessions!inner(is_demo)")
+      .eq("sessions.is_demo", scope.demo)
       .eq("priority", "imminent")
       .is("closed_at", null)
       .is("acknowledged_at", null)

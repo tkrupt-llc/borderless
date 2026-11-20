@@ -1,5 +1,6 @@
 import { Logo } from "@/components/logo";
 import { LoginForm } from "./login-form";
+import { GuestButton } from "./guest-button";
 
 export default function StaffLoginPage() {
   return (
@@ -9,6 +10,7 @@ export default function StaffLoginPage() {
         <h1 className="font-serif text-[1.875rem] leading-tight font-normal">Care team sign-in</h1>
       </div>
       <LoginForm />
+      <GuestButton />
     </main>
   );
 }

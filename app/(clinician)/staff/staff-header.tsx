@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Staff } from "@/lib/staff/auth";
 import { signOut } from "./login/actions";
+import { resetDemoData } from "./actions";
+import { ActionButton } from "./ui";
 import { ImminentAlert } from "./imminent-alert";
 import { OutOfHours } from "./out-of-hours";
 
@@ -152,6 +154,14 @@ export function StaffShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line-warm bg-surface px-4 py-2 sm:px-5 lg:px-8">
           <div className="flex w-full flex-wrap items-center gap-2 sm:ms-auto sm:w-auto sm:gap-3">
+          {staff.demo && (
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="rounded-md border border-[#C8BFE7] bg-[#F1EEF9] px-2.5 py-1 text-[0.8125rem] font-semibold text-[#463c6e]">
+                Guest · demo cases only, reset daily
+              </span>
+              <ActionButton action={resetDemoData}>Reset demo data</ActionButton>
+            </span>
+          )}
           <OutOfHours />
           <ImminentAlert />
           <form action="/staff/find" role="search" className="flex w-full items-center gap-2 sm:w-auto">

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { ConsoleLoading } from "../../console-loading";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/staff/auth";
+import { scopeOf } from "@/lib/staff/scope";
 import { clinicById } from "@/lib/clinics";
 import { loadOrgReport } from "@/lib/staff/outcomes";
 import { cellText, MIN_GROUP, shareText } from "@/lib/outcomes/aggregate";
@@ -23,7 +24,7 @@ async function OrgReport({ params }: { params: Promise<{ orgId: string }> }) {
   const { orgId } = await params;
   const org = clinicById(orgId);
   if (!org || org.kind === "clinic") notFound();
-  const report = await loadOrgReport(org.id);
+  const report = await loadOrgReport(org.id, scopeOf(staff));
 
   return (
     <StaffShell staff={staff} active="insights">

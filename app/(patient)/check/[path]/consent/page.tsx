@@ -39,6 +39,7 @@ export default function ConsentPage() {
         <h1 className="font-serif text-[1.875rem] leading-tight font-normal">
           What happens to <em className="text-primary">your answers</em>
         </h1>
+        <p className="text-caption text-text-2">For adults aged 18 and over.</p>
       </div>
       <ul className="anim-pop anim-delay-1 mx-5 mt-4 flex flex-col gap-4 rounded-[20px] bg-surface p-5">
         {PROMISES.map((p) => (

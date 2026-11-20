@@ -62,6 +62,11 @@ export default function StartPage() {
             <span className="text-caption text-on-dark">About 10 minutes · fullest picture</span>
           </span>
         </Link>
+        {/* Age: the check-in is for adults. Emergency help above stays open to everyone. */}
+        <p role="note" className="rounded-2xl border-[1.5px] border-line bg-surface px-4 py-3 text-caption text-text-2">
+          <strong className="font-semibold text-ink">For adults aged 18 and over.</strong> Under 18? Please talk to a parent, a school counsellor or
+          your doctor. If you&apos;re in danger now, &ldquo;I&apos;m not safe right now&rdquo; above is for everyone.
+        </p>
         <Link href="/home" className="inline-flex min-h-11 items-center self-start text-caption text-primary-dark underline underline-offset-2">
           Coming back? See your next step
         </Link>

@@ -15,6 +15,7 @@ import { refresh } from "next/cache";
 import { db } from "@/lib/db/server";
 import { canWrite, requireStaff, type Staff } from "@/lib/staff/auth";
 import { loadCase, loadImminentAlerts } from "@/lib/staff/data";
+import { scopeOf, sessionInScope, taskSessionInScope, type Scope } from "@/lib/staff/scope";
 import { summaryToText } from "@/lib/summary/build";
 import { serviceById } from "@/lib/directory";
 import { dueAt, nextWorkingDay } from "@/lib/rules/tiers";
@@ -31,6 +32,23 @@ function must(result: { error: { message: string } | null }, what: string) {
 
 /** An error whose message is shown to the clinician as-is (e.g. why a case can't close). */
 class UserError extends Error {}
+
+/**
+ * Parses a case id and checks it is in this account's scope (the guest works on demo cases only,
+ * everyone else on real ones). Out of scope is reported as not found.
+ */
+async function caseId(staff: Staff, sessionId: string): Promise<string> {
+  const id = uuid.parse(sessionId);
+  if (!(await sessionInScope(id, scopeOf(staff)))) throw new UserError("Case not found.");
+  return id;
+}
+
+/** The same check for a task, through the case it belongs to. */
+async function taskInScope(staff: Staff, id: string): Promise<string> {
+  const parsed = uuid.parse(id);
+  if (!(await taskSessionInScope(parsed, scopeOf(staff)))) throw new UserError("Task not found.");
+  return parsed;
+}
 
 async function run(fn: (staff: Staff) => Promise<void>): Promise<Result> {
   const staff = await requireStaff();
@@ -52,7 +70,7 @@ async function addReceipt(sessionId: string, status: string, reason: string | nu
 
 export async function acknowledgeTask(taskId: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(taskId);
+    const id = await taskInScope(staff, taskId);
     const { data, error } = await db()
       .from("tasks")
       .update({ acknowledged_at: new Date().toISOString(), acknowledged_by: staff.id })
@@ -67,7 +85,7 @@ export async function acknowledgeTask(taskId: string): Promise<Result> {
 /** Acknowledges every open, not yet acknowledged task on a case (one click from the queue). */
 export async function acknowledgeCase(sessionId: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const { data, error } = await db()
       .from("tasks")
       .update({ acknowledged_at: new Date().toISOString(), acknowledged_by: staff.id })
@@ -83,7 +101,7 @@ export async function acknowledgeCase(sessionId: string): Promise<Result> {
 /** Hands a case to the duty supervisor now, without waiting for its clock to run out. */
 export async function escalateCase(sessionId: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     must(
       await db().from("tasks").update({ escalated_at: new Date().toISOString() }).eq("session_id", id).is("closed_at", null).is("escalated_at", null),
       "escalate",
@@ -94,7 +112,7 @@ export async function escalateCase(sessionId: string): Promise<Result> {
 
 export async function closeTask(taskId: string, signOffReason?: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(taskId);
+    const id = await taskInScope(staff, taskId);
     const { data: task } = await db().from("tasks").select("type, session_id, reason, requested_by").eq("id", id).single();
     // Supervisor reviews (co-sign, repeat crisis, unreachable, adverse event) are closed by a supervisor,
     // and a co-sign by someone other than the person who asked for it.
@@ -132,6 +150,9 @@ export async function decide(input: unknown): Promise<Result> {
   if (!parsed.success) return { ok: false, error: "An override needs a new step and a reason." };
   const d = parsed.data;
   return run(async (staff) => {
+    await caseId(staff, d.sessionId);
+    const own = await db().from("triage_proposals").select("id").eq("id", d.proposalId).eq("session_id", d.sessionId).limit(1);
+    if (!own.data?.length) throw new UserError("Proposal not found.");
     must(
       await db().from("clinician_decisions").insert({
         proposal_id: d.proposalId, action: d.action, clinician_id: staff.id,
@@ -157,14 +178,14 @@ export async function decide(input: unknown): Promise<Result> {
 /** Opening a case starts the review timer and stores the draft summary once. */
 export async function startReview(sessionId: string): Promise<{ created: boolean }> {
   const staff = await requireStaff();
-  const id = uuid.parse(sessionId);
+  const id = await caseId(staff, sessionId);
   // Log the visit and check for a summary at the same time; build the draft only when there is none yet.
   const [existing] = await Promise.all([
     db().from("summaries").select("session_id").eq("session_id", id).limit(1),
     audit(staff, "case_viewed", "session", id, id),
   ]);
   if (!canWrite(staff) || (existing.data?.length ?? 0) > 0) return { created: false };
-  const data = await loadCase(id);
+  const data = await loadCase(id, scopeOf(staff));
   if (!data || data.summary) return { created: false };
   must(
     await db().from("summaries").insert({ session_id: id, draft: { lines: data.draftLines }, review_started_at: new Date().toISOString() }),
@@ -175,7 +196,7 @@ export async function startReview(sessionId: string): Promise<{ created: boolean
 
 export async function saveSummary(sessionId: string, text: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const clean = z.string().trim().min(1).max(4000).parse(text);
     must(
       await db().from("summaries").update({ edited: { text: clean }, updated_at: new Date().toISOString() }).eq("session_id", id).is("signed_at", null),
@@ -188,8 +209,8 @@ export async function saveSummary(sessionId: string, text: string): Promise<Resu
 /** Signing marks the summary "AI-drafted, clinician-verified" and stops the review timer. */
 export async function signSummary(sessionId: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
-    const data = await loadCase(id);
+    const id = await caseId(staff, sessionId);
+    const data = await loadCase(id, scopeOf(staff));
     if (!data?.summary) throw new Error("no summary");
     const now = new Date();
     const update: Record<string, unknown> = { signed_at: now.toISOString(), signed_by: staff.id, updated_at: now.toISOString() };
@@ -204,7 +225,7 @@ export async function signSummary(sessionId: string): Promise<Result> {
 
 export async function setReceiptStatus(sessionId: string, status: "booked" | "first_contact_confirmed"): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const s = z.enum(["booked", "first_contact_confirmed"]).parse(status);
     await addReceipt(id, s);
     await audit(staff, `receipt_${s}`, "session", id, id);
@@ -213,7 +234,7 @@ export async function setReceiptStatus(sessionId: string, status: "booked" | "fi
 
 export async function logContact(sessionId: string, outcome: "called_no_answer" | "spoke", note: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const o = z.enum(["called_no_answer", "spoke"]).parse(outcome);
     must(
       await db().from("contact_attempts").insert({ session_id: id, outcome: o, note: note.trim().slice(0, 500) || null, clinician_id: staff.id }),
@@ -227,7 +248,7 @@ export async function logContact(sessionId: string, outcome: "called_no_answer" 
 /** A clinician can add a known BPD or ADHD history, which switches on the extra safeguards. */
 export async function addHistory(sessionId: string, kind: "bpd" | "adhd"): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const k = z.enum(["bpd", "adhd"]).parse(kind);
     must(
       await db().from("sessions").update({ [k === "bpd" ? "history_bpd" : "history_adhd"]: true, history_source: "clinician" }).eq("id", id),
@@ -245,7 +266,7 @@ export async function deleteCaseData(sessionId: string): Promise<Result> {
   const staff = await requireStaff();
   if (!canWrite(staff)) return { ok: false, error: "This account can view cases but not change them." };
   try {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const asked = await db().from("audit_events").select("id").eq("session_id", id).eq("action", "deletion_requested").limit(1);
     must(asked, "read request");
     if (!asked.data?.length) return { ok: false, error: "The patient hasn't asked for their data to be deleted." };
@@ -265,7 +286,7 @@ export async function deleteCaseData(sessionId: string): Promise<Result> {
 /** Refers the person to a service from the directory; their receipt shows where and what happens next. */
 export async function referToService(sessionId: string, serviceId: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const service = serviceById(serviceId);
     if (!service) throw new Error("unknown service");
     // Urgent if the case ever had an urgent or imminent task: it then returns to the queue after 48 h without progress.
@@ -278,7 +299,7 @@ export async function referToService(sessionId: string, serviceId: string): Prom
 /** Referral steps after the patient is referred: booked (with date), first contact, closed. */
 export async function updateReferral(sessionId: string, step: "booked" | "first_contact" | "closed", bookedFor?: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const row = await referral.latestReferral(id);
     if (!row || row.status === "closed") throw new Error("no open referral");
     const actor = `${staff.role}:${staff.id}`;
@@ -290,14 +311,14 @@ export async function updateReferral(sessionId: string, step: "booked" | "first_
 
 /** Read-only, for the console alert: open imminent tasks nobody has acknowledged yet. */
 export async function imminentAlerts(): Promise<{ id: string; sessionId: string; createdAt: string }[]> {
-  await requireStaff();
-  return loadImminentAlerts();
+  const staff = await requireStaff();
+  return loadImminentAlerts(scopeOf(staff));
 }
 
 /** "Reply to patient": a short message the person sees on their receipt timeline. */
 export async function replyToPatient(sessionId: string, body: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const text = z.string().trim().min(3).max(1000).parse(body);
     must(await db().from("patient_messages").insert({ session_id: id, body: text, sent_by: staff.id }), "message");
     // A reply answers the person's message: close any open "Message from patient" task.
@@ -322,7 +343,7 @@ export async function replyToPatient(sessionId: string, body: string): Promise<R
  */
 export async function changeUrgency(sessionId: string, priority: string, reason: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const to = z.enum(["imminent", "urgent", "elevated", "normal"]).parse(priority);
     const why = z.string().trim().min(5).max(500).parse(reason);
     const now = new Date();
@@ -342,7 +363,7 @@ export async function changeUrgency(sessionId: string, priority: string, reason:
 /** "Mark reviewed": acknowledges and closes the case's open tasks (it leaves the queue). */
 export async function markReviewed(sessionId: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const now = new Date().toISOString();
     must(await db().from("tasks").update({ acknowledged_at: now, acknowledged_by: staff.id }).eq("session_id", id).is("acknowledged_at", null).is("closed_at", null), "acknowledge");
     must(await db().from("tasks").update({ closed_at: now }).eq("session_id", id).is("closed_at", null), "close");
@@ -361,6 +382,7 @@ export async function reportAdverseEvent(input: unknown): Promise<Result> {
         description: z.string().trim().min(5).max(2000),
       })
       .parse(input);
+    if (d.sessionId) await caseId(staff, d.sessionId);
     must(
       await db().from("adverse_events").insert({ session_id: d.sessionId, category: d.category, severity: d.severity, description: d.description, reported_by: staff.id }),
       "adverse event",
@@ -394,7 +416,8 @@ export async function closeCase(input: unknown): Promise<Result> {
   if (!parsed.success) return { ok: false, error: "Choose a closure reason." };
   const d = parsed.data;
   return run(async (staff) => {
-    const state = await closureState(d.sessionId, staff.role === "supervisor", staff.id);
+    await caseId(staff, d.sessionId);
+    const state = await closureState(d.sessionId, staff.role === "supervisor", staff.id, scopeOf(staff));
     const verdict = canCloseCase(state, d.reason, d.notNeeded);
     if (!verdict.ok) throw new UserError(verdict.blockers.join(". ") + ".");
     const now = new Date();
@@ -427,8 +450,8 @@ export async function closeCase(input: unknown): Promise<Result> {
 }
 
 /** What the closure rules need to know about a case. */
-async function closureState(sessionId: string, bySupervisor: boolean, currentUserId: string) {
-  const [data, handoff] = await Promise.all([loadCase(sessionId), latestReferralRow(sessionId)]);
+async function closureState(sessionId: string, bySupervisor: boolean, currentUserId: string, scope: Scope) {
+  const [data, handoff] = await Promise.all([loadCase(sessionId, scope), latestReferralRow(sessionId)]);
   if (!data) throw new UserError("Case not found.");
   return closureStateFrom(data, handoff, bySupervisor, currentUserId);
 }
@@ -439,7 +462,7 @@ async function closureState(sessionId: string, bySupervisor: boolean, currentUse
  */
 export async function requestClosureCoSign(sessionId: string, reason: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const r = z.enum(["declined", "unreachable"]).parse(reason);
     await raiseSupervisorReview(id, "closure_cosign", "Co-sign closing as " + r + " (requested by a clinician)", staff.role + ":" + staff.id, staff.id);
   });
@@ -448,7 +471,7 @@ export async function requestClosureCoSign(sessionId: string, reason: string): P
 /** The clinician copied the follow-up link and sent it themselves (automatic sending is a pilot step). */
 export async function logFollowUpLinkSent(sessionId: string, how: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const channel = z.enum(["phone", "sms", "whatsapp", "email", "in_person"]).parse(how);
     await audit(staff, "follow_up_link_sent", "session", id, id, { channel });
   });
@@ -468,13 +491,13 @@ const SEND_CHANNELS = ["sms", "whatsapp", "email", "phone", "in_person"] as cons
  */
 export async function logPatientNotification(sessionId: string, kind: string, channel: string, taskId?: string): Promise<Result> {
   return run(async (staff) => {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const k = z.enum(MESSAGE_KINDS).parse(kind);
     const ch = z.enum(SEND_CHANNELS).parse(channel);
     if (taskId) {
       const now = new Date().toISOString();
       must(
-        await db().from("tasks").update({ acknowledged_at: now, closed_at: now }).eq("id", uuid.parse(taskId)).eq("session_id", id).eq("type", "send_reminder"),
+        await db().from("tasks").update({ acknowledged_at: now, closed_at: now }).eq("id", await taskInScope(staff, taskId)).eq("session_id", id).eq("type", "send_reminder"),
         "close reminder task",
       );
     }
@@ -491,7 +514,7 @@ export async function sendNewReturnCode(sessionId: string, channel: string, orig
   const staff = await requireStaff();
   if (!canWrite(staff)) return { ok: false, error: "This account can view cases but not change them." };
   try {
-    const id = uuid.parse(sessionId);
+    const id = await caseId(staff, sessionId);
     const ch = z.enum(["sms", "whatsapp", "email"]).parse(channel);
     const [consents, session] = await Promise.all([
       persist.getConsents(id),
@@ -509,4 +532,12 @@ export async function sendNewReturnCode(sessionId: string, channel: string, orig
     console.error(e);
     return { ok: false, error: "That didn't work. Please try again." };
   }
+}
+
+/** Guest only: put the demo cases back to their starting state (the same reset runs daily). */
+export async function resetDemoData(): Promise<Result> {
+  return run(async (staff) => {
+    if (!staff.demo) throw new UserError("Only the guest account can reset demo data.");
+    must(await db().rpc("reset_demo_data"), "reset demo data");
+  });
 }

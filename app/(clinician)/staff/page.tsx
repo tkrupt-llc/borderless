@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { ConsoleLoading } from "./console-loading";
 import Link from "next/link";
 import { canWrite, requireStaff } from "@/lib/staff/auth";
+import { scopeOf } from "@/lib/staff/scope";
 import { loadQueue, loadQueueScores, type QueueTask } from "@/lib/staff/data";
 import { caseRef } from "@/lib/case-ref";
 import { clinicById } from "@/lib/clinics";
@@ -58,7 +59,8 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
   const params = await searchParams;
   const view = VIEWS.find((v) => v.id === String(params.view ?? "all")) ?? VIEWS[0];
   const notFound = typeof params.notfound === "string" ? params.notfound : null;
-  const all = byCase(await loadQueue());
+  const scope = scopeOf(staff);
+  const all = byCase(await loadQueue(scope));
   // Sorted by reply-by time (earliest due first), imminent always on top.
   const sorted = [...all].sort(
     (a, b) => (a.top.priority === "imminent" ? 0 : 1) - (b.top.priority === "imminent" ? 0 : 1) || a.top.dueAt.localeCompare(b.top.dueAt),
@@ -241,7 +243,7 @@ async function Queue({ searchParams }: { searchParams: PageProps<"/staff">["sear
 
           {selected && (
             <div className="hidden min-w-0 flex-[1_1_340px] flex-col gap-3 sm:flex xl:sticky xl:top-6">
-              <CaseSummaryPanel key={selected.sessionId} sessionId={selected.sessionId} priority={selected.top.priority} write={write} />
+              <CaseSummaryPanel key={selected.sessionId} sessionId={selected.sessionId} priority={selected.top.priority} write={write} scope={scope} />
               {selected.unacked > 0 && write && (
                 <div className="flex items-center justify-between gap-3 rounded-2xl border border-line-warm bg-surface px-5 py-3">
                   <span className="text-[0.875rem] text-text-2">

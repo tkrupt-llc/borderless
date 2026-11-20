@@ -16,6 +16,7 @@ import { SKIPPED } from "@/lib/check/skip";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { canWrite, requireStaff } from "@/lib/staff/auth";
+import { scopeOf } from "@/lib/staff/scope";
 import { loadCase, loadCaseTrend } from "@/lib/staff/data";
 import { seriesFrom, TrendChart } from "@/components/trend-chart";
 import { STEP_NAMES } from "@/lib/rules/routing";
@@ -81,7 +82,7 @@ async function Case({ params }: { params: PageProps<"/staff/case/[id]">["params"
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   // Apply any due hand-off rules for this case first, so the panel is current.
   await applyFollowUps(id).catch((e) => console.error(e));
-  const [data, chain, handoff, h] = await Promise.all([loadCase(id), loadCaseTrend(id), latestReferral(id), headers()]);
+  const [data, chain, handoff, h] = await Promise.all([loadCase(id, scopeOf(staff)), loadCaseTrend(id, scopeOf(staff)), latestReferral(id), headers()]);
   const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000"}`;
   if (!data) notFound();
   // Discreet messages staff copy and send themselves, one per channel the person shared and allows.

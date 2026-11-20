@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db/server";
+import { sessionIdsInScope, type Scope } from "@/lib/staff/scope";
 
 // Service insights for the care-team console: how many people came in, how
 // fast the team responded, and how the AI and the rules behaved. Read-only,
@@ -30,24 +31,33 @@ const TIER_GROUPS = [
   { id: "routine", label: "Routine", target: "1 working day", tiers: ["elevated", "normal"] },
 ];
 
-export async function loadInsights(now = new Date()) {
+export async function loadInsights(scope: Scope, now = new Date()) {
   const since = new Date(now.getTime() - INSIGHT_DAYS * 86_400_000).toISOString();
-  const [sessions, events, flags, tasks, decisions, referrals] = await Promise.all([
+  // Only cases in scope: the guest sees demo cases, real staff never do.
+  const inScope = await sessionIdsInScope(scope);
+  const mine = <T extends { session_id: string | null }>(list: T[]) => list.filter((r) => r.session_id !== null && inScope.has(r.session_id));
+  const [allSessions, allEvents, allFlags, allTasks, allDecisions, allReferrals] = await Promise.all([
     db().from("sessions").select("id, path, created_at, taken_over").gte("created_at", since).limit(5000)
       .then((r) => rows<{ id: string; path: string; created_at: string; taken_over: boolean }>(r, "sessions")),
     db().from("audit_events").select("action, session_id, metadata")
       .in("action", ["check_in_completed", "summary_signed", "ai_reply_blocked", "ai_unavailable_fallback", "safety_check_asked"])
       .gte("created_at", since).limit(10000)
       .then((r) => rows<{ action: string; session_id: string | null; metadata: Record<string, unknown> }>(r, "events")),
-    db().from("red_flag_events").select("rule_id, tier").gte("created_at", since).limit(5000)
-      .then((r) => rows<{ rule_id: string; tier: string }>(r, "red flags")),
-    db().from("tasks").select("type, priority, created_at, due_at, acknowledged_at").gte("created_at", since).limit(5000)
-      .then((r) => rows<{ type: string; priority: string; created_at: string; due_at: string; acknowledged_at: string | null }>(r, "tasks")),
-    db().from("clinician_decisions").select("action").gte("created_at", since).limit(5000)
-      .then((r) => rows<{ action: string }>(r, "decisions")),
-    db().from("receipt_events").select("service_id").eq("status", "booked").not("service_id", "is", null).gte("created_at", since).limit(5000)
-      .then((r) => rows<{ service_id: string }>(r, "referrals")),
+    db().from("red_flag_events").select("session_id, rule_id, tier").gte("created_at", since).limit(5000)
+      .then((r) => rows<{ session_id: string; rule_id: string; tier: string }>(r, "red flags")),
+    db().from("tasks").select("session_id, type, priority, created_at, due_at, acknowledged_at").gte("created_at", since).limit(5000)
+      .then((r) => rows<{ session_id: string; type: string; priority: string; created_at: string; due_at: string; acknowledged_at: string | null }>(r, "tasks")),
+    db().from("clinician_decisions").select("action, triage_proposals!inner(session_id)").gte("created_at", since).limit(5000)
+      .then((r) => rows<{ action: string; triage_proposals: { session_id: string } }>(r, "decisions")),
+    db().from("receipt_events").select("session_id, service_id").eq("status", "booked").not("service_id", "is", null).gte("created_at", since).limit(5000)
+      .then((r) => rows<{ session_id: string; service_id: string }>(r, "referrals")),
   ]);
+  const sessions = allSessions.filter((s) => inScope.has(s.id));
+  const events = mine(allEvents);
+  const flags = mine(allFlags);
+  const tasks = mine(allTasks);
+  const decisions = allDecisions.filter((d) => inScope.has(d.triage_proposals.session_id));
+  const referrals = mine(allReferrals);
 
   const checkIns = sessions.filter((s) => s.path !== "contact");
   const completedEvents = events.filter((e) => e.action === "check_in_completed");

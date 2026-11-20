@@ -9,7 +9,8 @@ import { createServerClient } from "@supabase/ssr";
 // calls requireStaff(); data is then read with the server-only service client.
 
 export type StaffRole = "clinician" | "supervisor" | "judge";
-export type Staff = { id: string; email: string; role: StaffRole };
+/** demo: the guest account, which only ever sees demo cases (see lib/staff/scope.ts). */
+export type Staff = { id: string; email: string; role: StaffRole; demo: boolean };
 const ROLES: readonly string[] = ["clinician", "supervisor", "judge"];
 
 export async function staffAuthClient() {
@@ -38,7 +39,12 @@ export async function getStaff(): Promise<Staff | null> {
   const claims = data?.claims;
   const role = claims?.app_metadata?.role;
   if (!claims?.sub || typeof role !== "string" || !ROLES.includes(role)) return null;
-  return { id: claims.sub, email: typeof claims.email === "string" ? claims.email : "", role: role as StaffRole };
+  return {
+    id: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : "",
+    role: role as StaffRole,
+    demo: claims.app_metadata?.demo === true,
+  };
 }
 
 export async function requireStaff(): Promise<Staff> {

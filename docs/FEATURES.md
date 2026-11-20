@@ -52,6 +52,7 @@ A person answers a few short, standard questions. Fixed safety rules check every
 | **Clinician** | `/staff/login` | Reviews the queue, decides next steps, contacts and refers people. |
 | **Duty supervisor** | `/staff/login` | Same powers; responsible for cases that run late (the Escalated view). |
 | **Judge** | `/staff/login` | View-only access to everything. |
+| **Guest** | **Continue as guest** on `/staff/login` (no password) | Supervisor rights on **demo cases only**. Never sees a real check-in; demo cases reset daily. |
 | **Employer or university** | Links to the check-in from their website | Sees totals only, never a person, with a minimum group size of 10. |
 
 Demo staff accounts: `clinician@borderless.demo`, `supervisor@borderless.demo`, `judge@borderless.demo`. The password is kept out of this file.
@@ -100,7 +101,7 @@ A **follow-up** about 4 weeks later repeats PHQ-9 and GAD-7 so change can be mea
 | Page | What it shows | Where it leads |
 |---|---|---|
 | `/` Landing | Headline, how it works (5 steps), reply-time targets, why it's safe, coping cards, clinician preview. With a check-in in progress on this browser: a neutral **"Welcome back"** banner | Start a 2-minute check-in, Full check-in (about 10 min), "Coming back?" (header, under the main button, footer). On phones (under 768px) the header is one row: logo, **Check in** and a menu (Coming back?, How it works, Why it's safe, For clinicians), live demo, care team sign-in, Privacy / Terms / Accessibility / Contact |
-| `/start` | Three options, emergency first | Crisis page, quick check, full check-in, "Coming back?" (home, or find a check-in with a code) |
+| `/start` | Three options, emergency first; **"For adults aged 18 and over"** (under 18: talk to a parent, school counsellor or doctor; the crisis option stays open to everyone). The consent page repeats "For adults aged 18 and over". | Crisis page, quick check, full check-in, "Coming back?" (home, or find a check-in with a code) |
 | `/check/[path]/consent` | "What happens to your answers": four promises, care-team access (needed), AI help (full check-in only) | First question, or the AI chat |
 | `/check/full/chat` | AI assistant asks about what's going on. Every message is phrase-checked before and after the AI. | Questions, or the crisis page if unsafe |
 | `/check/[path]/1..n` | One question per page, section count, "Why am I asked this?", gentle note before suicide questions | Next question; crisis page on a red flag |
@@ -228,7 +229,7 @@ While a page loads, the console keeps its side bar and shows grey placeholders s
 The top bar has **Turn on alerts** (sound and tab-title count for imminent cases) and **Find case** by reference (e.g. `BL-AF09B5`).
 
 ### Queue (`/staff`)
-Filters by urgency; each row shows reference, why it's here, path, scores and a live reply-by countdown. Clicking a row opens the **case panel**: in their words, scores, rule that fired, AI or signed summary, **Acknowledge**, **Escalate**, **Open full case**.
+Filters by urgency; each row shows reference, why it's here, path, scores and a live reply-by countdown. Clicking a row opens the **case panel**: in their words, scores, **rule that fired at every urgency level** (red-flag rule and trigger; for routine and elevated cases the routing rule IDs with their reasons; for requests "No rule: the person asked" and what they asked for), AI or signed summary, **Acknowledge**, **Escalate**, **Open full case**.
 
 | Button | Meaning |
 |---|---|
@@ -260,6 +261,13 @@ Each task shows why it exists when a rule created it (e.g. "Repeat crisis: 2 urg
 A case with no phone or email shows **"No contact details: timeline only"**, in the queue and on the case: the person can only read replies on their timeline with their reference and code.
 
 **Send reminder** tasks (low priority) appear when a hand-off reminder or "Did you see them?" fires. Each carries the discreet message to copy; **Log message sent** closes it.
+
+### Guest access (demo)
+- **Continue as guest** on the sign-in page signs in to `guest@borderless.demo`: **supervisor rights, demo cases only**. There is no guest password; the server makes a one-time sign-in link and exchanges it straight away.
+- Demo cases are check-ins flagged `is_demo` (invented: no real person, number or answer). The guest never sees a real check-in, and real staff never see demo cases, in the queue, case pages, search, alerts, service overview, employer views and the family doctor summary. Every staff action checks the case is in the signed-in account's scope first ("Case not found" otherwise).
+- 12 demo cases cover every level: imminent and urgent red flags, the crisis page, elevated and routine check-ins, a call-back request, a message, a coping card that isn't helping, a referral to SEHA primary care and a closed case.
+- They **reset daily** at 00:00 UTC (04:00 UAE) via `pg_cron` (`reset_demo_data()`), and the guest can **Reset demo data** from the top bar at any time. The top bar shows "Guest · demo cases only, reset daily".
+- Set up once with `npx tsx --env-file=.env.local scripts/create-guest.ts` (migration `20261120000000_guest_demo.sql`).
 
 ### Supervisor triggers
 These create a **Supervisor review** task that goes straight into the Escalated view (one per case per trigger):

@@ -3,6 +3,7 @@ import { db } from "@/lib/db/server";
 import { latestConsents, type ConsentRow } from "@/lib/consent";
 import { computeOutcomes } from "@/lib/outcomes/metrics";
 import { orgReport, type OrgSession } from "@/lib/outcomes/aggregate";
+import { sessionIdsInScope, type Scope } from "@/lib/staff/scope";
 
 // Outcome measures for the service overview, and the aggregate-only view an
 // employer or university sees. Callers must have passed requireStaff().
@@ -19,9 +20,12 @@ type SessionRow = {
   demo_age_band: string | null; demo_gender: string | null; demo_nationality: string | null; demo_language_variety: string | null; demo_emirate: string | null;
 };
 
-async function loadRows(now: Date) {
+async function loadRows(scope: Scope, now: Date) {
   const since = new Date(now.getTime() - OUTCOME_DAYS * 86_400_000).toISOString();
-  const sessions = rows<SessionRow>(
+  // Only cases in scope: the guest sees demo cases, real staff never do.
+  const inScope = await sessionIdsInScope(scope);
+  const mine = <T extends { session_id: string | null }>(list: T[]) => list.filter((r) => r.session_id !== null && inScope.has(r.session_id));
+  const allSessions = rows<SessionRow>(
     await db()
       .from("sessions")
       .select("id, path, parent_session_id, created_at, clinic_id, demo_age_band, demo_gender, demo_nationality, demo_language_variety, demo_emirate")
@@ -29,20 +33,21 @@ async function loadRows(now: Date) {
       .limit(10000),
     "sessions",
   );
+  const sessions = allSessions.filter((s) => inScope.has(s.id));
   const ids = sessions.map((s) => s.id);
   const [consents, receipt, scores, tasks, adverse, stalled] = await Promise.all([
     db().from("consent_records").select("session_id, purpose, granted, created_at").eq("purpose", "service_improvement").gte("created_at", since).limit(20000)
-      .then((r) => rows<ConsentRow & { session_id: string }>(r, "consents")),
+      .then((r) => mine(rows<ConsentRow & { session_id: string }>(r, "consents"))),
     db().from("receipt_events").select("session_id, status, created_at").gte("created_at", since).limit(20000)
-      .then((r) => rows<{ session_id: string; status: string; created_at: string }>(r, "receipt")),
+      .then((r) => mine(rows<{ session_id: string; status: string; created_at: string }>(r, "receipt"))),
     db().from("scores").select("session_id, instrument, total").gte("created_at", since).limit(20000)
-      .then((r) => rows<{ session_id: string; instrument: string; total: number }>(r, "scores")),
-    db().from("tasks").select("created_at, due_at, acknowledged_at").eq("type", "red_flag").in("priority", ["imminent", "urgent"]).gte("created_at", since).limit(10000)
-      .then((r) => rows<{ created_at: string; due_at: string; acknowledged_at: string | null }>(r, "crisis tasks")),
-    db().from("adverse_events").select("category, severity").gte("created_at", since).limit(5000)
-      .then((r) => rows<{ category: string; severity: string }>(r, "adverse events")),
+      .then((r) => mine(rows<{ session_id: string; instrument: string; total: number }>(r, "scores"))),
+    db().from("tasks").select("session_id, created_at, due_at, acknowledged_at").eq("type", "red_flag").in("priority", ["imminent", "urgent"]).gte("created_at", since).limit(10000)
+      .then((r) => mine(rows<{ session_id: string; created_at: string; due_at: string; acknowledged_at: string | null }>(r, "crisis tasks"))),
+    db().from("adverse_events").select("session_id, category, severity").gte("created_at", since).limit(5000)
+      .then((r) => mine(rows<{ session_id: string | null; category: string; severity: string }>(r, "adverse events"))),
     db().from("referrals").select("session_id").not("stalled_at", "is", null).gte("referred_at", since).limit(10000)
-      .then((r) => rows<{ session_id: string }>(r, "stalled referrals")),
+      .then((r) => mine(rows<{ session_id: string }>(r, "stalled referrals"))),
   ]);
   const bySession = new Map<string, ConsentRow[]>();
   for (const c of consents) bySession.set(c.session_id, [...(bySession.get(c.session_id) ?? []), c]);
@@ -50,8 +55,8 @@ async function loadRows(now: Date) {
   return { sessions, ids, receipt, scores, tasks, adverse, stalled, statsConsent };
 }
 
-export async function loadOutcomes(now = new Date()) {
-  const r = await loadRows(now);
+export async function loadOutcomes(scope: Scope, now = new Date()) {
+  const r = await loadRows(scope, now);
   const outcomes = computeOutcomes({
     sessions: r.sessions.map((s) => ({
       id: s.id, path: s.path, parentId: s.parent_session_id, createdAt: s.created_at, statsConsent: r.statsConsent(s.id),
@@ -70,8 +75,8 @@ export async function loadOutcomes(now = new Date()) {
 }
 
 /** The employer or university view: aggregates only, minimum group size 10. */
-export async function loadOrgReport(orgId: string, now = new Date()) {
-  const r = await loadRows(now);
+export async function loadOrgReport(orgId: string, scope: Scope, now = new Date()) {
+  const r = await loadRows(scope, now);
   const referred = new Set(r.receipt.filter((e) => e.status === "referred").map((e) => e.session_id));
   const sessions: OrgSession[] = r.sessions
     .filter((s) => r.statsConsent(s.id))
